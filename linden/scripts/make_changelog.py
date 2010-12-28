@@ -414,11 +414,11 @@ def main():
     header="""
 
                                   CHANGELOG
-                           for the Imprudence Viewer
+                           for the Harebrained Viewer
                           http://imprudenceviewer.org
 
 
-     This is a log of revisions to the Imprudence Viewer source code.
+     This is a log of revisions to the Harebrained Viewer source code.
      If you are looking for an overview of new features and changes in
      each release, please see RELEASE_NOTES.txt instead.
 
