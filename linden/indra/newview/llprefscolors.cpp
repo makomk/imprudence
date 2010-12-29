@@ -147,17 +147,17 @@ void LLPrefsColors::cancel()
 
 void LLPrefsColors::apply()
 {
-	gSavedSettings.setColor4("SystemChatColor", childGetValue("system"));
-	gSavedSettings.setColor4("UserChatColor", childGetValue("user"));
-	gSavedSettings.setColor4("AgentChatColor", childGetValue("agent"));
-	gSavedSettings.setColor4("IMChatColor", childGetValue("im"));
-	gSavedSettings.setColor4("ScriptErrorColor", childGetValue("script_error"));
-	gSavedSettings.setColor4("ObjectChatColor", childGetValue("objects"));
-	gSavedSettings.setColor4("llOwnerSayChatColor", childGetValue("owner"));
-	gSavedSettings.setColor4("BackgroundChatColor", childGetValue("background"));
+	gSavedSettings.setColor4("SystemChatColor", LLColor4(childGetValue("system")));
+	gSavedSettings.setColor4("UserChatColor", LLColor4(childGetValue("user")));
+	gSavedSettings.setColor4("AgentChatColor", LLColor4(childGetValue("agent")));
+	gSavedSettings.setColor4("IMChatColor", LLColor4(childGetValue("im")));
+	gSavedSettings.setColor4("ScriptErrorColor", LLColor4(childGetValue("script_error")));
+	gSavedSettings.setColor4("ObjectChatColor", LLColor4(childGetValue("objects")));
+	gSavedSettings.setColor4("llOwnerSayChatColor", LLColor4(childGetValue("owner")));
+	gSavedSettings.setColor4("BackgroundChatColor", LLColor4(childGetValue("background")));
 
-	gSavedSettings.setColor4("HTMLLinkColor", childGetValue("links"));
-	LLTextEditor::setLinkColor(childGetValue("links"));
+	gSavedSettings.setColor4("HTMLLinkColor", LLColor4(childGetValue("links")));
+	LLTextEditor::setLinkColor(LLColor4(childGetValue("links")));
 
 	gSavedSettings.setBOOL("HighlightOwnNameInIM", childGetValue("HighlightOwnNameInIM"));
 	gSavedSettings.setBOOL("HighlightFriendsChat", childGetValue("HighlightFriendsChat"));

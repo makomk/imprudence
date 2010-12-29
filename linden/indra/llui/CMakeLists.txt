@@ -26,6 +26,8 @@ include_directories(
 set(llui_SOURCE_FILES
     llalertdialog.cpp
     llbutton.cpp
+    llcalc.cpp
+    llcalcparser.cpp
     llcheckboxctrl.cpp
     llclipboard.cpp
     llcombobox.cpp
@@ -78,6 +80,8 @@ set(llui_HEADER_FILES
 
     llalertdialog.h
     llbutton.h
+    llcalc.h
+    llcalcparser.h
     llcallbackmap.h
     llcheckboxctrl.h
     llclipboard.h

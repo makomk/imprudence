@@ -77,6 +77,9 @@
 
 //#define JC_PROFILE_GSAVED
 
+// FIXME: What on earth is this?   -- makomk
+#define LL_PCODE_PATH_CIRCLE_33 0x21
+
 void cmdline_printchat(std::string message);
 void cmdline_rezplat(bool use_saved_value = true, F32 visual_radius = 30.0);
 void cmdline_tp2name(std::string target);

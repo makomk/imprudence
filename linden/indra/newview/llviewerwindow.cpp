@@ -3282,7 +3282,7 @@ void LLViewerWindow::schedulePick(LLPickInfo& pick_info)
 	
 		return;
 	}
-	llassert_always(pick_info.mScreenRegion.notNull());
+	llassert_always(pick_info.mScreenRegion.notEmpty());
 	mPicks.push_back(pick_info);
 	
 	/*S32 scaled_x = llround((F32)pick_info.mMousePt.mX * mDisplayScale.mV[VX]);

@@ -158,8 +158,8 @@ void LLMediaRemoteCtrl::enableMediaButtons()
 
 	static LLColor4* sIconDisabledColor = rebind_llcontrol<LLColor4>("IconDisabledColor", &gColors, true);
 
-	LLColor4 music_icon_color = (*sIconDisabledColor).getValue();
-	LLColor4 media_icon_color = (*sIconDisabledColor).getValue();
+	LLColor4 music_icon_color = *sIconDisabledColor;
+	LLColor4 media_icon_color = *sIconDisabledColor;
 	std::string media_type = "none/none";
 
 	// Put this in xui file

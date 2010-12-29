@@ -2,31 +2,25 @@
  * @file v3math.cpp
  * @brief LLVector3 class implementation.
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -134,7 +128,6 @@ BOOL LLVector3::clampLength( F32 length_limit )
 			mV[0] *= length_limit;
 			mV[1] *= length_limit;
 			mV[2] *= length_limit;
-			changed = TRUE;
 		}
 	}
 
@@ -185,14 +178,6 @@ void 	LLVector3::snap(S32 sig_digits)
 	mV[VY] = snap_to_sig_figs(mV[VY], sig_digits);
 	mV[VZ] = snap_to_sig_figs(mV[VZ], sig_digits);
 }
-
-
-std::ostream& operator<<(std::ostream& s, const LLVector3 &a) 
-{
-	s << "{ " << a.mV[VX] << ", " << a.mV[VY] << ", " << a.mV[VZ] << " }";
-	return s;
-}
-
 
 const LLVector3&	LLVector3::rotVec(const LLMatrix3 &mat)
 {
@@ -313,12 +298,6 @@ void LLVector3::setValue(const LLSD& sd)
 	mV[0] = (F32) sd[0].asReal();
 	mV[1] = (F32) sd[1].asReal();
 	mV[2] = (F32) sd[2].asReal();
-}
-
-const LLVector3& LLVector3::operator=(const LLSD& sd)
-{
-	setValue(sd);
-	return *this;
 }
 
 const LLVector3& operator*=(LLVector3 &a, const LLQuaternion &rot)

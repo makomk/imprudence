@@ -333,7 +333,7 @@ void LLFloaterBuildOptions::reset()
 	childSetValue("Y size", gSavedPerAccountSettings.getControl("BuildPrefs_Ysize")->getDefault() );
 	childSetValue("X size", gSavedPerAccountSettings.getControl("BuildPrefs_Xsize")->getDefault() );
 
-	getChild<LLColorSwatchCtrl>("colorswatch")->set(gSavedPerAccountSettings.getControl("BuildPrefs_Color")->getDefault(), TRUE);
+	getChild<LLColorSwatchCtrl>("colorswatch")->set(LLColor4(gSavedPerAccountSettings.getControl("BuildPrefs_Color")->getDefault()), TRUE);
 	getChild<LLTextureCtrl>("texture control")->setImageAssetID( (LLUUID)gSavedPerAccountSettings.getControl("BuildPrefs_Texture")->getDefault().asString() );
 
 	mBuildItemUUID = (LLUUID)gSavedPerAccountSettings.getControl("BuildPrefs_Item")->getDefault().asString();

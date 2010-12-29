@@ -483,7 +483,7 @@ LLVector3 LLControlGroup::getVector3(const std::string& name)
 	LLControlVariable* control = getControl(name);
 	
 	if (control && control->isType(TYPE_VEC3))
-		return control->get();
+		return LLVector3(control->get());
 	else
 	{
 		CONTROL_ERRS << "Invalid LLVector3 control " << name << llendl;
@@ -496,7 +496,7 @@ LLVector3d LLControlGroup::getVector3d(const std::string& name)
 	LLControlVariable* control = getControl(name);
 	
 	if (control && control->isType(TYPE_VEC3D))
-		return control->get();
+		return LLVector3d(control->get());
 	else
 	{
 		CONTROL_ERRS << "Invalid LLVector3d control " << name << llendl;
@@ -509,7 +509,7 @@ LLRect LLControlGroup::getRect(const std::string& name)
 	LLControlVariable* control = getControl(name);
 	
 	if (control && control->isType(TYPE_RECT))
-		return control->get();
+		return LLRect(control->get());
 	else
 	{
 		CONTROL_ERRS << "Invalid rect control " << name << llendl;
@@ -555,7 +555,7 @@ LLColor4U LLControlGroup::getColor4U(const std::string& name)
 	LLControlVariable* control = getControl(name);
 	
 	if (control && control->isType(TYPE_COL4U))
-		return control->get();
+		return LLColor4U(control->get());
 	else
 	{
 		CONTROL_ERRS << "Invalid LLColor4 control " << name << llendl;
@@ -568,7 +568,7 @@ LLColor4 LLControlGroup::getColor4(const std::string& name)
 	LLControlVariable* control = getControl(name);
 	
 	if (control && control->isType(TYPE_COL4))
-		return control->get();
+		return LLColor4(control->get());
 	else
 	{
 		CONTROL_ERRS << "Invalid LLColor4 control " << name << llendl;

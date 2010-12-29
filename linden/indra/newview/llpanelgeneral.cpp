@@ -170,7 +170,7 @@ void LLPanelGeneral::apply()
 	gSavedSettings.setBOOL("AllowIdleAFK", childGetValue("afk_timeout_checkbox"));
 	gSavedSettings.setBOOL("MiniMapNotifyChatRange", childGetValue("mini_map_notify_chat"));
 	gSavedSettings.setBOOL("MiniMapNotifySimRange", childGetValue("mini_map_notify_sim"));
-	gSavedSettings.setColor4("EffectColor", childGetValue("effect_color_swatch"));
+	gSavedSettings.setColor4("EffectColor", LLColor4(childGetValue("effect_color_swatch")));
 	gSavedSettings.setF32("UIScaleFactor", childGetValue("ui_scale_slider").asReal());
 	gSavedSettings.setBOOL("UIAutoScale", childGetValue("ui_auto_scale"));
 	gSavedSettings.setString("Language", childGetValue("language_combobox"));

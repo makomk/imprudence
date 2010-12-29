@@ -2,31 +2,25 @@
  * @file llcamera.cpp
  * @brief Implementation of the LLCamera class.
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -45,7 +39,8 @@ LLCamera::LLCamera() :
 	mNearPlane(DEFAULT_NEAR_PLANE),
 	mFarPlane(DEFAULT_FAR_PLANE),
 	mFixedDistance(-1.f),
-	mPlaneCount(6)
+	mPlaneCount(6),
+	mFrustumCornerDist(0.f)
 {
 	calculateFrustumPlanes();
 } 
@@ -55,7 +50,8 @@ LLCamera::LLCamera(F32 vertical_fov_rads, F32 aspect_ratio, S32 view_height_in_p
 	LLCoordFrame(),
 	mViewHeightInPixels(view_height_in_pixels),
 	mFixedDistance(-1.f),
-	mPlaneCount(6)
+	mPlaneCount(6),
+	mFrustumCornerDist(0.f)
 {
 	mAspect = llclamp(aspect_ratio, MIN_ASPECT_RATIO, MAX_ASPECT_RATIO);
 	mNearPlane = llclamp(near_plane, MIN_NEAR_PLANE, MAX_NEAR_PLANE);
@@ -178,7 +174,7 @@ S32 LLCamera::AABBInFrustum(const LLVector3 &center, const LLVector3& radius)
 	U8 mask = 0;
 	S32 result = 2;
 
-	if (radius.magVecSquared() > mFrustumCornerDist * mFrustumCornerDist)
+	/*if (mFrustumCornerDist > 0.f && radius.magVecSquared() > mFrustumCornerDist * mFrustumCornerDist)
 	{ //box is larger than frustum, check frustum quads against box planes
 
 		static const LLVector3 dir[] = 
@@ -241,11 +237,15 @@ S32 LLCamera::AABBInFrustum(const LLVector3 &center, const LLVector3& radius)
 			result = 1;
 		}
 	}
-	else
+	else*/
 	{
 		for (U32 i = 0; i < mPlaneCount; i++)
 		{
 			mask = mAgentPlanes[i].mask;
+			if (mask == 0xff)
+			{
+				continue;
+			}
 			LLPlane p = mAgentPlanes[i].p;
 			LLVector3 n = LLVector3(p);
 			float d = p.mV[3];
@@ -294,6 +294,10 @@ S32 LLCamera::AABBInFrustumNoFarClip(const LLVector3 &center, const LLVector3& r
 		}
 
 		mask = mAgentPlanes[i].mask;
+		if (mask == 0xff)
+		{
+			continue;
+		}
 		LLPlane p = mAgentPlanes[i].p;
 		LLVector3 n = LLVector3(p);
 		float d = p.mV[3];
@@ -437,6 +441,11 @@ int LLCamera::sphereInFrustum(const LLVector3 &sphere_center, const F32 radius) 
 	int res = 2;
 	for (int i = 0; i < 6; i++)
 	{
+		if (mAgentPlanes[i].mask == 0xff)
+		{
+			continue;
+		}
+
 		float d = mAgentPlanes[i].p.dist(sphere_center);
 
 		if (d > radius) 
@@ -622,9 +631,19 @@ U8 LLCamera::calcPlaneMask(const LLPlane& plane)
 	return mask;
 }
 
+void LLCamera::ignoreAgentFrustumPlane(S32 idx)
+{
+	if (idx < 0 || idx > (S32) mPlaneCount)
+	{
+		return;
+	}
+
+	mAgentPlanes[idx].mask = 0xff;
+	mAgentPlanes[idx].p.clearVec();
+}
+
 void LLCamera::calcAgentFrustumPlanes(LLVector3* frust)
 {
-
 	for (int i = 0; i < 8; i++)
 	{
 		mAgentFrustum[i] = frust[i];
@@ -684,7 +703,6 @@ void LLCamera::calculateFrustumPlanes(F32 left, F32 right, F32 top, F32 bottom)
 	mLocalPlanes[PLANE_BOTTOM].setVec( a, c, b); 
 
 	//calculate center and radius squared of frustum in world absolute coordinates
-	static LLVector3 const X_AXIS(1.f, 0.f, 0.f);
 	mFrustCenter = X_AXIS*mFarPlane*0.5f;
 	mFrustCenter = transformToAbsolute(mFrustCenter);
 	mFrustRadiusSquared = mFarPlane*0.5f;

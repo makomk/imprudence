@@ -3368,7 +3368,7 @@ LLScrollListItem* LLScrollListCtrl::addElement(const LLSD& value, EAddPosition p
 		}
 		
 		BOOL has_color = (*itor).has("color");
-		LLColor4 color = ((*itor)["color"]);
+		LLColor4 color = LLColor4(((*itor)["color"]));
 		BOOL enabled = !(*itor).has("enabled") || (*itor)["enabled"].asBoolean() == true;
 
 		const LLFontGL *font = LLResMgr::getInstance()->getRes(fontname);

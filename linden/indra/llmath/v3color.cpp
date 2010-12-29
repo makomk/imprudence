@@ -2,31 +2,25 @@
  * @file v3color.cpp
  * @brief LLColor3 class implementation.
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -56,9 +50,7 @@ LLColor3::LLColor3(const LLVector4 &a)
 
 LLColor3::LLColor3(const LLSD &sd)
 {
-	mV[0] = (F32) sd[0].asReal();
-	mV[1] = (F32) sd[1].asReal();
-	mV[2] = (F32) sd[2].asReal();
+	setValue(sd);
 }
 
 const LLColor3& LLColor3::operator=(const LLColor4 &a) 
@@ -73,6 +65,42 @@ std::ostream& operator<<(std::ostream& s, const LLColor3 &a)
 {
 	s << "{ " << a.mV[VX] << ", " << a.mV[VY] << ", " << a.mV[VZ] << " }";
 	return s;
+}
+
+static F32 hueToRgb ( F32 val1In, F32 val2In, F32 valHUeIn )
+{
+	if ( valHUeIn < 0.0f ) valHUeIn += 1.0f;
+	if ( valHUeIn > 1.0f ) valHUeIn -= 1.0f;
+	if ( ( 6.0f * valHUeIn ) < 1.0f ) return ( val1In + ( val2In - val1In ) * 6.0f * valHUeIn );
+	if ( ( 2.0f * valHUeIn ) < 1.0f ) return ( val2In );
+	if ( ( 3.0f * valHUeIn ) < 2.0f ) return ( val1In + ( val2In - val1In ) * ( ( 2.0f / 3.0f ) - valHUeIn ) * 6.0f );
+	return ( val1In );
+}
+
+void LLColor3::setHSL ( F32 hValIn, F32 sValIn, F32 lValIn)
+{
+	if ( sValIn < 0.00001f )
+	{
+		mV[VRED] = lValIn;
+		mV[VGREEN] = lValIn;
+		mV[VBLUE] = lValIn;
+	}
+	else
+	{
+		F32 interVal1;
+		F32 interVal2;
+
+		if ( lValIn < 0.5f )
+			interVal2 = lValIn * ( 1.0f + sValIn );
+		else
+			interVal2 = ( lValIn + sValIn ) - ( sValIn * lValIn );
+
+		interVal1 = 2.0f * lValIn - interVal2;
+
+		mV[VRED] = hueToRgb ( interVal1, interVal2, hValIn + ( 1.f / 3.f ) );
+		mV[VGREEN] = hueToRgb ( interVal1, interVal2, hValIn );
+		mV[VBLUE] = hueToRgb ( interVal1, interVal2, hValIn - ( 1.f / 3.f ) );
+	}
 }
 
 void LLColor3::calcHSL(F32* hue, F32* saturation, F32* luminance) const

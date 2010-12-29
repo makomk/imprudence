@@ -751,7 +751,7 @@ void primbackup::import_object1a()
 	show();
 
 	group_prim_import_iter=llsd["data"].beginArray();	
-	root_root_pos=(*group_prim_import_iter)["root_position"];
+	root_root_pos=LLVector3((*group_prim_import_iter)["root_position"]);
 
 	this->m_objects=llsd["data"].size();
 	this->m_curobject=1;
@@ -769,7 +769,7 @@ void primbackup::import_next_object()
 	m_curprim=0;
 	m_prims=this_group.size();
 	updateimportnumbers();
-	LLVector3 lgpos=(*group_prim_import_iter)["root_position"];
+	LLVector3 lgpos((*group_prim_import_iter)["root_position"]);
 
 	group_offset=lgpos-root_root_pos;
 	root_pos=offset_agent(LLVector3(2.0,0,0));
@@ -789,7 +789,7 @@ void primbackup::xmltoprim(LLSD prim_llsd,LLViewerObject * object)
 	if(prim_llsd.has("parent"))
 	{
 		//we are not the root node.
-		LLVector3 pos=prim_llsd["position"];
+		LLVector3 pos(prim_llsd["position"]);
 		LLQuaternion rot=ll_quaternion_from_sd(prim_llsd["rotation"]);
 		object->setPositionRegion((pos*root_rot)+(root_pos+group_offset));
 		object->setRotation(rot*root_rot);
@@ -801,7 +801,7 @@ void primbackup::xmltoprim(LLSD prim_llsd,LLViewerObject * object)
 		object->setRotation(rot);
 	}
 
-	object->setScale(prim_llsd["scale"]);
+	object->setScale(LLVector3(prim_llsd["scale"]));
 
 	if(prim_llsd.has("shadows"))
 		if(prim_llsd["shadows"].asInteger()==1)

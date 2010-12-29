@@ -2,31 +2,25 @@
  * @file v4color.h
  * @brief LLColor4 class header file.
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -58,7 +52,7 @@ class LLColor4
 		LLColor4(U32 clr);							// Initializes LLColor4 to (r=clr>>24, etc))
 		LLColor4(const F32 *vec);			// Initializes LLColor4 to (vec[0]. vec[1], vec[2], 1)
 		LLColor4(const LLColor3 &vec, F32 a = 1.f);	// Initializes LLColor4 to (vec, a)
-		LLColor4(const LLSD& sd);
+		explicit LLColor4(const LLSD& sd);
 		explicit LLColor4(const LLColor4U& color4u);  // "explicit" to avoid automatic conversion
 		explicit LLColor4(const LLVector4& vector4);  // "explicit" to avoid automatic conversion
 
@@ -72,13 +66,7 @@ class LLColor4
 			return ret;
 		}
 	
-		void setValue(const LLSD& sd)
-		{
-			mV[0] = (F32) sd[0].asReal();
-			mV[1] = (F32) sd[1].asReal();
-			mV[2] = (F32) sd[2].asReal();
-			mV[3] = (F32) sd[3].asReal();
-		}
+		void setValue(const LLSD& sd);
 
 		void setHSL(F32 hue, F32 saturation, F32 luminance);
 		void calcHSL(F32* hue, F32* saturation, F32* luminance) const;
@@ -119,7 +107,6 @@ class LLColor4
 		F32 &operator[](int idx) { return mV[idx]; }
 	
 	    const LLColor4& operator=(const LLColor3 &a);	// Assigns vec3 to vec4 and returns vec4
-		const LLColor4& operator=(const LLSD& sd);
 		
 		friend std::ostream&	 operator<<(std::ostream& s, const LLColor4 &a);		// Print a
 		friend LLColor4 operator+(const LLColor4 &a, const LLColor4 &b);	// Return vector a + b
@@ -250,7 +237,7 @@ inline LLColor4::LLColor4(void)
 
 inline LLColor4::LLColor4(const LLSD& sd)
 {
-	*this = sd;
+	this->setValue(sd);
 }
 
 inline LLColor4::LLColor4(F32 r, F32 g, F32 b)
@@ -638,16 +625,6 @@ void LLColor4::clamp()
 	{
 		mV[3] = 1.f;
 	}
-}
-
-inline const LLColor4& LLColor4::operator=(const LLSD& sd)
-{
-	mV[0] = (F32) sd[0].asReal();
-	mV[1] = (F32) sd[1].asReal();
-	mV[2] = (F32) sd[2].asReal();
-	mV[3] = (F32) sd[3].asReal();
-
-	return *this;
 }
 
 #endif
