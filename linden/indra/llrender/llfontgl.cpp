@@ -373,6 +373,8 @@ S32 LLFontGL::renderUTF8(const std::string &text, const S32 offset,
 	return render(wstr, offset, x, y, color, halign, valign, style, max_chars, max_pixels, right_x, FALSE, use_ellipses);
 }
 
+static LLFastTimer::DeclareTimer FTM_RENDER_FONTS("Fonts");
+
 S32 LLFontGL::render(const LLWString &wstr, 
 					 const S32 begin_offset,
 					 const F32 x, const F32 y,
@@ -422,7 +424,7 @@ S32 LLFontGL::render(const LLWString &wstr,
 	F32 pixel_offset_y = llround((F32)sCurOrigin.mY) - (sCurOrigin.mY);
 	gGL.translatef(-pixel_offset_x, -pixel_offset_y, 0.f);
 
-	LLFastTimer t(LLFastTimer::FTM_RENDER_FONTS);
+	LLFastTimer t(FTM_RENDER_FONTS);
 
 	gGL.color4fv( color.mV );
 

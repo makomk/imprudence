@@ -1,260 +1,180 @@
-/** 
+/**
  * @file llfasttimer.h
- * @brief Declaration of a fast timer.
+ * @brief Inline implementations of fast timers.
  *
- * $LicenseInfo:firstyear=2004&license=viewergpl$
- * 
- * Copyright (c) 2004-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2004&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLFASTTIMER_H
-#define LL_LLFASTTIMER_H
+#ifndef LL_FASTTIMER_H
+#define LL_FASTTIMER_H
 
-#define FAST_TIMER_ON 1
+// pull in the actual class definition
+#include "llfasttimer_class.h"
 
-LL_COMMON_API U64 get_cpu_clock_count();
+//
+// Important note: These implementations must be FAST!
+//
 
-class LL_COMMON_API LLFastTimer
+#if LL_WINDOWS
+//
+// Windows implementation of CPU clock
+//
+
+//
+// NOTE: put back in when we aren't using platform sdk anymore
+//
+// because MS has different signatures for these functions in winnt.h
+// need to rename them to avoid conflicts
+//#define _interlockedbittestandset _renamed_interlockedbittestandset
+//#define _interlockedbittestandreset _renamed_interlockedbittestandreset
+//#include <intrin.h>
+//#undef _interlockedbittestandset
+//#undef _interlockedbittestandreset
+
+//inline U32 LLFastTimer::getCPUClockCount32()
+//{
+//	U64 time_stamp = __rdtsc();
+//	return (U32)(time_stamp >> 8);
+//}
+//
+//// return full timer value, *not* shifted by 8 bits
+//inline U64 LLFastTimer::getCPUClockCount64()
+//{
+//	return __rdtsc();
+//}
+
+// shift off lower 8 bits for lower resolution but longer term timing
+// on 1Ghz machine, a 32-bit word will hold ~1000 seconds of timing
+inline U32 LLFastTimer::getCPUClockCount32()
 {
-public:
-	enum EFastTimerType
+	U32 ret_val;
+	__asm
 	{
-		// high level
-		FTM_FRAME,
-		FTM_UPDATE,
-		FTM_RENDER,
-		FTM_SWAP,
-		FTM_CLIENT_COPY,
-		FTM_IDLE,
-		FTM_SLEEP,
-
-		// common messaging components
-		FTM_PUMP,
-		FTM_CURL,
-		
-		// common simulation components
-		FTM_UPDATE_ANIMATION,
-		FTM_UPDATE_TERRAIN,
-		FTM_UPDATE_PRIMITIVES,
-		FTM_UPDATE_PARTICLES,
-		FTM_SIMULATE_PARTICLES,
-		FTM_UPDATE_SKY,
-		FTM_UPDATE_TEXTURES,
-		FTM_UPDATE_WLPARAM,
-		FTM_UPDATE_WATER,
-		FTM_UPDATE_CLOUDS,
-		FTM_UPDATE_GRASS,
-		FTM_UPDATE_TREE,
-		FTM_UPDATE_AVATAR,
-		
-		// common render components
-		FTM_SHADOW_GEOMETRY,
-		FTM_SHADOW_RENDER,
-		FTM_SHADOW_TERRAIN,
-		FTM_SHADOW_AVATAR,
-		FTM_SHADOW_SIMPLE,
-		FTM_SHADOW_ALPHA,
-		FTM_SHADOW_TREE,
-		
-		FTM_RENDER_GEOMETRY,
-		 FTM_RENDER_TERRAIN,
-		 FTM_RENDER_SIMPLE,
-		 FTM_RENDER_FULLBRIGHT,
-		 FTM_RENDER_GLOW,
-		 FTM_RENDER_GRASS,
-		 FTM_RENDER_INVISIBLE,
-		 FTM_RENDER_SHINY,
-		 FTM_RENDER_BUMP,
-		 FTM_RENDER_TREES,
-		 FTM_RENDER_CHARACTERS,
-		 FTM_RENDER_OCCLUSION,
-		 FTM_RENDER_ALPHA,
-         FTM_RENDER_CLOUDS,
-		 FTM_RENDER_HUD,
-		 FTM_RENDER_PARTICLES,
-		 FTM_RENDER_WATER,
-		 FTM_RENDER_WL_SKY,
-		 FTM_RENDER_FAKE_VBO_UPDATE,
-		FTM_RENDER_TIMER,
-		FTM_RENDER_UI,
-		FTM_RENDER_BLOOM,
-			FTM_RENDER_BLOOM_FBO,		
-		FTM_RENDER_FONTS,
-		
-		// newview specific
-		FTM_MESSAGES,
-		FTM_MOUSEHANDLER,
-		FTM_KEYHANDLER,
-		FTM_REBUILD,
-		FTM_STATESORT,
-		FTM_STATESORT_DRAWABLE,
-		FTM_STATESORT_POSTSORT,
-		FTM_REBUILD_VBO,
-		FTM_REBUILD_VOLUME_VB,
-		FTM_REBUILD_BRIDGE_VB,
-		FTM_REBUILD_HUD_VB,
-		FTM_REBUILD_TERRAIN_VB,
-		FTM_REBUILD_WATER_VB,
-		FTM_REBUILD_TREE_VB,
-		FTM_REBUILD_PARTICLE_VB,
-		FTM_REBUILD_CLOUD_VB,
-		FTM_REBUILD_GRASS_VB,
-		FTM_REBUILD_NONE_VB,
-		FTM_REBUILD_OCCLUSION_VB,
-		FTM_POOLS,
-		FTM_POOLRENDER,
-		FTM_IDLE_CB,
-		FTM_WORLD_UPDATE,
-		FTM_UPDATE_MOVE,
-		FTM_OCTREE_BALANCE,
-		FTM_UPDATE_LIGHTS,
-		FTM_CULL,
-		FTM_CULL_REBOUND,
-		FTM_FRUSTUM_CULL,
-		FTM_GEO_UPDATE,
-		FTM_GEO_RESERVE,
-		FTM_GEO_LIGHT,
-		FTM_GEO_SHADOW,
-		FTM_GEO_SKY,
-		FTM_GEN_VOLUME,
-		FTM_GEN_TRIANGLES,
-		FTM_GEN_FLEX,
-		FTM_AUDIO_UPDATE,
-		FTM_RESET_DRAWORDER,
-		FTM_OBJECTLIST_UPDATE,
-		FTM_AVATAR_UPDATE,
-		FTM_JOINT_UPDATE,
-		FTM_ATTACHMENT_UPDATE,
-		FTM_LOD_UPDATE,
-		FTM_REGION_UPDATE,
-		FTM_CLEANUP,
-		FTM_NETWORK,
-		FTM_IDLE_NETWORK,
-		FTM_CREATE_OBJECT,
-		FTM_LOAD_AVATAR,
-		FTM_PROCESS_MESSAGES,
-		FTM_PROCESS_OBJECTS,
-		FTM_PROCESS_IMAGES,
-		FTM_IMAGE_UPDATE,
-		FTM_IMAGE_CREATE,
-		FTM_IMAGE_DECODE,
-		FTM_IMAGE_READBACK,
-		FTM_IMAGE_MARK_DIRTY,
-		FTM_PIPELINE,
-		FTM_VFILE_WAIT,
-		FTM_FLEXIBLE_UPDATE,
-		FTM_OCCLUSION_READBACK,
-		FTM_HUD_EFFECTS,
-		FTM_HUD_UPDATE,
-		FTM_INVENTORY,
-		FTM_AUTO_SELECT,
-		FTM_ARRANGE,
-		FTM_FILTER,
-		FTM_REFRESH,
-		FTM_SORT,
-		FTM_PICK,
-		
-		// Temp
-		FTM_TEMP1,
-		FTM_TEMP2,
-		FTM_TEMP3,
-		FTM_TEMP4,
-		FTM_TEMP5,
-		FTM_TEMP6,
-		FTM_TEMP7,
-		FTM_TEMP8,
-		
-		FTM_OTHER, // Special, used by display code
-		
-		FTM_NUM_TYPES
-	};
-	enum { FTM_HISTORY_NUM = 60 };
-	enum { FTM_MAX_DEPTH = 64 };
-	
-public:
-	static EFastTimerType sCurType;
-
-	LLFastTimer(EFastTimerType type)
-	{
-#if FAST_TIMER_ON
-		mType = type;
-		sCurType = type;
-		// These don't get counted, because they use CPU clockticks
-		//gTimerBins[gCurTimerBin]++;
-		//LLTimer::sNumTimerCalls++;
-
-		U64 cpu_clocks = get_cpu_clock_count();
-
-		sStart[sCurDepth] = cpu_clocks;
-		sCurDepth++;
-#endif
-	};
-	~LLFastTimer()
-	{
-#if FAST_TIMER_ON
-		U64 end,delta;
-		int i;
-
-		// These don't get counted, because they use CPU clockticks
-		//gTimerBins[gCurTimerBin]++;
-		//LLTimer::sNumTimerCalls++;
-		end = get_cpu_clock_count();
-
-		sCurDepth--;
-		delta = end - sStart[sCurDepth];
-		sCounter[mType] += delta;
-		sCalls[mType]++;
-		// Subtract delta from parents
-		for (i=0; i<sCurDepth; i++)
-			sStart[i] += delta;
-#endif
+        _emit   0x0f
+        _emit   0x31
+		shr eax,8
+		shl edx,24
+		or eax, edx
+		mov dword ptr [ret_val], eax
 	}
+    return ret_val;
+}
 
-	static void reset();
-	static U64 countsPerSecond();
+// return full timer value, *not* shifted by 8 bits
+inline U64 LLFastTimer::getCPUClockCount64()
+{
+	U64 ret_val;
+	__asm
+	{
+        _emit   0x0f
+        _emit   0x31
+		mov eax,eax
+		mov edx,edx
+		mov dword ptr [ret_val+4], edx
+		mov dword ptr [ret_val], eax
+	}
+    return ret_val;
+}
+#endif
 
-public:
-	static int sCurDepth;
-	static U64 sStart[FTM_MAX_DEPTH];
-	static U64 sCounter[FTM_NUM_TYPES];
-	static U64 sCalls[FTM_NUM_TYPES];
-	static U64 sCountAverage[FTM_NUM_TYPES];
-	static U64 sCallAverage[FTM_NUM_TYPES];
-	static U64 sCountHistory[FTM_HISTORY_NUM][FTM_NUM_TYPES];
-	static U64 sCallHistory[FTM_HISTORY_NUM][FTM_NUM_TYPES];
-	static S32 sCurFrameIndex;
-	static S32 sLastFrameIndex;
-	static int sPauseHistory;
-	static int sResetHistory;
-	static F64 sCPUClockFrequency;
-    static U64 sClockResolution;
+
+#if (LL_LINUX || LL_SOLARIS) && !(defined(__i386__) || defined(__amd64__))
+//
+// Linux and Solaris implementation of CPU clock - non-x86.
+// This is accurate but SLOW!  Only use out of desperation.
+//
+// Try to use the MONOTONIC clock if available, this is a constant time counter
+// with nanosecond resolution (but not necessarily accuracy) and attempts are
+// made to synchronize this value between cores at kernel start. It should not
+// be affected by CPU frequency. If not available use the REALTIME clock, but
+// this may be affected by NTP adjustments or other user activity affecting
+// the system time.
+inline U64 LLFastTimer::getCPUClockCount64()
+{
+	struct timespec tp;
 	
-private:
-	EFastTimerType mType;
-};
+#ifdef CLOCK_MONOTONIC // MONOTONIC supported at build-time?
+	if (-1 == clock_gettime(CLOCK_MONOTONIC,&tp)) // if MONOTONIC isn't supported at runtime then ouch, try REALTIME
+#endif
+		clock_gettime(CLOCK_REALTIME,&tp);
 
+	return (tp.tv_sec*LLFastTimer::sClockResolution)+tp.tv_nsec;        
+}
+
+inline U32 LLFastTimer::getCPUClockCount32()
+{
+	return (U32)(LLFastTimer::getCPUClockCount64() >> 8);
+}
+#endif // (LL_LINUX || LL_SOLARIS) && !(defined(__i386__) || defined(__amd64__))
+
+
+#if (LL_LINUX || LL_SOLARIS || LL_DARWIN) && (defined(__i386__) || defined(__amd64__))
+//
+// Mac+Linux+Solaris FAST x86 implementation of CPU clock
+
+#ifdef __i386__
+inline U64 LLFastTimer::getCPUClockCount64()
+{
+	U64 x;
+	__asm__ volatile (".byte 0x0f, 0x31": "=A"(x));
+	return x;
+}
+#else
+inline U64 LLFastTimer::getCPUClockCount64()
+{
+	// Due to some fun poorly-documented gcc quirk, we can't actually use
+	// "=A" on amd64. Seriously, until I fixed this gcc was clobbering a 
+	// this pointer in RAX and causing a weird segfault early in startup.
+	// (From the assembly generated, =A probably means RDX on amd64.)
+	U32 hi, lo;
+	__asm__ volatile (".byte 0x0f, 0x31": "=a"(lo), "=d"(hi));
+	return ((U64)hi << 32) | ((U64)lo);
+}
+#endif
+
+
+inline U32 LLFastTimer::getCPUClockCount32()
+{
+	return (U32)(LLFastTimer::getCPUClockCount64() >> 8);
+}
+
+#endif
+
+
+#if ( LL_DARWIN && !(defined(__i386__) || defined(__amd64__)))
+//
+// Mac PPC (deprecated) implementation of CPU clock
+//
+// Just use gettimeofday implementation for now
+
+inline U32 LLFastTimer::getCPUClockCount32()
+{
+	return (U32)(get_clock_count()>>8);
+}
+
+inline U64 LLFastTimer::getCPUClockCount64()
+{
+	return get_clock_count();
+}
+#endif
 
 #endif // LL_LLFASTTIMER_H

@@ -35,6 +35,7 @@
 
 #include "lltool.h"
 //#include "v3math.h"
+#include "llsafehandle.h"
 
 class LLView;
 class LLTextBox;

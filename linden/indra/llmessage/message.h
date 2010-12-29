@@ -64,6 +64,7 @@
 #include "llmsgvariabletype.h"
 #include "llmsgvariabletype.h"
 #include "llmessagesenderinterface.h"
+#include "llsingleton.h"
 
 #include "llstoredmessage.h"
 

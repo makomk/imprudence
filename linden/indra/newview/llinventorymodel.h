@@ -34,6 +34,7 @@
 #define LL_LLINVENTORYMODEL_H
 
 #include "llassettype.h"
+#include "llfoldertype.h"
 #include "lldarray.h"
 #include "lluuid.h"
 #include "llpermissionsflags.h"
@@ -261,7 +262,7 @@ public:
 
 	// SDK: Added flag to specify whether the folder should be created if not found.  This fixes the horrible
 	// multiple trash can bug.
-	LLUUID findCategoryUUIDForType(LLAssetType::EType preferred_type, bool create_folder = true);
+	LLUUID findCategoryUUIDForType(LLFolderType::EType preferred_type, bool create_folder = true);
 
 	// Call this method when it's time to update everyone on a new
 	// state, by default, the inventory model will not update
@@ -309,7 +310,7 @@ public:
 	// category. If you want to use the default name based on type,
 	// pass in a NULL to the 'name parameter.
 	LLUUID createNewCategory(const LLUUID& parent_id,
-							 LLAssetType::EType preferred_type,
+							 LLFolderType::EType preferred_type,
 							 const std::string& name);
 
 	LLUUID findCategoryByName(std::string name);
@@ -390,7 +391,7 @@ protected:
 
 	// Internal method which looks for a category with the specified
 	// preferred type. Returns LLUUID::null if not found
- 	LLUUID findCatUUID(LLAssetType::EType preferred_type);
+ 	LLUUID findCatUUID(LLFolderType::EType preferred_type);
 
 
 

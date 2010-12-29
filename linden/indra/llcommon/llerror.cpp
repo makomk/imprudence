@@ -3,31 +3,25 @@
  * @date   December 2006
  * @brief error message system
  *
- * $LicenseInfo:firstyear=2006&license=viewergpl$
- * 
- * Copyright (c) 2006-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2006&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -45,22 +39,16 @@
 # include <syslog.h>
 # include <unistd.h>
 #endif // !LL_WINDOWS
-#if LL_WINDOWS
-# include <windows.h>
-#endif // LL_WINDOWS
 #include <vector>
 
 #include "llapp.h"
 #include "llapr.h"
 #include "llfile.h"
-#include "llfixedbuffer.h"
 #include "lllivefile.h"
 #include "llsd.h"
 #include "llsdserialize.h"
 #include "llstl.h"
 #include "lltimer.h"
-
-extern apr_thread_mutex_t* gCallStacksLogMutexp;
 
 namespace {
 #if !LL_WINDOWS
@@ -194,16 +182,16 @@ namespace {
 	class RecordToFixedBuffer : public LLError::Recorder
 	{
 	public:
-		RecordToFixedBuffer(LLFixedBuffer& buffer) : mBuffer(buffer) { }
+		RecordToFixedBuffer(LLLineBuffer* buffer) : mBuffer(buffer) { }
 		
 		virtual void recordMessage(LLError::ELevel level,
-									const std::string& message)
+								   const std::string& message)
 		{
-			mBuffer.addLine(message);
+			mBuffer->addLine(message);
 		}
 	
 	private:
-		LLFixedBuffer& mBuffer;
+		LLLineBuffer* mBuffer;
 	};
 
 #if LL_WINDOWS
@@ -211,7 +199,7 @@ namespace {
 	{
 	public:
 		virtual void recordMessage(LLError::ELevel level,
-									const std::string& message)
+								   const std::string& message)
 		{
 			llutf16string utf16str =
 				wstring_to_utf16str(utf8str_to_wstring(message));
@@ -291,7 +279,7 @@ namespace
 	public:
 		static LogControlFile& fromDirectory(const std::string& dir);
 		
-		virtual void loadFile();
+		virtual bool loadFile();
 		
 	private:
 		LogControlFile(const std::string &filename)
@@ -319,7 +307,7 @@ namespace
 			// NB: This instance is never freed
 	}
 	
-	void LogControlFile::loadFile()
+	bool LogControlFile::loadFile()
 	{
 		LLSD configuration;
 
@@ -335,12 +323,13 @@ namespace
 				llwarns << filename() << " missing, ill-formed,"
 							" or simply undefined; not changing configuration"
 						<< llendl;
-				return;
+				return false;
 			}
 		}
 		
 		LLError::configure(configuration);
 		llinfos << "logging reconfigured from " << filename() << llendl;
+		return true;
 	}
 
 
@@ -434,7 +423,7 @@ namespace LLError
 		Settings()
 			:	printLocation(false),
 				defaultLevel(LLError::LEVEL_DEBUG),
-				crashFunction(NULL),
+				crashFunction(),
 				timeFunction(NULL),
 				fileRecorder(NULL),
 				fixedBufferRecorder(NULL),
@@ -602,11 +591,17 @@ namespace LLError
 		s.printLocation = print;
 	}
 
-	void setFatalFunction(FatalFunction f)
+	void setFatalFunction(const FatalFunction& f)
 	{
 		Settings& s = Settings::get();
 		s.crashFunction = f;
 	}
+
+    FatalFunction getFatalFunction()
+    {
+        Settings& s = Settings::get();
+        return s.crashFunction;
+    }
 
 	void setTimeFunction(TimeFunction f)
 	{
@@ -787,7 +782,7 @@ namespace LLError
 		addRecorder(f);
 	}
 	
-	void logToFixedBuffer(LLFixedBuffer* fixedBuffer)
+	void logToFixedBuffer(LLLineBuffer* fixedBuffer)
 	{
 		LLError::Settings& s = LLError::Settings::get();
 
@@ -800,7 +795,7 @@ namespace LLError
 			return;
 		}
 		
-		s.fixedBufferRecorder = new RecordToFixedBuffer(*fixedBuffer);
+		s.fixedBufferRecorder = new RecordToFixedBuffer(fixedBuffer);
 		addRecorder(s.fixedBufferRecorder);
 	}
 
@@ -905,7 +900,7 @@ namespace {
 			return;
 		}
 		
-		const int MAX_RETRIES = 10;
+		const int MAX_RETRIES = 5;
 		for (int attempts = 0; attempts < MAX_RETRIES; ++attempts)
 		{
 			apr_status_t s = apr_thread_mutex_trylock(gLogMutexp);
@@ -917,7 +912,9 @@ namespace {
 			}
 
 			ms_sleep(1);
-			apr_thread_yield();
+			//apr_thread_yield();
+				// Just yielding won't necessarily work, I had problems with
+				// this on Linux - doug 12/02/04
 		}
 
 		// We're hosed, we can't get the mutex.  Blah.
@@ -951,7 +948,12 @@ namespace LLError
 		
 		std::string class_name = className(site.mClassInfo);
 		std::string function_name = functionName(site.mFunction);
+#if LL_LINUX
+		// gross, but typeid comparison seems to always fail here with gcc4.1
+		if (0 != strcmp(site.mClassInfo.name(), typeid(NoClassInfo).name()))
+#else
 		if (site.mClassInfo != typeid(NoClassInfo))
+#endif // LL_LINUX
 		{
 			function_name = class_name + "::" + function_name;
 		}
@@ -1076,35 +1078,17 @@ namespace LLError
 	#if LL_WINDOWS
 		// DevStudio: __FUNCTION__ already includes the full class name
 	#else
+                #if LL_LINUX
+		// gross, but typeid comparison seems to always fail here with gcc4.1
+		if (0 != strcmp(site.mClassInfo.name(), typeid(NoClassInfo).name()))
+                #else
 		if (site.mClassInfo != typeid(NoClassInfo))
+                #endif // LL_LINUX
 		{
 			prefix << className(site.mClassInfo) << "::";
 		}
 	#endif
 		prefix << site.mFunction << ": ";
-
-		if (site.mPrintOnce)
-		{
-			std::map<std::string, unsigned int>::iterator messageIter = s.uniqueLogMessages.find(message);
-			if (messageIter != s.uniqueLogMessages.end())
-			{
-				messageIter->second++;
-				unsigned int num_messages = messageIter->second;
-				if (num_messages == 10 || num_messages == 50 || (num_messages % 100) == 0)
-				{
-					prefix << "ONCE (" << num_messages << "th time seen): ";
-				} 
-				else
-				{
-					return;
-				}
-			}
-			else 
-			{
-				prefix << "ONCE: ";
-				s.uniqueLogMessages[message] = 1;
-			}
-		}
 
 		if (site.mPrintOnce)
 		{
@@ -1210,14 +1194,17 @@ namespace LLError
 	void crashAndLoop(const std::string& message)
 	{
 		// Now, we go kaboom!
-		int* crash = NULL;
+		int* make_me_crash = NULL;
 
-		*crash = 0;
+		*make_me_crash = 0;
 
 		while(true)
 		{
 			// Loop forever, in case the crash didn't work?
 		}
+		
+		// this is an attempt to let Coverity and other semantic scanners know that this function won't be returning ever.
+		exit(EXIT_FAILURE);
 	}
 #if LL_WINDOWS
 		#pragma optimize("", on)
@@ -1242,17 +1229,32 @@ namespace LLError
 	char** LLCallStacks::sBuffer = NULL ;
 	S32    LLCallStacks::sIndex  = 0 ;
 
+#define SINGLE_THREADED 1
+
 	class CallStacksLogLock
 	{
 	public:
 		CallStacksLogLock();
 		~CallStacksLogLock();
+
+#if SINGLE_THREADED
+		bool ok() const { return true; }
+#else
 		bool ok() const { return mOK; }
 	private:
 		bool mLocked;
 		bool mOK;
+#endif
 	};
 	
+#if SINGLE_THREADED
+	CallStacksLogLock::CallStacksLogLock()
+	{
+	}
+	CallStacksLogLock::~CallStacksLogLock()
+	{
+	}
+#else
 	CallStacksLogLock::CallStacksLogLock()
 		: mLocked(false), mOK(false)
 	{
@@ -1288,6 +1290,7 @@ namespace LLError
 			apr_thread_mutex_unlock(gCallStacksLogMutexp);
 		}
 	}
+#endif
 
 	//static
    void LLCallStacks::push(const char* function, const int line)

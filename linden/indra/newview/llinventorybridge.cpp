@@ -76,6 +76,7 @@
 #include "lltoolcomp.h"
 #include "lltooldraganddrop.h"
 #include "lltoolmgr.h"
+#include "llviewerassettype.h"
 #include "llviewerimagelist.h"
 #include "llviewerinventory.h"
 #include "llviewerjoystick.h"
@@ -97,6 +98,8 @@
 // [RLVa:KB]
 #include "rlvhandler.h"
 // [/RLVa:KB]
+
+using namespace LLOldEvents;
 
 // Helpers
 // bug in busy count inc/dec right now, logic is complex... do we really need it?
@@ -283,7 +286,7 @@ void LLInvFVBridge::removeBatchNoCheck(LLDynamicArray<LLFolderViewEventListener*
 	LLInventoryModel* model = mInventoryPanel->getModel();
 	if(!model) return;
 	LLMessageSystem* msg = gMessageSystem;
-	LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+	LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 	LLViewerInventoryItem* item = NULL;
 	LLViewerInventoryCategory* cat = NULL;
 	std::vector<LLUUID> move_ids;
@@ -538,7 +541,7 @@ BOOL LLInvFVBridge::startDrag(EDragAndDropType* type, LLUUID* id) const
 
 	if(obj)
 	{
-		*type = LLAssetType::lookupDragAndDropType(obj->getType());
+		*type = LLViewerAssetType::lookupDragAndDropType(obj->getType());
 		if(*type == DAD_NONE)
 		{
 			return FALSE;
@@ -573,7 +576,7 @@ BOOL LLInvFVBridge::isInTrash() const
 {
 	LLInventoryModel* model = mInventoryPanel->getModel();
 	if(!model) return FALSE;
-	LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+	LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 	return model->isObjectDescendentOf(mUUID, trash_id);
 }
 
@@ -747,7 +750,7 @@ LLInvFVBridge* LLInvFVBridge::createBridge(LLAssetType::EType asset_type,
 		break;
 
 	case LLAssetType::AT_CATEGORY:
-	case LLAssetType::AT_ROOT_CATEGORY:
+		// FIXME - handle link folders
 		new_listener = new LLFolderBridge(inventory, uuid);
 		break;
 		
@@ -849,11 +852,11 @@ void LLItemBridge::selectItem()
 
 void LLItemBridge::restoreItem()
 {
-	LLViewerInventoryItem* item = (LLViewerInventoryItem*)getItem();
+	LLViewerInventoryItem* item = static_cast<LLViewerInventoryItem*>(getItem());
 	if(item)
 	{
 		LLInventoryModel* model = mInventoryPanel->getModel();
-		LLUUID new_parent = model->findCategoryUUIDForType(item->getType());
+		LLUUID new_parent = model->findCategoryUUIDForType(LLFolderType::assetTypeToFolderType(item->getType()));
 		// do not restamp on restore.
 		LLInvFVBridge::changeItemParent(model, item, new_parent, FALSE);
 	}
@@ -910,7 +913,7 @@ void LLItemBridge::restoreToWorld()
 
 	// Check if it's in the trash. (again similar to the normal rez logic)
 	LLUUID trash_id;
-	trash_id = gInventory.findCategoryUUIDForType(LLAssetType::AT_TRASH);
+	trash_id = gInventory.findCategoryUUIDForType(LLFolderType::FT_TRASH);
 	if(gInventory.isObjectDescendentOf(itemp->getUUID(), trash_id))
 	{
 		remove_from_inventory = TRUE;
@@ -1061,7 +1064,7 @@ BOOL LLItemBridge::removeItem()
 	LLPreview::hide(mUUID, TRUE);
 	LLInventoryModel* model = mInventoryPanel->getModel();
 	if(!model) return FALSE;
-	LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+	LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 	LLViewerInventoryItem* item = getItem();
 
 	// if item is not already in trash
@@ -1144,7 +1147,7 @@ BOOL LLFolderBridge::isItemMovable()
 	LLInventoryObject* obj = getInventoryObject();
 	if(obj)
 	{
-		return (LLAssetType::AT_NONE == ((LLInventoryCategory*)obj)->getPreferredType());
+		return (LLFolderType::FT_NONE == ((LLInventoryCategory*)obj)->getPreferredType());
 	}
 	return FALSE;
 }
@@ -1180,7 +1183,7 @@ BOOL LLFolderBridge::isItemRemovable()
 		return FALSE;
 	}
 
-	if( LLAssetType::AT_NONE != category->getPreferredType() )
+	if( LLFolderType::FT_NONE != category->getPreferredType() )
 	{
 		return FALSE;
 	}
@@ -1193,7 +1196,7 @@ BOOL LLFolderBridge::isItemRemovable()
 	for( i = 0; i < descendent_categories.count(); i++ )
 	{
 		LLInventoryCategory* category = descendent_categories[i];
-		if( LLAssetType::AT_NONE != category->getPreferredType() )
+		if( LLFolderType::FT_NONE != category->getPreferredType() )
 		{
 			return FALSE;
 		}
@@ -1270,10 +1273,10 @@ BOOL LLFolderBridge::dragCategoryIntoFolder(LLInventoryCategory* inv_cat,
 
 		// Is the destination the trash?
 		LLUUID trash_id;
-		trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+		trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 		BOOL move_is_into_trash = (mUUID == trash_id)
 				|| model->isObjectDescendentOf(mUUID, trash_id);
-		BOOL is_movable = (LLAssetType::AT_NONE == inv_cat->getPreferredType());
+		BOOL is_movable = (LLFolderType::FT_NONE == inv_cat->getPreferredType());
 		if( is_movable )
 		{
 			gInventory.collectDescendents( cat_id, descendent_categories, descendent_items, FALSE );
@@ -1281,7 +1284,7 @@ BOOL LLFolderBridge::dragCategoryIntoFolder(LLInventoryCategory* inv_cat,
 			for( i = 0; i < descendent_categories.count(); i++ )
 			{
 				LLInventoryCategory* category = descendent_categories[i];
-				if( LLAssetType::AT_NONE != category->getPreferredType() )
+				if( LLFolderType::FT_NONE != category->getPreferredType() )
 				{
 					// ...can't move "special folders" like Textures
 					is_movable = FALSE;
@@ -1731,7 +1734,7 @@ void LLFolderBridge::openItem()
 BOOL LLFolderBridge::isItemRenameable() const
 {
 	LLViewerInventoryCategory* cat = (LLViewerInventoryCategory*)getCategory();
-	if(cat && (cat->getPreferredType() == LLAssetType::AT_NONE)
+	if(cat && (cat->getPreferredType() == LLFolderType::FT_NONE)
 	   && (cat->getOwnerID() == gAgent.getID()))
 	{
 		return TRUE;
@@ -1746,7 +1749,7 @@ void LLFolderBridge::restoreItem()
 	if(cat)
 	{
 		LLInventoryModel* model = mInventoryPanel->getModel();
-		LLUUID new_parent = model->findCategoryUUIDForType(cat->getType());
+		LLUUID new_parent = model->findCategoryUUIDForType(LLFolderType::assetTypeToFolderType(cat->getType()));
 		// do not restamp children on restore
 		LLInvFVBridge::changeCategoryParent(model, cat, new_parent, FALSE);
 	}
@@ -1756,7 +1759,7 @@ void LLFolderBridge::restoreItem()
 LLUIImagePtr LLFolderBridge::getIcon() const
 {
 	const char* control = NULL;
-	LLAssetType::EType preferred_type = LLAssetType::AT_NONE;
+	LLFolderType::EType preferred_type = LLFolderType::FT_NONE;
 	LLViewerInventoryCategory* cat = getCategory();
 	if(cat)
 	{
@@ -1764,50 +1767,49 @@ LLUIImagePtr LLFolderBridge::getIcon() const
 	}
 	switch(preferred_type)
 	{
-	case LLAssetType::AT_TEXTURE:
+	case LLFolderType::FT_TEXTURE:
 		control = "inv_folder_texture.tga";
 		break;
-	case LLAssetType::AT_SOUND:
+	case LLFolderType::FT_SOUND:
 		control = "inv_folder_sound.tga";
 		break;
-	case LLAssetType::AT_CALLINGCARD:
+	case LLFolderType::FT_CALLINGCARD:
 		control = "inv_folder_callingcard.tga";
 		break;
-	case LLAssetType::AT_LANDMARK:
+	case LLFolderType::FT_LANDMARK:
 		control = "inv_folder_landmark.tga";
 		break;
-	case LLAssetType::AT_SCRIPT:
-	case LLAssetType::AT_LSL_TEXT:
+	case LLFolderType::FT_LSL_TEXT:
 		control = "inv_folder_script.tga";
 		break;
-	case LLAssetType::AT_OBJECT:
+	case LLFolderType::FT_OBJECT:
 		control = "inv_folder_object.tga";
 		break;
-	case LLAssetType::AT_NOTECARD:
+	case LLFolderType::FT_NOTECARD:
 		control = "inv_folder_notecard.tga";
 		break;
-	case LLAssetType::AT_CATEGORY:
+	case LLFolderType::FT_ROOT_INVENTORY:
 		control = "inv_folder_plain_closed.tga";
 		break;
-	case LLAssetType::AT_CLOTHING:
+	case LLFolderType::FT_CLOTHING:
 		control = "inv_folder_clothing.tga";
 		break;
-	case LLAssetType::AT_BODYPART:
+	case LLFolderType::FT_BODYPART:
 		control = "inv_folder_bodypart.tga";
 		break;
-	case LLAssetType::AT_TRASH:
+	case LLFolderType::FT_TRASH:
 		control = "inv_folder_trash.tga";
 		break;
-	case LLAssetType::AT_SNAPSHOT_CATEGORY:
+	case LLFolderType::FT_SNAPSHOT_CATEGORY:
 		control = "inv_folder_snapshot.tga";
 		break;
-	case LLAssetType::AT_LOST_AND_FOUND:
+	case LLFolderType::FT_LOST_AND_FOUND:
 		control = "inv_folder_lostandfound.tga";
 		break;
-	case LLAssetType::AT_ANIMATION:
+	case LLFolderType::FT_ANIMATION:
 		control = "inv_folder_animation.tga";
 		break;
-	case LLAssetType::AT_GESTURE:
+	case LLFolderType::FT_GESTURE:
 		control = "inv_folder_gesture.tga";
 		break;
 	default:
@@ -1848,7 +1850,7 @@ BOOL LLFolderBridge::removeItem()
 	if(!model) return FALSE;
 
 	LLUUID trash_id;
-	trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+	trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 
 	// Look for any gestures and deactivate them
 	LLInventoryModel::cat_array_t	descendent_categories;
@@ -1959,7 +1961,7 @@ void LLFolderBridge::folderOptionsMenu()
 
 	const LLInventoryCategory* category = model->getCategory(mUUID);
 	bool is_default_folder = category &&
-		(LLAssetType::AT_NONE != category->getPreferredType());
+		(LLFolderType::FT_NONE != category->getPreferredType());
 	
 	// calling card related functionality for folders.
 
@@ -2019,8 +2021,8 @@ void LLFolderBridge::buildContextMenu(LLMenuGL& menu, U32 flags)
 //	std::vector<std::string> disabled_items;
 	LLInventoryModel* model = mInventoryPanel->getModel();
 	if(!model) return;
-	LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
-	LLUUID lost_and_found_id = model->findCategoryUUIDForType(LLAssetType::AT_LOST_AND_FOUND);
+	LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
+	LLUUID lost_and_found_id = model->findCategoryUUIDForType(LLFolderType::FT_LOST_AND_FOUND);
 
 // [RLVa:KB] - Checked: 2009-07-10 (RLVa-1.0.0g)
 	// Fixes LL bug
@@ -2205,7 +2207,7 @@ void LLFolderBridge::createNewCategory(void* user_data)
 	if(!model) return;
 	LLUUID id;
 	id = model->createNewCategory(bridge->getUUID(),
-								  LLAssetType::AT_NONE,
+								  LLFolderType::FT_NONE,
 								  LLStringUtil::null);
 	model->notifyObservers();
 
@@ -2386,18 +2388,14 @@ BOOL LLFolderBridge::dragItemIntoFolder(LLInventoryItem* inv_item,
 		BOOL is_movable = TRUE;
 		switch( inv_item->getType() )
 		{
-		case LLAssetType::AT_ROOT_CATEGORY:
-			is_movable = FALSE;
-			break;
-
 		case LLAssetType::AT_CATEGORY:
-			is_movable = ( LLAssetType::AT_NONE == ((LLInventoryCategory*)inv_item)->getPreferredType() );
+			is_movable = !LLFolderType::lookupIsProtectedType( ((LLInventoryCategory*)inv_item)->getPreferredType() );
 			break;
 		default:
 			break;
 		}
 
-		LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+		LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 		BOOL move_is_into_trash = (mUUID == trash_id) || model->isObjectDescendentOf(mUUID, trash_id);
 		if(is_movable && move_is_into_trash)
 		{
@@ -4122,11 +4120,11 @@ void LLOutfitObserver::done()
 			{
 				if(LLInventoryType::IT_GESTURE == item->getInventoryType())
 				{
-					pid = gInventory.findCategoryUUIDForType(LLAssetType::AT_GESTURE);
+					pid = gInventory.findCategoryUUIDForType(LLFolderType::FT_GESTURE);
 				}
 				else
 				{
-					pid = gInventory.findCategoryUUIDForType(LLAssetType::AT_CLOTHING);
+					pid = gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 				}
 				break;
 			}
@@ -4138,7 +4136,7 @@ void LLOutfitObserver::done()
 		
 		LLUUID cat_id = gInventory.createNewCategory(
 			pid,
-			LLAssetType::AT_NONE,
+			LLFolderType::FT_NONE,
 			name);
 		mCatID = cat_id;
 		LLPointer<LLInventoryCallback> cb = new LLWearInventoryCategoryCallback(mCatID, mAppend);

@@ -104,41 +104,6 @@ struct mtv_display_info {
 
 static const LLColor4 red0(0.5f, 0.0f, 0.0f, 1.0f);
 
-static const struct mtv_display_info mtv_display_table[] =
-{
-	{ LLMemType::MTYPE_INIT,			"Init", 			&LLColor4::white },
-	{ LLMemType::MTYPE_STARTUP,			"Startup", 			&LLColor4::cyan1 },
-	{ LLMemType::MTYPE_MAIN,			"Main", 			&LLColor4::cyan2 },
-	{ LLMemType::MTYPE_IMAGEBASE,		"ImageBase",		&LLColor4::yellow1 },
-	{ LLMemType::MTYPE_IMAGERAW,		"ImageRaw", 		&LLColor4::yellow2 },
-	{ LLMemType::MTYPE_IMAGEFORMATTED,	"ImageFmtd",		&LLColor4::yellow3 },
-	{ LLMemType::MTYPE_APPFMTIMAGE,		"ViewerImageFmt",	&LLColor4::orange1 },
-	{ LLMemType::MTYPE_APPRAWIMAGE,		"ViewerImageRaw",	&LLColor4::orange2 },
-	{ LLMemType::MTYPE_APPAUXRAWIMAGE,	"ViewerImageAux",	&LLColor4::orange3 },
-	{ LLMemType::MTYPE_DRAWABLE,		"Drawable", 		&LLColor4::green1 },
-	{ LLMemType::MTYPE_OBJECT,			"ViewerObject",		&LLColor4::green2 },
-	{ LLMemType::MTYPE_PIPELINE,		"Pipeline",			&LLColor4::green3 },
-	{ LLMemType::MTYPE_PARTICLES,		"Particles",		&LLColor4::green4 },
-	{ LLMemType::MTYPE_SPACE_PARTITION,	"Space Partition",	&LLColor4::blue2 },
-	{ LLMemType::MTYPE_VERTEX_DATA,		"Vertex Buffer",	&LLColor4::blue3 },
-	{ LLMemType::MTYPE_AVATAR,			"Avatar",			&LLColor4::purple1 },
-	{ LLMemType::MTYPE_AVATAR_MESH,		"Avatar Mesh",		&LLColor4::purple2 },
-	{ LLMemType::MTYPE_ANIMATION,		"Animation",		&LLColor4::purple3 },
-	{ LLMemType::MTYPE_REGIONS,			"Regions",			&LLColor4::blue1 },
-	{ LLMemType::MTYPE_VOLUME,			"Volume",			&LLColor4::pink1 },
-	{ LLMemType::MTYPE_PRIMITIVE,		"Profile",			&LLColor4::pink2 },
- 	{ LLMemType::MTYPE_TEMP1,			"Temp1",			&LLColor4::red1 },
- 	{ LLMemType::MTYPE_TEMP2,			"Temp2",			&LLColor4::magenta1 },
- 	{ LLMemType::MTYPE_TEMP3,			"Temp3",			&LLColor4::red2 },
- 	{ LLMemType::MTYPE_TEMP4,			"Temp4",			&LLColor4::magenta2 },
- 	{ LLMemType::MTYPE_TEMP5,			"Temp5",			&LLColor4::red3 },
- 	{ LLMemType::MTYPE_TEMP6,			"Temp6",			&LLColor4::magenta3 },
- 	{ LLMemType::MTYPE_TEMP7,			"Temp7",			&LLColor4::red4 },
- 	{ LLMemType::MTYPE_TEMP8,			"Temp8",			&LLColor4::magenta4 },
-
- 	{ LLMemType::MTYPE_OTHER,			"Other",			&red0 },
-};
-static const int MTV_DISPLAY_NUM  = LL_ARRAY_SIZE(mtv_display_table);
 
 void LLMemoryView::draw()
 {
@@ -275,32 +240,4 @@ void LLMemoryView::setDataDumpInterval(float delay)
 
 void LLMemoryView::dumpData()
 {
-#if MEM_TRACK_TYPE && MEM_DUMP_DATA
-	if (mDelay && (mDumpTimer.getElapsedTimeF32() > mDelay ))
-	{
-		// reset timer
-		mDumpTimer.reset();
-		// append dump info to text file
-		LLFILE *dump = LLFile::fopen("memusagedump.txt", "a");
-
-		if (dump)
-		{
-			// write out total memory usage
-			fprintf (dump, "Total memory in use = %09d (%03d MB)\n", LLMemType::sTotalMem, LLMemType::sTotalMem>>20);
-			fprintf (dump, "High Water Mark = %09d (%03d MB)\n\n", LLMemType::sMaxTotalMem, LLMemType::sMaxTotalMem>>20);
-			// dump out usage of 'new' for each memory type
-			for (S32 i=0; i<LLMemType::MTYPE_NUM_TYPES; i++)
-			{
-				if (LLMemType::sMemCount[i])
-				{
-					std::string outData = llformat("MEM: % 20s %09d %03d MB (%09d %03d MB) in %06d News", LLMemType::sTypeDesc[i], LLMemType::sMemCount[i], LLMemType::sMemCount[i]>>20, LLMemType::sMaxMemCount[i], LLMemType::sMaxMemCount[i]>>20, LLMemType::sNewCount[i]);
-					fprintf (dump, "%s\n", outData.c_str());
-				}
-			}
-			fprintf (dump, "\n\n");
-
-			fclose(dump);
-		}
-	}
-#endif
 }

@@ -38,6 +38,7 @@
 #include "lluuid.h"
 #include "llmemory.h"
 #include "llviewerimage.h"
+#include "llsafehandle.h"
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Class LLFloaterAuction

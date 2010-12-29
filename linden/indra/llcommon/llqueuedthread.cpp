@@ -1,38 +1,33 @@
 /** 
  * @file llqueuedthread.cpp
  *
- * $LicenseInfo:firstyear=2004&license=viewergpl$
- * 
- * Copyright (c) 2004-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2004&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
 #include "linden_common.h"
 #include "llqueuedthread.h"
+
 #include "llstl.h"
-#include "lltimer.h"
+#include "lltimer.h"	// ms_sleep()
 
 //============================================================================
 
@@ -41,7 +36,8 @@ LLQueuedThread::LLQueuedThread(const std::string& name, bool threaded) :
 	LLThread(name),
 	mThreaded(threaded),
 	mIdleThread(TRUE),
-	mNextHandle(0)
+	mNextHandle(0),
+	mStarted(FALSE)
 {
 	if (mThreaded)
 	{
@@ -52,6 +48,10 @@ LLQueuedThread::LLQueuedThread(const std::string& name, bool threaded) :
 // MAIN THREAD
 LLQueuedThread::~LLQueuedThread()
 {
+	if (!mThreaded)
+	{
+		endThread();
+	}
 	shutdown();
 	// ~LLThread() will be called here
 }
@@ -90,6 +90,7 @@ void LLQueuedThread::shutdown()
 		if (req->getStatus() == STATUS_QUEUED || req->getStatus() == STATUS_INPROGRESS)
 		{
 			++active_count;
+			req->setStatus(STATUS_ABORTED); // avoid assert in deleteRequest
 		}
 		req->deleteRequest();
 	}
@@ -105,6 +106,14 @@ void LLQueuedThread::shutdown()
 // virtual
 S32 LLQueuedThread::update(U32 max_time_ms)
 {
+	if (!mStarted)
+	{
+		if (!mThreaded)
+		{
+			startThread();
+			mStarted = TRUE;
+		}
+	}
 	return updateQueue(max_time_ms);
 }
 
@@ -118,7 +127,10 @@ S32 LLQueuedThread::updateQueue(U32 max_time_ms)
 	if (mThreaded)
 	{
 		pending = getPending();
+		if(pending > 0)
+		{
 		unpause();
+	}
 	}
 	else
 	{
@@ -349,9 +361,9 @@ bool LLQueuedThread::completeRequest(handle_t handle)
 #if _DEBUG
 // 		llinfos << llformat("LLQueuedThread::Completed req [%08d]",handle) << llendl;
 #endif
-		//re insert to the queue to schedule for a delete later
-		req->setStatus(STATUS_DELETE);
-		mRequestQueue.insert(req);
+		mRequestHash.erase(handle);
+		req->deleteRequest();
+// 		check();
 		res = true;
 	}
 	unlockData();
@@ -395,19 +407,11 @@ S32 LLQueuedThread::processNextRequest()
 		}
 		req = *mRequestQueue.begin();
 		mRequestQueue.erase(mRequestQueue.begin());
-
-		if(req->getStatus() == STATUS_DELETE)
-		{
-				mRequestHash.erase(req);
-				req->deleteRequest();
-				continue;
-		}
-
 		if ((req->getFlags() & FLAG_ABORT) || (mStatus == QUITTING))
 		{
 			req->setStatus(STATUS_ABORTED);
 			req->finishRequest(false);
-			if ((req->getFlags() & FLAG_AUTO_COMPLETE))
+			if (req->getFlags() & FLAG_AUTO_COMPLETE)
 			{
 				mRequestHash.erase(req);
 				req->deleteRequest();
@@ -418,9 +422,11 @@ S32 LLQueuedThread::processNextRequest()
 		llassert_always(req->getStatus() == STATUS_QUEUED);
 		break;
 	}
+	U32 start_priority = 0 ;
 	if (req)
 	{
 		req->setStatus(STATUS_INPROGRESS);
+		start_priority = req->getPriority();
 	}
 	unlockData();
 
@@ -429,33 +435,29 @@ S32 LLQueuedThread::processNextRequest()
 	// safe to access req.
 	if (req)
 	{
-		// process request
+		// process request		
 		bool complete = req->processRequest();
 
 		if (complete)
 		{
 			lockData();
 			req->setStatus(STATUS_COMPLETE);
-			unlockData();
-
 			req->finishRequest(true);
-
-			if ((req->getFlags() & FLAG_AUTO_COMPLETE))
+			if (req->getFlags() & FLAG_AUTO_COMPLETE)
 			{
-				lockData();
 				mRequestHash.erase(req);
 				req->deleteRequest();
-				unlockData();
+// 				check();
 			}
+			unlockData();
 		}
 		else
 		{
 			lockData();
 			req->setStatus(STATUS_QUEUED);
 			mRequestQueue.insert(req);
-			U32 priority = req->getPriority();
 			unlockData();
-			if (priority < PRIORITY_NORMAL)
+			if (mThreaded && start_priority < PRIORITY_NORMAL)
 			{
 				ms_sleep(1); // sleep the thread a little
 			}
@@ -483,20 +485,21 @@ void LLQueuedThread::run()
 	// call checPause() immediately so we don't try to do anything before the class is fully constructed
 	checkPause();
 	startThread();
+	mStarted = TRUE;
 	
 	while (1)
 	{
 		// this will block on the condition until runCondition() returns true, the thread is unpaused, or the thread leaves the RUNNING state.
 		checkPause();
 		
-		if(isQuitting())
+		if (isQuitting())
 		{
 			endThread();
 			break;
 		}
 
 		mIdleThread = FALSE;
-		
+
 		threadedUpdate();
 		
 		int res = processNextRequest();
@@ -508,17 +511,17 @@ void LLQueuedThread::run()
 		//LLThread::yield(); // thread should yield after each request		
 	}
 	llinfos << "LLQueuedThread " << mName << " EXITING." << llendl;
-		}
-		
+}
+
 // virtual
 void LLQueuedThread::startThread()
-		{
-		}
+{
+}
 
 // virtual
 void LLQueuedThread::endThread()
 {
-	}
+}
 
 // virtual
 void LLQueuedThread::threadedUpdate()

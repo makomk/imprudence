@@ -9,6 +9,7 @@
 #include "llinventoryview.h"
 #include "llinventorymodel.h"
 #include "llviewerimagelist.h"
+#include "llviewerassettype.h"
 #include "llbutton.h"
 #include "lltextbox.h"
 #include "llpreview.h"
@@ -184,7 +185,7 @@ BOOL LLFloaterAssetBrowser::handleHover(S32 x, S32 y, MASK mask)
     						&& LLToolDragAndDrop::getInstance()->isOverThreshold(screen_x, screen_y))
 					    {
     						EDragAndDropType type;
-						    type = LLAssetType::lookupDragAndDropType(item->getType());
+						    type = LLViewerAssetType::lookupDragAndDropType(item->getType());
 						    LLToolDragAndDrop::ESource src = LLToolDragAndDrop::SOURCE_LIBRARY;
     						
 						    if(!mObjectUUID.isNull())

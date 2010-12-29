@@ -77,6 +77,8 @@
 #include "rlvhandler.h"
 // [/RLVa:KB]
 
+using namespace LLOldEvents;
+
 const F32 MAP_SCALE_MIN = 32;
 const F32 MAP_SCALE_MID = 1024;
 //const F32 MAP_SCALE_MAX = 4096; Now uses the max height value from hippo limits

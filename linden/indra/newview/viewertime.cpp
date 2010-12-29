@@ -55,6 +55,34 @@ std::vector<std::string> ViewerTime::sDays;
 std::vector<std::string> ViewerTime::sMonths;
 const U32 ViewerTime::MAX_DATE_STRING_LENGTH = 2000;
 
+static struct tm* utc_to_offset_time(time_t utc_time, S32 offset, BOOL DST)
+{
+	if (DST)
+	{
+		//Subtract one then
+		offset--;
+	}
+
+	// We subtract off the PST/PDT offset _before_ getting
+	// "UTC" time, because this will handle wrapping around
+	// for 5 AM UTC -> 10 PM PDT of the previous day.
+	utc_time -= offset * MIN_PER_HOUR * SEC_PER_MIN;
+
+	// Internal buffer to PST/PDT (see above)
+	struct tm* internal_time = gmtime(&utc_time);
+
+	/*
+	// Don't do this, this won't correctly tell you if daylight savings is active in CA or not.
+	if (pacific_daylight_time)
+	{
+		internal_time->tm_isdst = 1;
+	}
+	*/
+
+	return internal_time;
+}
+
+
 ViewerTime::ViewerTime() :
 	mHour(0),
 	mMinute(0),

@@ -860,7 +860,7 @@ bool LLAppViewer::init()
 			minSpecs += "\n";
 			unsupported = true;
 		}
-		if(gSysCPU.getMhz() < minCPU)
+		if(gSysCPU.getMHz() < minCPU)
 		{
 			minSpecs += LLNotifications::instance().getGlobalString("UnsupportedCPU");
 			minSpecs += "\n";
@@ -910,6 +910,16 @@ bool LLAppViewer::init()
 	return true;
 }
 
+static LLFastTimer::DeclareTimer FTM_MESSAGES("System Messages");
+static LLFastTimer::DeclareTimer FTM_SLEEP("Sleep");
+//static LLFastTimer::DeclareTimer FTM_TEXTURE_CACHE("Texture Cache");
+static LLFastTimer::DeclareTimer FTM_DECODE("Image Decode");
+static LLFastTimer::DeclareTimer FTM_VFS("VFS Thread");
+static LLFastTimer::DeclareTimer FTM_LFS("LFS Thread");
+static LLFastTimer::DeclareTimer FTM_PAUSE_THREADS("Pause Threads");
+static LLFastTimer::DeclareTimer FTM_IDLE("Idle");
+static LLFastTimer::DeclareTimer FTM_PUMP("Pump");
+
 bool LLAppViewer::mainLoop()
 {
 	mMainloopTimeout = new LLWatchdogTimeout();
@@ -938,21 +948,20 @@ bool LLAppViewer::mainLoop()
 	// Handle messages
 	while (!LLApp::isExiting())
 	{
-		LLFastTimer::reset(); // Should be outside of any timer instances
+		LLFastTimer::nextFrame(); // Should be outside of any timer instances
 		try
 		{
-			LLFastTimer t(LLFastTimer::FTM_FRAME);
 			pingMainloopTimeout("Main:MiscNativeWindowEvents");
 			
 			{
-				LLFastTimer t2(LLFastTimer::FTM_MESSAGES);
+				LLFastTimer t2(FTM_MESSAGES);
 				gViewerWindow->mWindow->processMiscNativeEvents();
 			}
 			
 			pingMainloopTimeout("Main:GatherInput");
 			
 			{
-				LLFastTimer t2(LLFastTimer::FTM_MESSAGES);
+				LLFastTimer t2(FTM_MESSAGES);
 				if (!restoreErrorTrap())
 				{
 					llwarns << " Someone took over my signal/exception handler (post messagehandling)!" << llendl;
@@ -997,13 +1006,13 @@ bool LLAppViewer::mainLoop()
 				{
 					pauseMainloopTimeout(); // *TODO: Remove. Messages shouldn't be stalling for 20+ seconds!
 					
-					LLFastTimer t3(LLFastTimer::FTM_IDLE);
+					LLFastTimer t3(FTM_IDLE);
 					idle();
 
 					if (gAres != NULL && gAres->isInitialized())
 					{
 						pingMainloopTimeout("Main:ServicePump");				
-						LLFastTimer t4(LLFastTimer::FTM_PUMP);
+						LLFastTimer t4(FTM_PUMP);
 						gAres->process();
 						// this pump is necessary to make the login screen show up
 						gServicePump->pump();
@@ -1045,7 +1054,7 @@ bool LLAppViewer::mainLoop()
 
 			// Sleep and run background threads
 			{
-				LLFastTimer t2(LLFastTimer::FTM_SLEEP);
+				LLFastTimer t2(FTM_SLEEP);
 				bool run_multiple_threads = gSavedSettings.getBOOL("RunMultipleThreads");
 
 				// yield some time to the os based on command line option
@@ -2450,7 +2459,7 @@ void LLAppViewer::writeSystemInfo()
 
 	gDebugInfo["CPUInfo"]["CPUString"] = gSysCPU.getCPUString();
 	gDebugInfo["CPUInfo"]["CPUFamily"] = gSysCPU.getFamily();
-	gDebugInfo["CPUInfo"]["CPUMhz"] = gSysCPU.getMhz();
+	gDebugInfo["CPUInfo"]["CPUMhz"] = gSysCPU.getMHz();
 	gDebugInfo["CPUInfo"]["CPUAltivec"] = gSysCPU.hasAltivec();
 	gDebugInfo["CPUInfo"]["CPUSSE"] = gSysCPU.hasSSE();
 	gDebugInfo["CPUInfo"]["CPUSSE2"] = gSysCPU.hasSSE2();
@@ -2557,7 +2566,7 @@ void LLAppViewer::handleViewerCrash()
 	gDebugInfo["CurrentPath"] = gDirUtilp->getCurPath();
 	gDebugInfo["SessionLength"] = F32(LLFrameTimer::getElapsedSeconds());
 //FIXME	gDebugInfo["StartupState"] = LLStartUp::getStartupStateString();
-	gDebugInfo["RAMInfo"]["Allocated"] = (LLSD::Integer) getCurrentRSS() >> 10;
+	gDebugInfo["RAMInfo"]["Allocated"] = (LLSD::Integer) LLMemory::getCurrentRSS() >> 10;
 	gDebugInfo["FirstLogin"] = (LLSD::Boolean) gAgent.isFirstLogin();
 	gDebugInfo["FirstRunThisInstall"] = gSavedSettings.getBOOL("FirstRunThisInstall");
 
@@ -2601,7 +2610,7 @@ void LLAppViewer::handleViewerCrash()
 		llinfos << "Creating crash marker file " << crash_file_name << llendl;
 		
 		LLAPRFile crash_file ;
-		crash_file.open(crash_file_name, LL_APR_W, LLAPRFile::local);
+		crash_file.open(crash_file_name, LL_APR_W);
 		if (crash_file.getFileHandle())
 		{
 			LL_INFOS("MarkerFile") << "Created crash marker file " << crash_file_name << LL_ENDL;
@@ -2669,11 +2678,11 @@ bool LLAppViewer::anotherInstanceRunning()
 	LL_DEBUGS("MarkerFile") << "Checking marker file for lock..." << LL_ENDL;
 
 	//Freeze case checks
-	if (LLAPRFile::isExist(marker_file, LL_APR_RB))
+	if (LLAPRFile::isExist(marker_file, NULL, LL_APR_RB))
 	{
 		// File exists, try opening with write permissions
 		LLAPRFile outfile ;
-		outfile.open(marker_file, LL_APR_WB, LLAPRFile::global);
+		outfile.open(marker_file, LL_APR_WB);
 		apr_file_t* fMarker = outfile.getFileHandle() ; 
 		if (!fMarker)
 		{
@@ -2712,25 +2721,25 @@ void LLAppViewer::initMarkerFile()
 	std::string llerror_marker_file = gDirUtilp->getExpandedFilename(LL_PATH_LOGS, LLERROR_MARKER_FILE_NAME);
 	std::string error_marker_file = gDirUtilp->getExpandedFilename(LL_PATH_LOGS, ERROR_MARKER_FILE_NAME);
 
-	if (LLAPRFile::isExist(mMarkerFileName, LL_APR_RB) && !anotherInstanceRunning())
+	if (LLAPRFile::isExist(mMarkerFileName, NULL, LL_APR_RB) && !anotherInstanceRunning())
 	{
 		gLastExecEvent = LAST_EXEC_FROZE;
 		LL_INFOS("MarkerFile") << "Exec marker found: program froze on previous execution" << LL_ENDL;
 	}    
-	if(LLAPRFile::isExist(logout_marker_file, LL_APR_RB))
+	if(LLAPRFile::isExist(logout_marker_file, NULL, LL_APR_RB))
 	{
 		gLastExecEvent = LAST_EXEC_LOGOUT_FROZE;
 		LL_INFOS("MarkerFile") << "Last exec LLError crashed, setting LastExecEvent to " << gLastExecEvent << LL_ENDL;
 		LLAPRFile::remove(logout_marker_file);
 	}
-	if(LLAPRFile::isExist(llerror_marker_file, LL_APR_RB))
+	if(LLAPRFile::isExist(llerror_marker_file, NULL, LL_APR_RB))
 	{
 		if(gLastExecEvent == LAST_EXEC_LOGOUT_FROZE) gLastExecEvent = LAST_EXEC_LOGOUT_CRASH;
 		else gLastExecEvent = LAST_EXEC_LLERROR_CRASH;
 		LL_INFOS("MarkerFile") << "Last exec LLError crashed, setting LastExecEvent to " << gLastExecEvent << LL_ENDL;
 		LLAPRFile::remove(llerror_marker_file);
 	}
-	if(LLAPRFile::isExist(error_marker_file, LL_APR_RB))
+	if(LLAPRFile::isExist(error_marker_file, NULL, LL_APR_RB))
 	{
 		if(gLastExecEvent == LAST_EXEC_LOGOUT_FROZE) gLastExecEvent = LAST_EXEC_LOGOUT_CRASH;
 		else gLastExecEvent = LAST_EXEC_OTHER_CRASH;
@@ -2746,7 +2755,7 @@ void LLAppViewer::initMarkerFile()
 	
 	// Create the marker file for this execution & lock it
 	apr_status_t s;
-	s = mMarkerFile.open(mMarkerFileName, LL_APR_W, LLAPRFile::global);
+	s = mMarkerFile.open(mMarkerFileName, LL_APR_W);
 
 	if (s == APR_SUCCESS && mMarkerFile.getFileHandle())
 	{
@@ -3345,6 +3354,16 @@ public:
 		}
 };
 
+static LLFastTimer::DeclareTimer FTM_AUDIO_UPDATE("Update Audio");
+static LLFastTimer::DeclareTimer FTM_CLEANUP("Cleanup");
+//static LLFastTimer::DeclareTimer FTM_IDLE_CB("Idle Callbacks");
+static LLFastTimer::DeclareTimer FTM_LOD_UPDATE("Update LOD");
+static LLFastTimer::DeclareTimer FTM_OBJECTLIST_UPDATE("Update Objectlis");
+static LLFastTimer::DeclareTimer FTM_REGION_UPDATE("Update Region");
+static LLFastTimer::DeclareTimer FTM_WORLD_UPDATE("Update World");
+static LLFastTimer::DeclareTimer FTM_NETWORK("Network");
+
+
 ///////////////////////////////////////////////////////
 // idle()
 //
@@ -3419,7 +3438,7 @@ void LLAppViewer::idle()
 
 	if (!gDisconnected)
 	{
-		LLFastTimer t(LLFastTimer::FTM_NETWORK);
+		LLFastTimer t(FTM_NETWORK);
 		// Update spaceserver timeinfo
 	    LLWorld::getInstance()->setSpaceTimeUSec(LLWorld::getInstance()->getSpaceTimeUSec() + (U32)(dt_raw * SEC_TO_MICROSEC));
     
@@ -3508,7 +3527,7 @@ void LLAppViewer::idle()
 	
 	if (!gDisconnected)
 	{
-		LLFastTimer t(LLFastTimer::FTM_NETWORK);
+		LLFastTimer t(FTM_NETWORK);
 	
 	    ////////////////////////////////////////////////
 	    //
@@ -3542,7 +3561,7 @@ void LLAppViewer::idle()
 	//
 
 	{
-// 		LLFastTimer t(LLFastTimer::FTM_IDLE_CB);
+// 		LLFastTimer t(FTM_IDLE_CB);
 
 		// Do event notifications if necessary.  Yes, we may want to move this elsewhere.
 		gEventNotifier.update();
@@ -3577,7 +3596,7 @@ void LLAppViewer::idle()
 	}
 
 	{
-		LLFastTimer t(LLFastTimer::FTM_OBJECTLIST_UPDATE); // Actually "object update"
+		LLFastTimer t(FTM_OBJECTLIST_UPDATE); // Actually "object update"
 		gFrameStats.start(LLFrameStats::OBJECT_UPDATE);
 		
         if (!(logoutRequestSent() && hasSavedFinalSnapshot()))
@@ -3593,7 +3612,7 @@ void LLAppViewer::idle()
 	//
 
 	{
-		LLFastTimer t(LLFastTimer::FTM_CLEANUP);
+		LLFastTimer t(FTM_CLEANUP);
 		gFrameStats.start(LLFrameStats::CLEAN_DEAD);
 		gObjectList.cleanDeadObjects();
 		LLDrawable::cleanupDeadDrawables();
@@ -3627,7 +3646,7 @@ void LLAppViewer::idle()
 	//
 
 	{
-		LLFastTimer t(LLFastTimer::FTM_NETWORK);
+		LLFastTimer t(FTM_NETWORK);
 		gVLManager.unpackData();
 	}
 	
@@ -3639,7 +3658,7 @@ void LLAppViewer::idle()
 	LLWorld::getInstance()->updateVisibilities();
 	{
 		const F32 max_region_update_time = .001f; // 1ms
-		LLFastTimer t(LLFastTimer::FTM_REGION_UPDATE);
+		LLFastTimer t(FTM_REGION_UPDATE);
 		LLWorld::getInstance()->updateRegions(max_region_update_time);
 	}
 	
@@ -3686,7 +3705,7 @@ void LLAppViewer::idle()
 	
 	if (!gNoRender)
 	{
-		LLFastTimer t(LLFastTimer::FTM_WORLD_UPDATE);
+		LLFastTimer t(FTM_WORLD_UPDATE);
 		gFrameStats.start(LLFrameStats::UPDATE_MOVE);
 		gPipeline.updateMove();
 
@@ -3714,13 +3733,13 @@ void LLAppViewer::idle()
 
 	// objects and camera should be in sync, do LOD calculations now
 	{
-		LLFastTimer t(LLFastTimer::FTM_LOD_UPDATE);
+		LLFastTimer t(FTM_LOD_UPDATE);
 		gObjectList.updateApparentAngles(gAgent);
 	}
 
 	{
 		gFrameStats.start(LLFrameStats::AUDIO);
-		LLFastTimer t(LLFastTimer::FTM_AUDIO_UPDATE);
+		LLFastTimer t(FTM_AUDIO_UPDATE);
 		
 		if (gAudiop)
 		{
@@ -3881,7 +3900,7 @@ void LLAppViewer::sendLogoutRequest()
 		mLogoutMarkerFileName = gDirUtilp->getExpandedFilename(LL_PATH_LOGS,LOGOUT_MARKER_FILE_NAME);
 		
 		LLAPRFile outfile ;
-		outfile.open(mLogoutMarkerFileName, LL_APR_W, LLAPRFile::global);
+		outfile.open(mLogoutMarkerFileName, LL_APR_W);
 		mLogoutMarkerFile =  outfile.getFileHandle() ;
 		if (mLogoutMarkerFile)
 		{
@@ -3906,6 +3925,8 @@ void LLAppViewer::sendLogoutRequest()
 static F32 CheckMessagesMaxTime = CHECK_MESSAGES_DEFAULT_MAX_TIME;
 #endif
 
+static LLFastTimer::DeclareTimer FTM_IDLE_NETWORK("Idle Network");
+
 void LLAppViewer::idleNetwork()
 {
 	if (gDisconnected)
@@ -3920,7 +3941,7 @@ void LLAppViewer::idleNetwork()
 
 	if (!gSavedSettings.getBOOL("SpeedTest"))
 	{
-		LLFastTimer t(LLFastTimer::FTM_IDLE_NETWORK); // decode
+		LLFastTimer t(FTM_IDLE_NETWORK); // decode
 		
 		// deal with any queued name requests and replies.
 		gCacheName->processPending();

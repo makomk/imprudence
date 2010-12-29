@@ -1,10 +1,10 @@
 /** 
- * @file llindraconfigfile.h
- * @brief manages  configuration file for indra.xml
+ * @file llviewerassettype.h
+ * @brief Declaration of LLViewerViewerAssetType.
  *
- * $LicenseInfo:firstyear=2007&license=viewergpl$
+ * $LicenseInfo:firstyear=2001&license=viewergpl$
  * 
- * Copyright (c) 2007-2009, Linden Research, Inc.
+ * Copyright (c) 2001-2009, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,32 +30,25 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLINDRACONFIGFILE_H
-#define LL_LLINDRACONFIGFILE_H
+#ifndef LL_LLVIEWERASSETTYPE_H
+#define LL_LLVIEWERASSETTYPE_H
 
 #include <string>
-#include "linden_common.h"
+#include "llassettype.h"
 
-#include "lllivefile.h"
-#include "llsd.h"
-
-
-// To use, call LLIndraConfigFile::initClass(config_dir);
-// Then whenever getConfig is called, it will check and reload automatically
-
-class LLIndraConfigFile : public LLLiveFile
+// This class is similar to llassettype, but contains methods
+// only used by the viewer.
+class LLViewerAssetType : public LLAssetType
 {
 public:
-	LLIndraConfigFile();
-	static void initClass(const std::string& config_dir);
-    static LLSD getConfig(const std::string& config_name);
-
-private:
-    static std::string filename();
-
+	// Generate a good default description. You may want to add a verb
+	// or agent name after this depending on your application.
+	static void 				generateDescriptionFor(LLViewerAssetType::EType asset_type,
+													   std::string& description);
+	static EDragAndDropType   	lookupDragAndDropType(EType asset_type);
 protected:
-	/* virtual */ void loadFile();
-	LLSD mConfig;
+	LLViewerAssetType() {}
+	~LLViewerAssetType() {}
 };
 
-#endif //LL_LLINDRACONFIGFILE_H
+#endif // LL_LLVIEWERASSETTYPE_H

@@ -2,31 +2,25 @@
  * @file llstring.h
  * @brief String utility functions and std::string class.
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -35,8 +29,10 @@
 
 #include <string>
 #include <cstdio>
-#include <algorithm>
-#include <map>
+#include <locale>
+#include <iomanip>
+#include "llsd.h"
+#include "llfasttimer.h"
 
 #if LL_LINUX || LL_SOLARIS
 #include <wctype.h>
@@ -148,7 +144,23 @@ struct char_traits<U16>
 
 class LL_COMMON_API LLStringOps
 {
+private:
+	static long sPacificTimeOffset;
+	static long sLocalTimeOffset;
+	static bool sPacificDaylightTime;
+
+	static std::map<std::string, std::string> datetimeToCodes;
+
 public:
+	static std::vector<std::string> sWeekDayList;
+	static std::vector<std::string> sWeekDayShortList;
+	static std::vector<std::string> sMonthList;
+	static std::vector<std::string> sMonthShortList;
+	static std::string sDayFormat;
+
+	static std::string sAM;
+	static std::string sPM;
+
 	static char toUpper(char elem) { return toupper((unsigned char)elem); }
 	static llwchar toUpper(llwchar elem) { return towupper(elem); }
 	
@@ -175,14 +187,31 @@ public:
 
 	static S32	collate(const char* a, const char* b) { return strcoll(a, b); }
 	static S32	collate(const llwchar* a, const llwchar* b);
+
+	static void setupDatetimeInfo(bool pacific_daylight_time);
+
+	static void setupWeekDaysNames(const std::string& data);
+	static void setupWeekDaysShortNames(const std::string& data);
+	static void setupMonthNames(const std::string& data);
+	static void setupMonthShortNames(const std::string& data);
+	static void setupDayFormat(const std::string& data);
+
+
+	static long getPacificTimeOffset(void) { return sPacificTimeOffset;}
+	static long getLocalTimeOffset(void) { return sLocalTimeOffset;}
+	// Is the Pacific time zone (aka server time zone)
+	// currently in daylight savings time?
+	static bool getPacificDaylightTime(void) { return sPacificDaylightTime;}
+
+	static std::string getDatetimeCode (std::string key);
 };
 
 /**
  * @brief Return a string constructed from in without crashing if the
  * pointer is NULL.
  */
-std::string LL_COMMON_API ll_safe_string(const char* in);
-std::string LL_COMMON_API ll_safe_string(const char* in, S32 maxlen);
+LL_COMMON_API std::string ll_safe_string(const char* in);
+LL_COMMON_API std::string ll_safe_string(const char* in, S32 maxlen);
 
 
 // Allowing assignments from non-strings into format_map_t is apparently
@@ -204,6 +233,9 @@ private:
 template <class T>
 class LLStringUtilBase
 {
+private:
+	static std::string sLocale;
+
 public:
 	typedef typename std::basic_string<T>::size_type size_type;
 	
@@ -211,10 +243,18 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// Static Utility functions that operate on std::strings
 
-	static std::basic_string<T> const null;
+	static const std::basic_string<T> null;
 	
 	typedef std::map<LLFormatMapString, LLFormatMapString> format_map_t;
-	static S32 format(std::basic_string<T>& s, const format_map_t& fmt_map);
+	LL_COMMON_API static void getTokens(const std::basic_string<T>& instr, std::vector<std::basic_string<T> >& tokens, const std::basic_string<T>& delims);
+	LL_COMMON_API static void formatNumber(std::basic_string<T>& numStr, std::basic_string<T> decimals);
+	LL_COMMON_API static bool formatDatetime(std::basic_string<T>& replacement, std::basic_string<T> token, std::basic_string<T> param, S32 secFromEpoch);
+	LL_COMMON_API static S32 format(std::basic_string<T>& s, const format_map_t& substitutions);
+	LL_COMMON_API static S32 format(std::basic_string<T>& s, const LLSD& substitutions);
+	LL_COMMON_API static bool simpleReplacement(std::basic_string<T>& replacement, std::basic_string<T> token, const format_map_t& substitutions);
+	LL_COMMON_API static bool simpleReplacement(std::basic_string<T>& replacement, std::basic_string<T> token, const LLSD& substitutions);
+	LL_COMMON_API static void setLocale (std::string inLocale);
+	LL_COMMON_API static std::string getLocale (void);
 	
 	static bool isValidIndex(const std::basic_string<T>& string, size_type i)
 	{
@@ -231,7 +271,25 @@ public:
 	
 	// True if this is the head of s.
 	static BOOL	isHead( const std::basic_string<T>& string, const T* s ); 
-	
+
+	/**
+	 * @brief Returns true if string starts with substr
+	 *
+	 * If etither string or substr are empty, this method returns false.
+	 */
+	static bool startsWith(
+		const std::basic_string<T>& string,
+		const std::basic_string<T>& substr);
+
+	/**
+	 * @brief Returns true if string ends in substr
+	 *
+	 * If etither string or substr are empty, this method returns false.
+	 */
+	static bool endsWith(
+		const std::basic_string<T>& string,
+		const std::basic_string<T>& substr);
+
 	static void	addCRLF(std::basic_string<T>& string);
 	static void	removeCRLF(std::basic_string<T>& string);
 
@@ -296,13 +354,19 @@ public:
 	// Copies src into dst at a given offset.  
 	static void		copyInto(std::basic_string<T>& dst, const std::basic_string<T>& src, size_type offset);
 	
+	static bool		isPartOfWord(T c) { return (c == (T)'_') || LLStringOps::isAlnum(c); }
+
+
 #ifdef _DEBUG	
-	static void		testHarness();
+	LL_COMMON_API static void		testHarness();
 #endif
 
+private:
+	LL_COMMON_API static size_type getSubstitution(const std::basic_string<T>& instr, size_type& start, std::vector<std::basic_string<T> >& tokens);
 };
 
-template<class T> std::basic_string<T> const LLStringUtilBase<T>::null;
+template<class T> const std::basic_string<T> LLStringUtilBase<T>::null;
+template<class T> std::string LLStringUtilBase<T>::sLocale;
 
 typedef LLStringUtilBase<char> LLStringUtil;
 typedef LLStringUtilBase<llwchar> LLWStringUtil;
@@ -339,7 +403,7 @@ public:
  * This function works on bytes rather than glyphs, so this will
  * incorrectly truncate non-single byte strings.
  * Use utf8str_truncate() for utf8 strings
- * @return a copy of in string minus the trailing count characters.
+ * @return a copy of in string minus the trailing count bytes.
  */
 inline std::string chop_tail_copy(
 	const std::string& in,
@@ -364,13 +428,14 @@ LL_COMMON_API U8 hex_as_nybble(char hex);
  * @return Returns true on success. If false, str is unmodified.
  */
 LL_COMMON_API bool _read_file_into_string(std::string& str, const std::string& filename);
+LL_COMMON_API bool iswindividual(llwchar elem);
 
 /**
  * Unicode support
  */
 
 // Make the incoming string a utf8 string. Replaces any unknown glyph
-// with the UNKOWN_CHARACTER. Once any unknown glph is found, the rest
+// with the UNKNOWN_CHARACTER. Once any unknown glyph is found, the rest
 // of the data may not be recovered.
 LL_COMMON_API std::string rawstr_to_utf8(const std::string& raw);
 
@@ -403,10 +468,10 @@ LL_COMMON_API std::string utf16str_to_utf8str(const llutf16string &utf16str, S32
 LL_COMMON_API std::string utf16str_to_utf8str(const llutf16string &utf16str);
 
 // Length of this UTF32 string in bytes when transformed to UTF8
-LL_COMMON_API S32 wstring_utf8_length(const LLWString& wstr);
+LL_COMMON_API S32 wstring_utf8_length(const LLWString& wstr); 
 
 // Length in bytes of this wide char in a UTF8 string
-LL_COMMON_API S32 wchar_utf8_length(const llwchar wc);
+LL_COMMON_API S32 wchar_utf8_length(const llwchar wc); 
 
 LL_COMMON_API std::string utf8str_tolower(const std::string& utf8str);
 
@@ -452,7 +517,7 @@ LL_COMMON_API std::string utf8str_substChar(
 LL_COMMON_API std::string utf8str_makeASCII(const std::string& utf8str);
 
 // Hack - used for evil notecards.
-LL_COMMON_API std::string mbcsstring_makeASCII(const std::string& str);
+LL_COMMON_API std::string mbcsstring_makeASCII(const std::string& str); 
 
 LL_COMMON_API std::string utf8str_removeCRLF(const std::string& utf8str);
 
@@ -483,7 +548,7 @@ LL_COMMON_API std::string utf8str_removeCRLF(const std::string& utf8str);
 // Deal with the differeneces on Windows
 namespace snprintf_hack
 {
-    LL_COMMON_API int snprintf(char *str, size_t size, const char *format, ...);
+	LL_COMMON_API int snprintf(char *str, size_t size, const char *format, ...);
 }
 
 using snprintf_hack::snprintf;
@@ -493,7 +558,20 @@ using snprintf_hack::snprintf;
  *
  * This replaces the unsafe W2A macro from ATL.
  */
-LL_COMMON_API std::string ll_convert_wide_to_string(const wchar_t* in);
+LL_COMMON_API std::string ll_convert_wide_to_string(const wchar_t* in, unsigned int code_page);
+
+/**
+ * Converts a string to wide string.
+ *
+ * It will allocate memory for result string with "new []". Don't forget to release it with "delete []".
+ */
+LL_COMMON_API wchar_t* ll_convert_string_to_wide(const std::string& in, unsigned int code_page);
+
+/**
+ * Converts incoming string into urf8 string
+ *
+ */
+LL_COMMON_API std::string ll_convert_string_to_utf8_string(const std::string& in);
 
 //@}
 #endif // LL_WINDOWS
@@ -556,63 +634,12 @@ namespace LLStringFn
 }
 
 ////////////////////////////////////////////////////////////
+// NOTE: LLStringUtil::format, getTokens, and support functions moved to llstring.cpp.
+// There is no LLWStringUtil::format implementation currently.
+// Calling thse for anything other than LLStringUtil will produce link errors.
 
-// LLStringBase::format()
-//
-// This function takes a string 's' and a map 'fmt_map' of strings-to-strings.
-// All occurances of strings in 's' from the left-hand side of 'fmt_map' are
-// then replaced with the corresponding right-hand side of 'fmt_map', non-
-// recursively.  The function returns the number of substitutions made.
+////////////////////////////////////////////////////////////
 
-// static
-template<class T> 
-S32 LLStringUtilBase<T>::format(std::basic_string<T>& s, const format_map_t& fmt_map)
-{
-	typedef typename std::basic_string<T>::size_type string_size_type_t;
-	string_size_type_t scanstart = 0;
-	S32 res = 0;
-
-	// Look for the first match of any keyword, replace that keyword,
-	// repeat from the end of the replacement string.  This avoids
-	// accidentally performing substitution on a substituted string.
-	while (1)
-	{
-		string_size_type_t first_match_pos = scanstart;
-		string_size_type_t first_match_str_length = 0;
-		std::basic_string<T> first_match_str_replacement;
-
-		for (format_map_t::const_iterator iter = fmt_map.begin();
-		     iter != fmt_map.end();
-		     ++iter)
-		{
-			string_size_type_t n = s.find(iter->first, scanstart);
-			if (n != std::basic_string<T>::npos &&
-			    (n < first_match_pos ||
-			     0 == first_match_str_length))
-			{
-				first_match_pos = n;
-				first_match_str_length = iter->first.length();
-				first_match_str_replacement = iter->second;
-			}
-		}
-
-		if (0 == first_match_str_length)
-		{
-			// no more keys found to substitute from this point
-			// in the string forward.
-			break;
-		}
-		else
-		{
-			s.erase(first_match_pos, first_match_str_length);
-			s.insert(first_match_pos, first_match_str_replacement);
-			scanstart = first_match_pos +
-				first_match_str_replacement.length();
-			++res;
-		}
-	}
-	return res;
-}
 
 // static
 template<class T> 
@@ -1001,14 +1028,15 @@ void LLStringUtilBase<T>::stripNonprintable(std::basic_string<T>& string)
 	{
 		return;
 	}
-	char* c_string = new char[string.size() + 1];
+	size_t src_size = string.size();
+	char* c_string = new char[src_size + 1];
 	if(c_string == NULL)
 	{
 		return;
 	}
-	strcpy(c_string, string.c_str());	/*Flawfinder: ignore*/
+	copy(c_string, string.c_str(), src_size+1);
 	char* write_head = &c_string[0];
-	for (size_type i = 0; i < string.size(); i++)
+	for (size_type i = 0; i < src_size; i++)
 	{
 		char* read_head = &string[i];
 		write_head = &c_string[j];
@@ -1087,6 +1115,30 @@ BOOL LLStringUtilBase<T>::isHead( const std::basic_string<T>& string, const T* s
 		return (strncmp( s, string.c_str(), string.size() ) == 0);
 	}
 }
+
+// static
+template<class T> 
+bool LLStringUtilBase<T>::startsWith(
+	const std::basic_string<T>& string,
+	const std::basic_string<T>& substr)
+{
+	if(string.empty() || (substr.empty())) return false;
+	if(0 == string.find(substr)) return true;
+	return false;
+}
+
+// static
+template<class T> 
+bool LLStringUtilBase<T>::endsWith(
+	const std::basic_string<T>& string,
+	const std::basic_string<T>& substr)
+{
+	if(string.empty() || (substr.empty())) return false;
+	std::string::size_type idx = string.rfind(substr);
+	if(std::string::npos == idx) return false;
+	return (idx == (string.size() - substr.size()));
+}
+
 
 template<class T> 
 BOOL LLStringUtilBase<T>::convertToBOOL(const std::basic_string<T>& string, BOOL& value)

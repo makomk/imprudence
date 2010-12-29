@@ -2,31 +2,25 @@
  * @file llmemtype.h
  * @brief Runtime memory usage debugging utilities.
  *
- * $LicenseInfo:firstyear=2005&license=viewergpl$
- * 
- * Copyright (c) 2005-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2005&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -36,128 +30,210 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-class LLMemType;
-
-extern void* ll_allocate (size_t size);
-extern void ll_release (void *p);
-
-#define MEM_TRACK_MEM 0
-#define MEM_TRACK_TYPE (1 && MEM_TRACK_MEM)
-
-#if MEM_TRACK_TYPE
-#define MEM_DUMP_DATA 1
-#define MEM_TYPE_NEW(T) \
-static void* operator new(size_t s) { LLMemType mt(T); return ll_allocate(s); } \
-static void  operator delete(void* p) { ll_release(p); }
-
-#else
-#define MEM_TYPE_NEW(T)
-#endif // MEM_TRACK_TYPE
-
-
 //----------------------------------------------------------------------------
+
+#include "linden_common.h"
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// WARNING: Never commit with MEM_TRACK_MEM == 1
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#define MEM_TRACK_MEM (0 && LL_WINDOWS)
+
+#include <vector>
+
+#define MEM_TYPE_NEW(T)
 
 class LL_COMMON_API LLMemType
 {
 public:
-	// Also update sTypeDesc in llmemory.cpp
-	enum EMemType
+
+	// class we'll initialize all instances of as
+	// static members of MemType.  Then use
+	// to construct any new mem type.
+	class LL_COMMON_API DeclareMemType
 	{
-		MTYPE_INIT,
-		MTYPE_STARTUP,
-		MTYPE_MAIN,
-
-		MTYPE_IMAGEBASE,
-		MTYPE_IMAGERAW,
-		MTYPE_IMAGEFORMATTED,
+	public:
+		DeclareMemType(char const * st);
+		~DeclareMemType();
+	
+		S32 mID;
+		char const * mName;
 		
-		MTYPE_APPFMTIMAGE,
-		MTYPE_APPRAWIMAGE,
-		MTYPE_APPAUXRAWIMAGE,
-		
-		MTYPE_DRAWABLE,
-		MTYPE_OBJECT,
-		MTYPE_VERTEX_DATA,
-		MTYPE_SPACE_PARTITION,
-		MTYPE_PIPELINE,
-		MTYPE_AVATAR,
-		MTYPE_AVATAR_MESH,
-		MTYPE_PARTICLES,
-		MTYPE_REGIONS,
-		MTYPE_INVENTORY,
-		MTYPE_ANIMATION,
-		MTYPE_VOLUME,
-		MTYPE_PRIMITIVE,
-
-		MTYPE_NETWORK,
-		MTYPE_PHYSICS,
-		MTYPE_INTERESTLIST,
-		
-		MTYPE_SCRIPT,
-		MTYPE_SCRIPT_RUN,
-		MTYPE_SCRIPT_BYTECODE,
-		
-		MTYPE_IO_PUMP,
-		MTYPE_IO_TCP,
-		MTYPE_IO_BUFFER,
-		MTYPE_IO_HTTP_SERVER,
-		MTYPE_IO_SD_SERVER,
-		MTYPE_IO_SD_CLIENT,
-		MTYPE_IO_URL_REQUEST,
-
-		MTYPE_TEMP1,
-		MTYPE_TEMP2,
-		MTYPE_TEMP3,
-		MTYPE_TEMP4,
-		MTYPE_TEMP5,
-		MTYPE_TEMP6,
-		MTYPE_TEMP7,
-		MTYPE_TEMP8,
-		MTYPE_TEMP9,
-
-		MTYPE_OTHER, // Special, used by display code
-		
-		MTYPE_NUM_TYPES
+		// array so we can map an index ID to Name
+		static std::vector<char const *> mNameList;
 	};
-	enum { MTYPE_MAX_DEPTH = 64 };
-	
-public:
-	LLMemType(EMemType type)
-	{
-#if MEM_TRACK_TYPE
-		if (type < 0 || type >= MTYPE_NUM_TYPES)
-			llerrs << "LLMemType error" << llendl;
-		if (sCurDepth < 0 || sCurDepth >= MTYPE_MAX_DEPTH)
-			llerrs << "LLMemType error" << llendl;
-		sType[sCurDepth] = sCurType;
-		sCurDepth++;
-		sCurType = type;
-#endif
-	}
-	~LLMemType()
-	{
-#if MEM_TRACK_TYPE
-		sCurDepth--;
-		sCurType = sType[sCurDepth];
-#endif
-	}
 
-	static void reset();
-	static void printMem();
+	LLMemType(DeclareMemType& dt);
+	~LLMemType();
+
+	static char const * getNameFromID(S32 id);
+
+	static DeclareMemType MTYPE_INIT;
+	static DeclareMemType MTYPE_STARTUP;
+	static DeclareMemType MTYPE_MAIN;
+	static DeclareMemType MTYPE_FRAME;
+
+	static DeclareMemType MTYPE_GATHER_INPUT;
+	static DeclareMemType MTYPE_JOY_KEY;
+
+	static DeclareMemType MTYPE_IDLE;
+	static DeclareMemType MTYPE_IDLE_PUMP;
+	static DeclareMemType MTYPE_IDLE_NETWORK;
+	static DeclareMemType MTYPE_IDLE_UPDATE_REGIONS;
+	static DeclareMemType MTYPE_IDLE_UPDATE_VIEWER_REGION;
+	static DeclareMemType MTYPE_IDLE_UPDATE_SURFACE;
+	static DeclareMemType MTYPE_IDLE_UPDATE_PARCEL_OVERLAY;
+	static DeclareMemType MTYPE_IDLE_AUDIO;
+
+	static DeclareMemType MTYPE_CACHE_PROCESS_PENDING;
+	static DeclareMemType MTYPE_CACHE_PROCESS_PENDING_ASKS;
+	static DeclareMemType MTYPE_CACHE_PROCESS_PENDING_REPLIES;
+
+	static DeclareMemType MTYPE_MESSAGE_CHECK_ALL;
+	static DeclareMemType MTYPE_MESSAGE_PROCESS_ACKS;
+
+	static DeclareMemType MTYPE_RENDER;
+	static DeclareMemType MTYPE_SLEEP;
+
+	static DeclareMemType MTYPE_NETWORK;
+	static DeclareMemType MTYPE_PHYSICS;
+	static DeclareMemType MTYPE_INTERESTLIST;
+
+	static DeclareMemType MTYPE_IMAGEBASE;
+	static DeclareMemType MTYPE_IMAGERAW;
+	static DeclareMemType MTYPE_IMAGEFORMATTED;
 	
-public:
-#if MEM_TRACK_TYPE
-	static S32 sCurDepth;
-	static S32 sCurType;
-	static S32 sType[MTYPE_MAX_DEPTH];
-	static S32 sMemCount[MTYPE_NUM_TYPES];
-	static S32 sMaxMemCount[MTYPE_NUM_TYPES];
-	static S32 sNewCount[MTYPE_NUM_TYPES];
-	static S32 sOverheadMem;
-	static const char* sTypeDesc[MTYPE_NUM_TYPES];
-#endif
-	static S32 sTotalMem;
-	static S32 sMaxTotalMem;
+	static DeclareMemType MTYPE_APPFMTIMAGE;
+	static DeclareMemType MTYPE_APPRAWIMAGE;
+	static DeclareMemType MTYPE_APPAUXRAWIMAGE;
+	
+	static DeclareMemType MTYPE_DRAWABLE;
+	
+	static DeclareMemType MTYPE_OBJECT;
+	static DeclareMemType MTYPE_OBJECT_PROCESS_UPDATE;
+	static DeclareMemType MTYPE_OBJECT_PROCESS_UPDATE_CORE;
+
+	static DeclareMemType MTYPE_DISPLAY;
+	static DeclareMemType MTYPE_DISPLAY_UPDATE;
+	static DeclareMemType MTYPE_DISPLAY_UPDATE_CAMERA;
+	static DeclareMemType MTYPE_DISPLAY_UPDATE_GEOM;
+	static DeclareMemType MTYPE_DISPLAY_SWAP;
+	static DeclareMemType MTYPE_DISPLAY_UPDATE_HUD;
+	static DeclareMemType MTYPE_DISPLAY_GEN_REFLECTION;
+	static DeclareMemType MTYPE_DISPLAY_IMAGE_UPDATE;
+	static DeclareMemType MTYPE_DISPLAY_STATE_SORT;
+	static DeclareMemType MTYPE_DISPLAY_SKY;
+	static DeclareMemType MTYPE_DISPLAY_RENDER_GEOM;
+	static DeclareMemType MTYPE_DISPLAY_RENDER_FLUSH;
+	static DeclareMemType MTYPE_DISPLAY_RENDER_UI;
+	static DeclareMemType MTYPE_DISPLAY_RENDER_ATTACHMENTS;
+
+	static DeclareMemType MTYPE_VERTEX_DATA;
+	static DeclareMemType MTYPE_VERTEX_CONSTRUCTOR;
+	static DeclareMemType MTYPE_VERTEX_DESTRUCTOR;
+	static DeclareMemType MTYPE_VERTEX_CREATE_VERTICES;
+	static DeclareMemType MTYPE_VERTEX_CREATE_INDICES;
+	static DeclareMemType MTYPE_VERTEX_DESTROY_BUFFER;	
+	static DeclareMemType MTYPE_VERTEX_DESTROY_INDICES;
+	static DeclareMemType MTYPE_VERTEX_UPDATE_VERTS;
+	static DeclareMemType MTYPE_VERTEX_UPDATE_INDICES;
+	static DeclareMemType MTYPE_VERTEX_ALLOCATE_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_RESIZE_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_MAP_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_MAP_BUFFER_VERTICES;
+	static DeclareMemType MTYPE_VERTEX_MAP_BUFFER_INDICES;
+	static DeclareMemType MTYPE_VERTEX_UNMAP_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_SET_STRIDE;
+	static DeclareMemType MTYPE_VERTEX_SET_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_SETUP_VERTEX_BUFFER;
+	static DeclareMemType MTYPE_VERTEX_CLEANUP_CLASS;
+
+	static DeclareMemType MTYPE_SPACE_PARTITION;
+
+	static DeclareMemType MTYPE_PIPELINE;
+	static DeclareMemType MTYPE_PIPELINE_INIT;
+	static DeclareMemType MTYPE_PIPELINE_CREATE_BUFFERS;
+	static DeclareMemType MTYPE_PIPELINE_RESTORE_GL;
+	static DeclareMemType MTYPE_PIPELINE_UNLOAD_SHADERS;
+	static DeclareMemType MTYPE_PIPELINE_LIGHTING_DETAIL;
+	static DeclareMemType MTYPE_PIPELINE_GET_POOL_TYPE;
+	static DeclareMemType MTYPE_PIPELINE_ADD_POOL;
+	static DeclareMemType MTYPE_PIPELINE_ALLOCATE_DRAWABLE;
+	static DeclareMemType MTYPE_PIPELINE_ADD_OBJECT;
+	static DeclareMemType MTYPE_PIPELINE_CREATE_OBJECTS;
+	static DeclareMemType MTYPE_PIPELINE_UPDATE_MOVE;
+	static DeclareMemType MTYPE_PIPELINE_UPDATE_GEOM;
+	static DeclareMemType MTYPE_PIPELINE_MARK_VISIBLE;
+	static DeclareMemType MTYPE_PIPELINE_MARK_MOVED;
+	static DeclareMemType MTYPE_PIPELINE_MARK_SHIFT;
+	static DeclareMemType MTYPE_PIPELINE_SHIFT_OBJECTS;
+	static DeclareMemType MTYPE_PIPELINE_MARK_TEXTURED;
+	static DeclareMemType MTYPE_PIPELINE_MARK_REBUILD;
+	static DeclareMemType MTYPE_PIPELINE_UPDATE_CULL;
+	static DeclareMemType MTYPE_PIPELINE_STATE_SORT;
+	static DeclareMemType MTYPE_PIPELINE_POST_SORT;
+	
+	static DeclareMemType MTYPE_PIPELINE_RENDER_HUD_ELS;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_HL;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_GEOM;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_GEOM_DEFFERRED;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_GEOM_POST_DEF;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_GEOM_SHADOW;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_SELECT;
+	static DeclareMemType MTYPE_PIPELINE_REBUILD_POOLS;
+	static DeclareMemType MTYPE_PIPELINE_QUICK_LOOKUP;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_OBJECTS;
+	static DeclareMemType MTYPE_PIPELINE_GENERATE_IMPOSTOR;
+	static DeclareMemType MTYPE_PIPELINE_RENDER_BLOOM;
+
+	static DeclareMemType MTYPE_UPKEEP_POOLS;
+
+	static DeclareMemType MTYPE_AVATAR;
+	static DeclareMemType MTYPE_AVATAR_MESH;
+	static DeclareMemType MTYPE_PARTICLES;
+	static DeclareMemType MTYPE_REGIONS;
+
+	static DeclareMemType MTYPE_INVENTORY;
+	static DeclareMemType MTYPE_INVENTORY_DRAW;
+	static DeclareMemType MTYPE_INVENTORY_BUILD_NEW_VIEWS;
+	static DeclareMemType MTYPE_INVENTORY_DO_FOLDER;
+	static DeclareMemType MTYPE_INVENTORY_POST_BUILD;
+	static DeclareMemType MTYPE_INVENTORY_FROM_XML;
+	static DeclareMemType MTYPE_INVENTORY_CREATE_NEW_ITEM;
+	static DeclareMemType MTYPE_INVENTORY_VIEW_INIT;
+	static DeclareMemType MTYPE_INVENTORY_VIEW_SHOW;
+	static DeclareMemType MTYPE_INVENTORY_VIEW_TOGGLE;
+
+	static DeclareMemType MTYPE_ANIMATION;
+	static DeclareMemType MTYPE_VOLUME;
+	static DeclareMemType MTYPE_PRIMITIVE;
+	
+	static DeclareMemType MTYPE_SCRIPT;
+	static DeclareMemType MTYPE_SCRIPT_RUN;
+	static DeclareMemType MTYPE_SCRIPT_BYTECODE;
+	
+	static DeclareMemType MTYPE_IO_PUMP;
+	static DeclareMemType MTYPE_IO_TCP;
+	static DeclareMemType MTYPE_IO_BUFFER;
+	static DeclareMemType MTYPE_IO_HTTP_SERVER;
+	static DeclareMemType MTYPE_IO_SD_SERVER;
+	static DeclareMemType MTYPE_IO_SD_CLIENT;
+	static DeclareMemType MTYPE_IO_URL_REQUEST;
+
+	static DeclareMemType MTYPE_DIRECTX_INIT;
+
+	static DeclareMemType MTYPE_TEMP1;
+	static DeclareMemType MTYPE_TEMP2;
+	static DeclareMemType MTYPE_TEMP3;
+	static DeclareMemType MTYPE_TEMP4;
+	static DeclareMemType MTYPE_TEMP5;
+	static DeclareMemType MTYPE_TEMP6;
+	static DeclareMemType MTYPE_TEMP7;
+	static DeclareMemType MTYPE_TEMP8;
+	static DeclareMemType MTYPE_TEMP9;
+
+	static DeclareMemType MTYPE_OTHER; // Special; used by display code
+
+	S32 mTypeIndex;
 };
 
 //----------------------------------------------------------------------------

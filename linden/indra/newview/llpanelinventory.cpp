@@ -72,6 +72,7 @@
 #include "llselectmgr.h"
 #include "llstatusbar.h"
 #include "lltooldraganddrop.h"
+#include "llviewerassettype.h"
 #include "llviewercontrol.h"
 #include "llviewerregion.h"
 #include "llviewerimagelist.h"
@@ -305,7 +306,7 @@ bool LLTaskInvFVBridge::commitBuyItem(const LLSD& notification, const LLSD& resp
 		msg->addUUIDFast(_PREHASH_ObjectID, notification["payload"]["task_id"].asUUID());
 		msg->addUUIDFast(_PREHASH_ItemID, notification["payload"]["item_id"].asUUID());
 		msg->addUUIDFast(_PREHASH_FolderID,
-			gInventory.findCategoryUUIDForType((LLAssetType::EType)notification["payload"]["type"].asInteger()));
+				 gInventory.findCategoryUUIDForType(LLFolderType::assetTypeToFolderType((LLAssetType::EType)notification["payload"]["type"].asInteger())));
 		msg->sendReliable(object->getRegion()->getHost());
 	}
 	return false;
@@ -642,7 +643,7 @@ BOOL LLTaskInvFVBridge::startDrag(EDragAndDropType* type, LLUUID* id) const
 //				   || gAgent.isGodlike())
 
 				{
-					*type = LLAssetType::lookupDragAndDropType(inv->getType());
+					*type = LLViewerAssetType::lookupDragAndDropType(inv->getType());
 
 					*id = inv->getUUID();
 					return TRUE;
@@ -865,7 +866,7 @@ BOOL LLTaskCategoryBridge::startDrag(EDragAndDropType* type, LLUUID* id) const
 //				   || gAgent.isGodlike())
 
 				{
-					*type = LLAssetType::lookupDragAndDropType(inv->getType());
+					*type = LLViewerAssetType::lookupDragAndDropType(inv->getType());
 
 					*id = inv->getUUID();
 					return TRUE;

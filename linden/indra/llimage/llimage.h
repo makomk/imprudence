@@ -162,7 +162,7 @@ private:
 	BOOL mBadBufferAllocation ;
 
 public:
-	S16 mMemType; // debug
+	LLMemType::DeclareMemType &mMemType; // debug
 	
 	static BOOL sSizeOverride;
 };

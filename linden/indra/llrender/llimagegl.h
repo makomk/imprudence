@@ -37,7 +37,7 @@
 #include "llimage.h"
 
 #include "llgltypes.h"
-#include "llmemory.h"
+#include "llrefcount.h"
 #include "v2math.h"
 
 #include "llrender.h"

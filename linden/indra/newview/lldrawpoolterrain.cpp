@@ -61,6 +61,7 @@ int DebugDetailMap = 0;
 S32 LLDrawPoolTerrain::sDetailMode = 1;
 F32 LLDrawPoolTerrain::sDetailScale = DETAIL_SCALE;
 static LLGLSLShader* sShader = NULL;
+static LLFastTimer::DeclareTimer FTM_SHADOW_TERRAIN("Terrain Shadow");
 
 LLDrawPoolTerrain::LLDrawPoolTerrain(LLViewerImage *texturep) :
 	LLFacePool(POOL_TERRAIN),
@@ -127,7 +128,7 @@ void LLDrawPoolTerrain::prerender()
 
 void LLDrawPoolTerrain::beginRenderPass( S32 pass )
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	LLFacePool::beginRenderPass(pass);
 
 	sShader = LLPipeline::sUnderWaterRender ? 
@@ -142,7 +143,7 @@ void LLDrawPoolTerrain::beginRenderPass( S32 pass )
 
 void LLDrawPoolTerrain::endRenderPass( S32 pass )
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	LLFacePool::endRenderPass(pass);
 
 	if (mVertexShaderLevel > 1 && sShader->mShaderLevel > 0) {
@@ -158,7 +159,7 @@ S32 LLDrawPoolTerrain::getDetailMode()
 
 void LLDrawPoolTerrain::render(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	
 	if (mDrawFace.empty())
 	{
@@ -232,7 +233,7 @@ void LLDrawPoolTerrain::render(S32 pass)
 
 void LLDrawPoolTerrain::beginDeferredPass(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	LLFacePool::beginRenderPass(pass);
 
 	sShader = &gDeferredTerrainProgram;
@@ -242,14 +243,14 @@ void LLDrawPoolTerrain::beginDeferredPass(S32 pass)
 
 void LLDrawPoolTerrain::endDeferredPass(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	LLFacePool::endRenderPass(pass);
 	sShader->unbind();
 }
 
 void LLDrawPoolTerrain::renderDeferred(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_RENDER_TERRAIN);
+	LLFastTimer t(FTM_RENDER_TERRAIN);
 	if (mDrawFace.empty())
 	{
 		return;
@@ -259,7 +260,7 @@ void LLDrawPoolTerrain::renderDeferred(S32 pass)
 
 void LLDrawPoolTerrain::beginShadowPass(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_SHADOW_TERRAIN);
+	LLFastTimer t(FTM_SHADOW_TERRAIN);
 	LLFacePool::beginRenderPass(pass);
 	gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 	gDeferredShadowProgram.bind();
@@ -267,14 +268,14 @@ void LLDrawPoolTerrain::beginShadowPass(S32 pass)
 
 void LLDrawPoolTerrain::endShadowPass(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_SHADOW_TERRAIN);
+	LLFastTimer t(FTM_SHADOW_TERRAIN);
 	LLFacePool::endRenderPass(pass);
 	gDeferredShadowProgram.unbind();
 }
 
 void LLDrawPoolTerrain::renderShadow(S32 pass)
 {
-	LLFastTimer t(LLFastTimer::FTM_SHADOW_TERRAIN);
+	LLFastTimer t(FTM_SHADOW_TERRAIN);
 	if (mDrawFace.empty())
 	{
 		return;

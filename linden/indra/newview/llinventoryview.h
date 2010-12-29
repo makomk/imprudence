@@ -104,7 +104,7 @@ public:
 	// Call this method to set the selection.
 	void openAllFolders();
 	void closeAllFolders();
-	void openDefaultFolderForType(LLAssetType::EType);
+	void openDefaultFolderForType(LLFolderType::EType);
 	void setSelection(const LLUUID& obj_id, BOOL take_keyboard_focus);
 	void setSelectCallback(LLFolderView::SelectCallback callback, void* user_data) { if (mFolders) mFolders->setSelectCallback(callback, user_data); }
 	void clearSelection();

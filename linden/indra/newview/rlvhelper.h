@@ -3,6 +3,7 @@
 
 #include "llagent.h"
 #include "llboost.h"
+#include "lleventtimer.h"
 #include "llgesturemgr.h"
 #include "llinventorymodel.h"
 #include "llviewerinventory.h"

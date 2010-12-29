@@ -79,6 +79,8 @@ LLWLParamManager * LLWLParamManager::sInstance = NULL;
 std::vector<LLWLPresetsObserver*> LLWLParamManager::sObservers;
 LLFrameTimer wlSmoothTransitionTimer;
 
+static LLFastTimer::DeclareTimer FTM_UPDATE_WLPARAM("Update Windlight Params");
+
 LLWLParamManager::LLWLParamManager() :
 
 	//set the defaults for the controls
@@ -440,7 +442,7 @@ void LLWLParamManager::updateShaderUniforms(LLGLSLShader * shader)
 
 void LLWLParamManager::propagateParameters(void)
 {
-	LLFastTimer ftm(LLFastTimer::FTM_UPDATE_WLPARAM);
+	LLFastTimer ftm(FTM_UPDATE_WLPARAM);
 	
 	LLVector4 sunDir;
 	LLVector4 moonDir;
@@ -511,7 +513,7 @@ void LLWLParamManager::propagateParameters(void)
 
 void LLWLParamManager::update(LLViewerCamera * cam)
 {
-	LLFastTimer ftm(LLFastTimer::FTM_UPDATE_WLPARAM);
+	LLFastTimer ftm(FTM_UPDATE_WLPARAM);
 	
 	// update clouds, sun, and general
 	mCurParams.updateCloudScrolling();

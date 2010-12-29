@@ -4,6 +4,7 @@
 #include "llfloater.h"
 #include "lltemplatemessagereader.h"
 #include "llmessagelog.h"
+#include "lleventtimer.h"
 
 class LLNetListItem
 {

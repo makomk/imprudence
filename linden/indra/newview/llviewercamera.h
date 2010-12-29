@@ -33,6 +33,7 @@
 #ifndef LL_LLVIEWERCAMERA_H
 #define LL_LLVIEWERCAMERA_H
 
+#include "llsingleton.h"
 #include "llcamera.h"
 #include "lltimer.h"
 #include "llstat.h"

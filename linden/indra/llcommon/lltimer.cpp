@@ -2,38 +2,31 @@
  * @file lltimer.cpp
  * @brief Cross-platform objects for doing timing 
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
 #include "linden_common.h"
 
 #include "lltimer.h"
-#include "timing.h"	// totalTime prototype.
 
 #include "u64.h"
 
@@ -52,6 +45,9 @@
 //
 // Locally used constants
 //
+const U32 SEC_PER_DAY = 86400;
+const F64 SEC_TO_MICROSEC = 1000000.f;
+const U64 SEC_TO_MICROSEC_U64 = 1000000;
 const F64 USEC_TO_SEC_F64 = 0.000001;
 
 
@@ -207,7 +203,7 @@ F64 calc_clock_frequency(U32 uiMeasureMSecs)
 // Both Linux and Mac use gettimeofday for accurate time
 F64 calc_clock_frequency(unsigned int uiMeasureMSecs)
 {
-	return 1000000.0; // microseconds, so 1 Mhz.
+	return 1000000.0; // microseconds, so 1 MHz.
 }
 
 U64 get_clock_count()
@@ -525,34 +521,6 @@ struct tm* utc_to_pacific_time(time_t utc_time, BOOL pacific_daylight_time)
 }
 
 
-struct tm* utc_to_offset_time(time_t utc_time, S32 offset, BOOL DST)
-{
-	if (DST)
-	{
-		//Subtract one then
-		offset--;
-	}
-
-	// We subtract off the PST/PDT offset _before_ getting
-	// "UTC" time, because this will handle wrapping around
-	// for 5 AM UTC -> 10 PM PDT of the previous day.
-	utc_time -= offset * MIN_PER_HOUR * SEC_PER_MIN;
- 
-	// Internal buffer to PST/PDT (see above)
-	struct tm* internal_time = gmtime(&utc_time);
-
-	/*
-	// Don't do this, this won't correctly tell you if daylight savings is active in CA or not.
-	if (pacific_daylight_time)
-	{
-		internal_time->tm_isdst = 1;
-	}
-	*/
-
-	return internal_time;
-}
-
-
 void microsecondsToTimecodeString(U64 current_time, std::string& tcstring)
 {
 	U64 hours;
@@ -578,62 +546,6 @@ void microsecondsToTimecodeString(U64 current_time, std::string& tcstring)
 void secondsToTimecodeString(F32 current_time, std::string& tcstring)
 {
 	microsecondsToTimecodeString((U64)((F64)(SEC_TO_MICROSEC*current_time)), tcstring);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
-//		LLEventTimer Implementation
-//
-//////////////////////////////////////////////////////////////////////////////
-
-std::list<LLEventTimer*> LLEventTimer::sActiveList;
-
-LLEventTimer::LLEventTimer(F32 period)
-: mEventTimer()
-{
-	mPeriod = period;
-	sActiveList.push_back(this);
-}
-
-LLEventTimer::LLEventTimer(const LLDate& time)
-: mEventTimer()
-{
-	mPeriod = (F32)(time.secondsSinceEpoch() - LLDate::now().secondsSinceEpoch());
-	sActiveList.push_back(this);
-}
-
-
-LLEventTimer::~LLEventTimer() 
-{
-	sActiveList.remove(this);
-}
-
-void LLEventTimer::updateClass() 
-{
-	std::list<LLEventTimer*> completed_timers;
-	for (std::list<LLEventTimer*>::iterator iter = sActiveList.begin(); iter != sActiveList.end(); ) 
-	{
-		LLEventTimer* timer = *iter++;
-		F32 et = timer->mEventTimer.getElapsedTimeF32();
-		if (timer->mEventTimer.getStarted() && et > timer->mPeriod) {
-			timer->mEventTimer.reset();
-			if ( timer->tick() )
-			{
-				completed_timers.push_back( timer );
-			}
-		}
-	}
-
-	if ( completed_timers.size() > 0 )
-	{
-		for (std::list<LLEventTimer*>::iterator completed_iter = completed_timers.begin(); 
-			 completed_iter != completed_timers.end(); 
-			 completed_iter++ ) 
-		{
-			delete *completed_iter;
-		}
-	}
 }
 
 

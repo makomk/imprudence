@@ -25,6 +25,8 @@
 #include "rlvcommon.h"
 #include "rlvhandler.h"
 
+using namespace LLOldEvents;
+
 // ============================================================================
 // RlvNotifications
 //

@@ -254,7 +254,7 @@ BOOL LLFloaterAnimPreview::postBuild()
 		S32 file_size;
 		
 		LLAPRFile infile ;
-		infile.open(mFilenameAndPath, LL_APR_RB, LLAPRFile::global, &file_size);
+		infile.open(mFilenameAndPath, LL_APR_RB, NULL, &file_size);
 		
 		if (!infile.getFileHandle())
 		{
@@ -1297,7 +1297,7 @@ void LLFloaterAnimPreview::onBtnOK(void* userdata)
 						    name,
 						    desc,
 						    0,
-						    LLAssetType::AT_NONE,
+						    LLFolderType::FT_NONE,
 						    LLInventoryType::IT_ANIMATION,
 						    LLFloaterPerms::getNextOwnerPerms(), LLFloaterPerms::getGroupPerms(), LLFloaterPerms::getEveryonePerms(),
 						    name,

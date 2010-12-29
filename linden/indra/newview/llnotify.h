@@ -36,7 +36,9 @@
 #include "llfontgl.h"
 #include "llpanel.h"
 #include "lltimer.h"
+#include "lleventtimer.h"
 #include "llnotifications.h"
+#include "llinstancetracker.h"
 #include <vector>
 
 class LLButton;

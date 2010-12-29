@@ -37,6 +37,7 @@
 #include "llmessagebuilder.h"
 #include "llsdmessagebuilder.h"
 #include "llsdutil.h"
+#include "llsdutil_math.h"
 
 #include "v3math.h"
 #include "v4math.h"

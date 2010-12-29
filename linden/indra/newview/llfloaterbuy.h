@@ -43,6 +43,7 @@
 #include "llvoinventorylistener.h"
 #include "llsaleinfo.h"
 #include "llinventory.h"
+#include "llsafehandle.h"
 
 class LLViewerObject;
 class LLSaleInfo;

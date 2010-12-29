@@ -72,6 +72,7 @@
 #include "llscrollbar.h"
 #include "llimview.h"
 #include "lltooldraganddrop.h"
+#include "llviewerassettype.h"
 #include "llviewerimagelist.h"
 #include "llviewerinventory.h"
 #include "llviewerobjectlist.h"
@@ -1948,9 +1949,11 @@ LLInventoryFilter::EFolderShow LLInventoryPanel::getShowFolderState()
 	return mFolders->getFilter()->getShowFolderState();
 }
 
+static LLFastTimer::DeclareTimer FTM_REFRESH("Inventory Refresh");
+
 void LLInventoryPanel::modelChanged(U32 mask)
 {
-	LLFastTimer t2(LLFastTimer::FTM_REFRESH);
+	LLFastTimer t2(FTM_REFRESH);
 
 	bool handled = false;
 	if(mask & LLInventoryObserver::LABEL)
@@ -2262,7 +2265,7 @@ void LLInventoryPanel::closeAllFolders()
 	mFolders->arrangeAll();
 }
 
-void LLInventoryPanel::openDefaultFolderForType(LLAssetType::EType type)
+void LLInventoryPanel::openDefaultFolderForType(LLFolderType::EType type)
 {
 	LLUUID category_id = mInventory->findCategoryUUIDForType(type);
 	LLOpenFolderByID opener(category_id);
@@ -2298,7 +2301,7 @@ void LLInventoryPanel::createNewItem(const std::string& name,
 									U32 next_owner_perm)
 {
 	std::string desc;
-	LLAssetType::generateDescriptionFor(asset_type, desc);
+	LLViewerAssetType::generateDescriptionFor(asset_type, desc);
 	next_owner_perm = (next_owner_perm) ? next_owner_perm : PERM_MOVE | PERM_TRANSFER;
 
 	

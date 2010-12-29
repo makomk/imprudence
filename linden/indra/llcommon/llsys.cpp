@@ -2,31 +2,25 @@
  * @file llsys.cpp
  * @brief Impelementation of the basic system query functions.
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
- * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2002&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -58,7 +52,6 @@
 #	include <unistd.h>
 #	include <sys/sysinfo.h>
 const char MEMINFO_FILE[] = "/proc/meminfo";
-const char CPUINFO_FILE[] = "/proc/cpuinfo";
 #elif LL_SOLARIS
 #	include <stdio.h>
 #	include <unistd.h>
@@ -75,6 +68,75 @@ extern int errno;
 
 static const S32 CPUINFO_BUFFER_SIZE = 16383;
 LLCPUInfo gSysCPU;
+
+#if LL_WINDOWS
+#ifndef DLLVERSIONINFO
+typedef struct _DllVersionInfo
+{
+    DWORD cbSize;
+    DWORD dwMajorVersion;
+    DWORD dwMinorVersion;
+    DWORD dwBuildNumber;
+    DWORD dwPlatformID;
+}DLLVERSIONINFO;
+#endif
+
+#ifndef DLLGETVERSIONPROC
+typedef int (FAR WINAPI *DLLGETVERSIONPROC) (DLLVERSIONINFO *);
+#endif
+
+bool get_shell32_dll_version(DWORD& major, DWORD& minor, DWORD& build_number)
+{
+	bool result = false;
+	const U32 BUFF_SIZE = 32767;
+	WCHAR tempBuf[BUFF_SIZE];
+	if(GetSystemDirectory((LPWSTR)&tempBuf, BUFF_SIZE))
+	{
+		
+		std::basic_string<WCHAR> shell32_path(tempBuf);
+
+		// Shell32.dll contains the DLLGetVersion function. 
+		// according to msdn its not part of the API
+		// so you have to go in and get it.
+		// http://msdn.microsoft.com/en-us/library/bb776404(VS.85).aspx
+		shell32_path += TEXT("\\shell32.dll");
+
+		HMODULE hDllInst = LoadLibrary(shell32_path.c_str());   //load the DLL
+		if(hDllInst) 
+		{  // Could successfully load the DLL
+			DLLGETVERSIONPROC pDllGetVersion;
+			/*
+			You must get this function explicitly because earlier versions of the DLL
+			don't implement this function. That makes the lack of implementation of the
+			function a version marker in itself.
+			*/
+			pDllGetVersion = (DLLGETVERSIONPROC) GetProcAddress(hDllInst, 
+																"DllGetVersion");
+
+			if(pDllGetVersion) 
+			{    
+				// DLL supports version retrieval function
+				DLLVERSIONINFO    dvi;
+
+				ZeroMemory(&dvi, sizeof(dvi));
+				dvi.cbSize = sizeof(dvi);
+				HRESULT hr = (*pDllGetVersion)(&dvi);
+
+				if(SUCCEEDED(hr)) 
+				{ // Finally, the version is at our hands
+					major = dvi.dwMajorVersion;
+					minor = dvi.dwMinorVersion;
+					build_number = dvi.dwBuildNumber;
+					result = true;
+				} 
+			} 
+
+			FreeLibrary(hDllInst);  // Release DLL
+		} 
+	}
+	return result;
+}
+#endif // LL_WINDOWS
 
 LLOSInfo::LLOSInfo() :
 	mMajorVer(0), mMinorVer(0), mBuild(0)
@@ -97,6 +159,11 @@ LLOSInfo::LLOSInfo() :
 	mMajorVer = osvi.dwMajorVersion;
 	mMinorVer = osvi.dwMinorVersion;
 	mBuild = osvi.dwBuildNumber;
+
+	DWORD shell32_major, shell32_minor, shell32_build;
+	bool got_shell32_version = get_shell32_dll_version(shell32_major, 
+													   shell32_minor, 
+													   shell32_build);
 
 	switch(osvi.dwPlatformId)
 	{
@@ -146,8 +213,8 @@ LLOSInfo::LLOSInfo() :
 				pGNSI = (PGNSI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")),  "GetNativeSystemInfo"); //load kernel32 get function
 				if(NULL != pGNSI) //check if it has failed
 					pGNSI(&si); //success
-				else
-					GetSystemInfo(&si); //if it fails get regular system info
+				else 
+					GetSystemInfo(&si); //if it fails get regular system info 
 				//(Warning: If GetSystemInfo it may result in incorrect information in a WOW64 machine, if the kernel fails to load)
 
 				//msdn microsoft finds 32 bit and 64 bit flavors this way..
@@ -206,6 +273,7 @@ LLOSInfo::LLOSInfo() :
 								  csdversion.c_str(),
 								  (osvi.dwBuildNumber & 0xffff));
 			}
+
 			mOSString = mOSStringSimple + tmpstr;
 		}
 		break;
@@ -235,6 +303,21 @@ LLOSInfo::LLOSInfo() :
 		mOSString = mOSStringSimple;
 		break;
 	}
+
+	std::string compatibility_mode;
+	if(got_shell32_version)
+	{
+		if(osvi.dwMajorVersion != shell32_major 
+			|| osvi.dwMinorVersion != shell32_minor)
+		{
+			compatibility_mode = llformat(" compatibility mode. real ver: %d.%d (Build %d)", 
+											shell32_major,
+											shell32_minor,
+											shell32_build);
+		}
+	}
+	mOSString += compatibility_mode;
+
 #else
 	struct utsname un;
 	if(uname(&un) != -1)
@@ -262,8 +345,8 @@ LLOSInfo::LLOSInfo() :
 		else if (ostype == "Linux")
 		{
 			// Only care about major and minor Linux versions, truncate at second '.'
-			S32 idx1 = mOSStringSimple.find_first_of(".", 0);
-			S32 idx2 = (idx1 != std::string::npos) ? mOSStringSimple.find_first_of(".", idx1+1) : std::string::npos;
+			std::string::size_type idx1 = mOSStringSimple.find_first_of(".", 0);
+			std::string::size_type idx2 = (idx1 != std::string::npos) ? mOSStringSimple.find_first_of(".", idx1+1) : std::string::npos;
 			std::string simple = mOSStringSimple.substr(0, idx2);
 			if (simple.length() > 0)
 				mOSStringSimple = simple;
@@ -423,71 +506,21 @@ U32 LLOSInfo::getProcessResidentSizeKB()
 LLCPUInfo::LLCPUInfo()
 {
 	std::ostringstream out;
-	CProcessor proc;
-	const ProcessorInfo* info = proc.GetCPUInfo();
+	LLProcessorInfo proc;
 	// proc.WriteInfoTextFile("procInfo.txt");
-	mHasSSE = info->_Ext.SSE_StreamingSIMD_Extensions;
-	mHasSSE2 = info->_Ext.SSE2_StreamingSIMD2_Extensions;
-	mHasAltivec = info->_Ext.Altivec_Extensions;
-	mCPUMhz = (S32)(proc.GetCPUFrequency(50)/1000000.0);
-	mFamily.assign( info->strFamily );
+	mHasSSE = proc.hasSSE();
+	mHasSSE2 = proc.hasSSE2();
+	mHasAltivec = proc.hasAltivec();
+	mCPUMHz = (F64)proc.getCPUFrequency();
+	mFamily = proc.getCPUFamilyName();
 	mCPUString = "Unknown";
 
-#if LL_WINDOWS || LL_DARWIN || LL_SOLARIS
-	out << proc.strCPUName;
-	if (200 < mCPUMhz && mCPUMhz < 10000)           // *NOTE: cpu speed is often way wrong, do a sanity check
+	out << proc.getCPUBrandName();
+	if (200 < mCPUMHz && mCPUMHz < 10000)           // *NOTE: cpu speed is often way wrong, do a sanity check
 	{
-		out << " (" << mCPUMhz << " MHz)";
+		out << " (" << mCPUMHz << " MHz)";
 	}
 	mCPUString = out.str();
-	
-#elif LL_LINUX
-	std::map< std::string, std::string > cpuinfo;
-	LLFILE* cpuinfo_fp = LLFile::fopen(CPUINFO_FILE, "rb");
-	if(cpuinfo_fp)
-	{
-		char line[MAX_STRING];
-		memset(line, 0, MAX_STRING);
-		while(fgets(line, MAX_STRING, cpuinfo_fp))
-		{
-			// /proc/cpuinfo on Linux looks like:
-			// name\t*: value\n
-			char* tabspot = strchr( line, '\t' );
-			if (tabspot == NULL)
-				continue;
-			char* colspot = strchr( tabspot, ':' );
-			if (colspot == NULL)
-				continue;
-			char* spacespot = strchr( colspot, ' ' );
-			if (spacespot == NULL)
-				continue;
-			char* nlspot = strchr( line, '\n' );
-			if (nlspot == NULL)
-				nlspot = line + strlen( line ); // Fallback to terminating NUL
-			std::string linename( line, tabspot );
-			std::string llinename(linename);
-			LLStringUtil::toLower(llinename);
-			std::string lineval( spacespot + 1, nlspot );
-			cpuinfo[ llinename ] = lineval;
-		}
-		fclose(cpuinfo_fp);
-	}
-# if LL_X86
-	std::string flags = " " + cpuinfo["flags"] + " ";
-	LLStringUtil::toLower(flags);
-	mHasSSE = ( flags.find( " sse " ) != std::string::npos );
-	mHasSSE2 = ( flags.find( " sse2 " ) != std::string::npos );
-	
-	F64 mhz;
-	if (LLStringUtil::convertToF64(cpuinfo["cpu mhz"], mhz)
-	    && 200.0 < mhz && mhz < 10000.0)
-	{
-		mCPUMhz = (S32)llrint(mhz);
-	}
-	if (!cpuinfo["model name"].empty())
-		mCPUString = cpuinfo["model name"];
-# endif // LL_X86
-#endif // LL_LINUX
 }
 
 bool LLCPUInfo::hasAltivec() const
@@ -505,9 +538,9 @@ bool LLCPUInfo::hasSSE2() const
 	return mHasSSE2;
 }
 
-S32 LLCPUInfo::getMhz() const
+F64 LLCPUInfo::getMHz() const
 {
-	return mCPUMhz;
+	return mCPUMHz;
 }
 
 std::string LLCPUInfo::getCPUString() const
@@ -517,44 +550,15 @@ std::string LLCPUInfo::getCPUString() const
 
 void LLCPUInfo::stream(std::ostream& s) const
 {
-#if LL_WINDOWS || LL_DARWIN || LL_SOLARIS
 	// gather machine information.
-	char proc_buf[CPUINFO_BUFFER_SIZE];		/* Flawfinder: ignore */
-	CProcessor proc;
-	if(proc.CPUInfoToText(proc_buf, CPUINFO_BUFFER_SIZE))
-	{
-		s << proc_buf;
-	}
-	else
-	{
-		s << "Unable to collect processor information" << std::endl;
-	}
-#else
-	// *NOTE: This works on linux. What will it do on other systems?
-	LLFILE* cpuinfo = LLFile::fopen(CPUINFO_FILE, "rb");
-	if(cpuinfo)
-	{
-		char line[MAX_STRING];
-		memset(line, 0, MAX_STRING);
-		while(fgets(line, MAX_STRING, cpuinfo))
-		{
-			line[strlen(line)-1] = ' ';
-			s << line;
-		}
-		fclose(cpuinfo);
-		s << std::endl;
-	}
-	else
-	{
-		s << "Unable to collect processor information" << std::endl;
-	}
-#endif
+	s << LLProcessorInfo().getCPUFeatureDescription();
+
 	// These are interesting as they reflect our internal view of the
 	// CPU's attributes regardless of platform
 	s << "->mHasSSE:     " << (U32)mHasSSE << std::endl;
 	s << "->mHasSSE2:    " << (U32)mHasSSE2 << std::endl;
 	s << "->mHasAltivec: " << (U32)mHasAltivec << std::endl;
-	s << "->mCPUMhz:     " << mCPUMhz << std::endl;
+	s << "->mCPUMHz:     " << mCPUMHz << std::endl;
 	s << "->mCPUString:  " << mCPUString << std::endl;
 }
 

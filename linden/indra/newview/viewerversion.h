@@ -33,6 +33,8 @@
 
 #include "llversionviewer.h" // for LL versioning only
 
+const char * const LL_VIEWER_NAME = "Second Life";
+
 class ViewerVersion
 {
 public:

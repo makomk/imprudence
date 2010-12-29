@@ -54,6 +54,7 @@
 #include "v4math.h"
 #include "llsmoothstep.h"
 #include "llsdutil.h"
+#include "llfoldertype.h"
 //#include "vmath.h"
 
 #include "imageids.h"
@@ -5512,7 +5513,7 @@ void update_group_floaters(const LLUUID& group_id)
 		gIMMgr->refresh();
 	}
 
-	gAgent.fireEvent(new LLEvent(&gAgent, "new group"), "");
+	gAgent.fireEvent(new LLOldEvents::LLEvent(&gAgent, "new group"), "");
 }
 
 // static
@@ -6707,7 +6708,7 @@ void LLAgent::saveWearableAs(
 	if (save_in_lost_and_found)
 	{
 		category_id = gInventory.findCategoryUUIDForType(
-			LLAssetType::AT_LOST_AND_FOUND);
+			LLFolderType::FT_LOST_AND_FOUND);
 	}
 	else
 	{
@@ -6739,7 +6740,7 @@ void LLAgent::saveWearableAs(
 			new_wearable->setPermissions(item->getPermissions());
 			if (save_in_lost_and_found)
 			{
-				category_id = gInventory.findCategoryUUIDForType(LLAssetType::AT_LOST_AND_FOUND);
+				category_id = gInventory.findCategoryUUIDForType(LLFolderType::FT_LOST_AND_FOUND);
 			}
 			else
 			{
@@ -7096,7 +7097,7 @@ void LLAgent::recoverMissingWearable( EWearableType type )
 	// (We used to overwrite the "not found" one, but that could potentially
 	// destory content.) JC
 	LLUUID lost_and_found_id = 
-		gInventory.findCategoryUUIDForType(LLAssetType::AT_LOST_AND_FOUND);
+		gInventory.findCategoryUUIDForType(LLFolderType::FT_LOST_AND_FOUND);
 	LLPointer<LLInventoryCallback> cb =
 		new addWearableToAgentInventoryCallback(
 			LLPointer<LLRefCount>(NULL),
@@ -7223,8 +7224,8 @@ void LLAgent::makeNewOutfit(
 
 	// First, make a folder in the Clothes directory.
 	LLUUID folder_id = gInventory.createNewCategory(
-		gInventory.findCategoryUUIDForType(LLAssetType::AT_CLOTHING),
-		LLAssetType::AT_NONE,
+		gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING),
+		LLFolderType::FT_NONE,
 		new_folder_name);
 
 	bool found_first_item = false;

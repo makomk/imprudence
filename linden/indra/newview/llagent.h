@@ -119,7 +119,7 @@ inline bool operator==(const LLGroupData &a, const LLGroupData &b)
 
 //
 
-class LLAgent : public LLObservable
+class LLAgent : public LLOldEvents::LLObservable
 {
 	LOG_CLASS(LLAgent);
 	

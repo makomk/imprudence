@@ -137,7 +137,7 @@ BOOL LLFloaterAvatarPicker::postBuild()
 	inventory_panel->setFilterTypes(LLInventoryType::NIT_CALLCARD);
 	inventory_panel->setFollowsAll();
 	inventory_panel->setShowFolderState(LLInventoryFilter::SHOW_NON_EMPTY_FOLDERS);
-	inventory_panel->openDefaultFolderForType(LLAssetType::AT_CALLINGCARD);
+	inventory_panel->openDefaultFolderForType(LLFolderType::FT_CALLINGCARD);
 	inventory_panel->setSelectCallback(LLFloaterAvatarPicker::onCallingCardSelectionChange, this);
 
 	childSetTabChangeCallback("ResidentChooserTabs", "SearchPanel",			onTabChanged, this);

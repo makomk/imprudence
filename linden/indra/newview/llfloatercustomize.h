@@ -43,6 +43,7 @@
 #include "llviewermenu.h"
 #include "llwearable.h"
 #include "lliconctrl.h"
+#include "llsafehandle.h"
 
 class LLButton;
 class LLIconCtrl;

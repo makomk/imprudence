@@ -2,36 +2,35 @@
  * @file linden_common.h
  * @brief Includes common headers that are always safe to include
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
 #ifndef LL_LINDEN_COMMON_H
 #define LL_LINDEN_COMMON_H
+
+// *NOTE:  Please keep includes here to a minimum!
+//
+// Files included here are included in every library .cpp file and
+// are not precompiled.
 
 #if defined(LL_WINDOWS) && defined(_DEBUG)
 # if _MSC_VER >= 1400 // Visual C++ 2005 or later
@@ -67,16 +66,6 @@
 #include <string>
 
 #ifdef LL_WINDOWS
-#pragma warning (3 : 4702) // we like level 3, not 4
-// level 4 warnings that we need to disable:
-#pragma warning (disable : 4100) // unreferenced formal parameter
-#pragma warning (disable : 4127) // conditional expression is constant (e.g. while(1) )
-#pragma warning (disable : 4244) // possible loss of data on conversions
-#pragma warning (disable : 4396) // the inline specifier cannot be used when a friend declaration refers to a specialization of a function template
-#pragma warning (disable : 4512) // assignment operator could not be generated
-#pragma warning (disable : 4706) // assignment within conditional (even if((x = y)) )
-#pragma warning (disable : 4265) // boost 1.36.0, non-virtual destructor in boost::exception_detail::*
-
 // Reenable warnings we disabled above
 #pragma warning (3 : 4702) // unreachable code, we like level 3, not 4
 // moved msvc warnings to llpreprocessor.h  *TODO - delete this comment after merge conflicts are unlikely -brad

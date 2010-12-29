@@ -41,6 +41,7 @@
 #include "llmap.h"
 #include "lljointstate.h"
 #include "lljoint.h"
+#include "llpointer.h"
 #include <map>
 
 

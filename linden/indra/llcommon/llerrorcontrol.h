@@ -3,31 +3,25 @@
  * @date   December 2006
  * @brief error message system control
  *
- * $LicenseInfo:firstyear=2007&license=viewergpl$
- * 
- * Copyright (c) 2007-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2007&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -35,10 +29,9 @@
 #define LL_LLERRORCONTROL_H
 
 #include "llerror.h"
-
+#include "boost/function.hpp"
 #include <string>
 
-class LLFixedBuffer;
 class LLSD;
 
 /*
@@ -48,6 +41,18 @@ class LLSD;
 	
 	These implementations are in llerror.cpp.
 */
+
+// Line buffer interface
+class LLLineBuffer
+{
+public:
+	LLLineBuffer() {};
+	virtual ~LLLineBuffer() {};
+
+	virtual void clear() = 0; // Clear the buffer, and reset it.
+
+	virtual void addLine(const std::string& utf8line) = 0;
+};
 
 
 namespace LLError
@@ -84,16 +89,38 @@ namespace LLError
 		Control functions.
 	*/
 
-	typedef void(*FatalFunction)(const std::string& message);
+	typedef boost::function<void(const std::string&)> FatalFunction;
 	LL_COMMON_API void crashAndLoop(const std::string& message);
-		// Default fatal funtion: access null pointer and loops forever
+		// Default fatal function: access null pointer and loops forever
 
-	LL_COMMON_API void setFatalFunction(FatalFunction);
+	LL_COMMON_API void setFatalFunction(const FatalFunction&);
 		// The fatal function will be called when an message of LEVEL_ERROR
 		// is logged.  Note: supressing a LEVEL_ERROR message from being logged
 		// (by, for example, setting a class level to LEVEL_NONE), will keep
 		// the that message from causing the fatal funciton to be invoked.
-		
+
+    LL_COMMON_API FatalFunction getFatalFunction();
+        // Retrieve the previously-set FatalFunction
+
+    /// temporarily override the FatalFunction for the duration of a
+    /// particular scope, e.g. for unit tests
+    class LL_COMMON_API OverrideFatalFunction
+    {
+    public:
+        OverrideFatalFunction(const FatalFunction& func):
+            mPrev(getFatalFunction())
+        {
+            setFatalFunction(func);
+        }
+        ~OverrideFatalFunction()
+        {
+            setFatalFunction(mPrev);
+        }
+
+    private:
+        FatalFunction mPrev;
+    };
+
 	typedef std::string (*TimeFunction)();
 	LL_COMMON_API std::string utcTime();
 	
@@ -122,7 +149,7 @@ namespace LLError
 		// each error message is passed to each recorder via recordMessage()
 	
 	LL_COMMON_API void logToFile(const std::string& filename);
-	LL_COMMON_API void logToFixedBuffer(LLFixedBuffer*);
+	LL_COMMON_API void logToFixedBuffer(LLLineBuffer*);
 		// Utilities to add recorders for logging to a file or a fixed buffer
 		// A second call to the same function will remove the logger added
 		// with the first.

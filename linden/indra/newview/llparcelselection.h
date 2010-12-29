@@ -33,7 +33,8 @@
 #ifndef LLPARCELSELECTION_H
 #define LLPARCELSELECTION_H
 
-#include "llmemory.h"
+#include "llpointer.h"
+#include "llsafehandle.h"
 
 class LLParcel;
 

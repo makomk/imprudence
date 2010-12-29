@@ -55,6 +55,8 @@
 #include "rlvhandler.h"
 // [/RLVa:KB]
 
+using namespace LLOldEvents;
+
 const F32 SPEAKER_TIMEOUT = 10.f; // seconds of not being on voice channel before removed from list of active speakers
 const F32 RESORT_TIMEOUT = 5.f; // seconds of mouse inactivity before it's ok to sort regardless of mouse-in-view.
 const LLColor4 INACTIVE_COLOR(0.3f, 0.3f, 0.3f, 0.5f);

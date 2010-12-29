@@ -405,10 +405,12 @@ set(viewer_SOURCE_FILES
     llvelocitybar.cpp
     llviewchildren.cpp
     llviewerassetstorage.cpp
+    llviewerassettype.cpp
     llvieweraudio.cpp
     llviewercamera.cpp
     llviewercontrol.cpp
     llviewerdisplay.cpp
+    llviewerfoldertype.cpp
     llviewergenericmessage.cpp
     llviewergesture.cpp
     llviewerimage.cpp
@@ -866,11 +868,13 @@ set(viewer_HEADER_FILES
     llvelocitybar.h
     llviewchildren.h
     llviewerassetstorage.h
+    llviewerassettype.h
     llvieweraudio.h
     llviewerbuild.h
     llviewercamera.h
     llviewercontrol.h
     llviewerdisplay.h
+    llviewerfoldertype.h
     llviewergenericmessage.h
     llviewergesture.h
     llviewerimage.h

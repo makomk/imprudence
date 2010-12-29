@@ -99,7 +99,7 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 	if(notify["sigtype"].asString() == "add" || notify["sigtype"].asString() == "change")
 	{
 		//bring existing notification to top
-		LLNotifyBox* boxp = LLNotifyBox::getInstance(notification->getID());
+		LLNotifyBox* boxp = LLInstanceTracker<LLNotifyBox,LLUUID>::getInstance(notification->getID());
 		if (boxp && !boxp->isDead())
 		{
 			gNotifyBoxView->showOnly(boxp);
@@ -116,7 +116,7 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 	}
 	else if (notify["sigtype"].asString() == "delete")
 	{
-		LLNotifyBox* boxp = LLNotifyBox::getInstance(notification->getID());
+		LLNotifyBox* boxp = LLInstanceTracker<LLNotifyBox,LLUUID>::getInstance(notification->getID());
 		if (boxp && !boxp->isDead())
 		{
 			boxp->close();

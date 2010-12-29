@@ -42,6 +42,7 @@
 #include "llfloater.h"
 #include "llvoinventorylistener.h"
 #include "llinventory.h"
+#include "llsafehandle.h"
 
 class LLViewerObject;
 class LLObjectSelection;

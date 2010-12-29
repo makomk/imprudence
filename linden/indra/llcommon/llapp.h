@@ -2,31 +2,25 @@
  * @file llapp.h
  * @brief Declaration of the LLApp class.
  *
- * $LicenseInfo:firstyear=2003&license=viewergpl$
- * 
- * Copyright (c) 2003-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2003&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -36,6 +30,7 @@
 #include <map>
 #include "llrun.h"
 #include "llsd.h"
+#include "lloptioninterface.h"
 
 // Forward declarations
 template <typename Type> class LLAtomic32;
@@ -65,7 +60,11 @@ public:
 };
 #endif
 
-class LL_COMMON_API LLApp
+namespace google_breakpad {
+	class ExceptionHandler; // See exception_handler.h
+}
+
+class LL_COMMON_API LLApp : public LLOptionInterface
 {
 	friend class LLErrorThread;
 public:
@@ -114,7 +113,7 @@ public:
 	 * @param name The name of the option.
 	 * @return Returns the option data.
 	 */
-	LLSD getOption(const std::string& name) const;
+	virtual LLSD getOption(const std::string& name) const;
 
 	/** 
 	 * @brief Parse command line options and insert them into
@@ -129,6 +128,19 @@ public:
 	 * @return Returns true if the parse succeeded.
 	 */
 	bool parseCommandOptions(int argc, char** argv);
+
+	/**
+	 * @brief Keep track of live files automatically.
+	 *
+	 * *TODO: it currently uses the <code>addToEventTimer()</code> API
+	 * instead of the runner. I should probalby use the runner.
+	 *
+	 * *NOTE: DO NOT add the livefile instance to any kind of check loop.
+	 *
+	 * @param livefile A valid instance of an LLLiveFile. This LLApp
+	 * instance will delete the livefile instance.
+	 */
+	void manageLiveFile(LLLiveFile* livefile);
 
 	/**
 	 * @brief Set the options at the specified priority.
@@ -195,18 +207,45 @@ public:
 #endif
 	static int getPid();
 
-	//
-	// Error handling methods
-	//
+	/** @name Error handling methods */
+	//@{
+	/**
+	 * @brief Do our generic platform-specific error-handling setup --
+	 * signals on unix, structured exceptions on windows.
+	 * 
+	 * DO call this method if your app will either spawn children or be
+	 * spawned by a launcher.
+	 * Call just after app object construction.
+	 * (Otherwise your app will crash when getting signals,
+	 * and will not core dump.)
+	 *
+	 * DO NOT call this method if your application has specialized
+	 * error handling code.
+	 */
+	void setupErrorHandling();
+
 	void setErrorHandler(LLAppErrorHandler handler);
-	void setSyncErrorHandler(LLAppErrorHandler handler);
+	static void runErrorHandler(); // run shortly after we detect an error, ran in the relatively robust context of the LLErrorThread - preferred.
+	//@}
+	
+	// the maximum length of the minidump filename returned by getMiniDumpFilename()
+	static const U32 MAX_MINDUMP_PATH_LENGTH = 256;
+
+	// change the directory where Breakpad minidump files are written to
+	void setMiniDumpDir(const std::string &path);
+
+	// Return the Google Breakpad minidump filename after a crash.
+	char *getMiniDumpFilename() { return minidump_path; }
+
+	// Write out a Google Breakpad minidump file.
+	void writeMiniDump();
 
 #if !LL_WINDOWS
 	//
 	// Child process handling (Unix only for now)
 	//
 	// Set a callback to be run on exit of a child process
-	// WARNING!  This callback is run from the signal handler due to the extreme crappiness of
+	// WARNING!  This callback is run from the signal handler due to
 	// Linux threading requiring waitpid() to be called from the thread that spawned the process.
 	// At some point I will make this more behaved, but I'm not going to fix this right now - djs
 	void setChildCallback(pid_t pid, LLAppChildCallback callback);
@@ -215,8 +254,9 @@ public:
 	void setDefaultChildCallback(LLAppChildCallback callback); 
 	
     // Fork and do the proper signal handling/error handling mojo
-	// WARNING: You need to make sure your signal handling callback is correct after
-	// you fork, because not all threads are duplicated when you fork!
+	// *NOTE: You need to make sure your signal handling callback is
+	// correct after you fork, because not all threads are duplicated
+	// when you fork!
 	pid_t fork(); 
 #endif
 
@@ -256,16 +296,14 @@ protected:
 private:
 	void startErrorThread();
 	
-	void setupErrorHandling();		// Do platform-specific error-handling setup (signals, structured exceptions)
-	static void runErrorHandler(); // run shortly after we detect an error, ran in the relatively robust context of the LLErrorThread - preferred.
-	static void runSyncErrorHandler(); // run IMMEDIATELY when we get an error, ran in the context of the faulting thread.
+	// Contains the filename of the minidump file after a crash.
+	char minidump_path[MAX_MINDUMP_PATH_LENGTH];
 
 	// *NOTE: On Windows, we need a routine to reset the structured
 	// exception handler when some evil driver has taken it over for
 	// their own purposes
 	typedef int(*signal_handler_func)(int signum);
 	static LLAppErrorHandler sErrorHandler;
-	static LLAppErrorHandler sSyncErrorHandler;
 
 	// Default application threads
 	LLErrorThread* mThreadErrorp;		// Waits for app to go to status ERROR, then runs the error callback
@@ -279,11 +317,15 @@ private:
 	// The application options.
 	LLSD mOptions;
 
+	// The live files for this application
+	std::vector<LLLiveFile*> mLiveFiles;
 	//@}
 
 private:
 	// the static application instance if it was created.
 	static LLApp* sApplication;
+	
+	google_breakpad::ExceptionHandler * mExceptionHandler;
 
 
 #if !LL_WINDOWS

@@ -1238,6 +1238,8 @@ void LLVOSky::createDummyVertexBuffer()
 	}
 }
 
+static LLFastTimer::DeclareTimer FTM_RENDER_FAKE_VBO_UPDATE("Fake VBO Update");
+
 void LLVOSky::updateDummyVertexBuffer()
 {	
 	if(!LLVertexBuffer::sEnableVBOs)
@@ -1249,7 +1251,7 @@ void LLVOSky::updateDummyVertexBuffer()
 		return ;
 	}
 
-	LLFastTimer t(LLFastTimer::FTM_RENDER_FAKE_VBO_UPDATE) ;
+	LLFastTimer t(FTM_RENDER_FAKE_VBO_UPDATE) ;
 
 	if(!mFace[FACE_DUMMY] || mFace[FACE_DUMMY]->mVertexBuffer.isNull())
 		createDummyVertexBuffer() ;
@@ -1263,9 +1265,11 @@ void LLVOSky::updateDummyVertexBuffer()
 //end of fake vertex buffer updating
 //----------------------------------
 
+static LLFastTimer::DeclareTimer FTM_GEO_SKY("Sky Geometry");
+
 BOOL LLVOSky::updateGeometry(LLDrawable *drawable)
 {
-	LLFastTimer ftm(LLFastTimer::FTM_GEO_SKY);
+	LLFastTimer ftm(FTM_GEO_SKY);
 	if (mFace[FACE_REFLECTION] == NULL)
 	{
 		LLDrawPoolWater *poolp = (LLDrawPoolWater*) gPipeline.getPool(LLDrawPool::POOL_WATER);

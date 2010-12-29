@@ -396,6 +396,17 @@ std::string LLDir::getExpandedFilename(ELLPath location, const std::string& subd
 		prefix += "browser_profile";
 		break;
 
+	case LL_PATH_LOCAL_ASSETS:
+		prefix = getAppRODataDir();
+		prefix += mDirDelimiter;
+		prefix += "skins";
+		prefix += mDirDelimiter;
+		prefix += "default";
+		prefix += mDirDelimiter;
+		prefix += "textures";
+		break;
+
+
 	case LL_PATH_EXECUTABLE:
 		prefix = getExecutableDir();
 		break;

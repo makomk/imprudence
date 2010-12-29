@@ -36,6 +36,7 @@
 #include "lltool.h"
 #include "lluuid.h"
 #include "llviewerwindow.h" // for LLPickInfo
+#include "llsafehandle.h"
 
 class LLViewerObject;
 class LLObjectSelection;

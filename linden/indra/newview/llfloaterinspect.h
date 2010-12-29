@@ -36,6 +36,7 @@
 #define LL_LLFLOATERINSPECT_H
 
 #include "llfloater.h"
+#include "llsafehandle.h"
 
 //class LLTool;
 class LLObjectSelection;

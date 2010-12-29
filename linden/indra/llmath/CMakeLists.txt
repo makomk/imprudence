@@ -56,6 +56,7 @@ set(llmath_HEADER_FILES
     llquantize.h
     llquaternion.h
     llrect.h
+    llsdutil_math.h
     llsphere.h
     lltreenode.h
     llv4math.h

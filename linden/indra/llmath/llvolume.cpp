@@ -46,6 +46,7 @@
 #include "lldarray.h"
 #include "llvolume.h"
 #include "llstl.h"
+#include "llpointer.h"
 
 #define DEBUG_SILHOUETTE_BINORMALS 0
 #define DEBUG_SILHOUETTE_NORMALS 0 // TomY: Use this to display normals using the silhouette

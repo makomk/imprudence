@@ -221,7 +221,7 @@ JCFloaterAreaSearch::PopupMenuHandler::PopupMenuHandler(const JCFloaterAreaSearc
 }
 
 // static
-bool JCFloaterAreaSearch::PopupMenuHandler::handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+bool JCFloaterAreaSearch::PopupMenuHandler::handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata)
 {
 	std::string command = userdata.asString();
 	JCFloaterAreaSearch* self = (JCFloaterAreaSearch*)mInstance;

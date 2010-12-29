@@ -128,73 +128,73 @@ private:
 	class LLScaleMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLCenterMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLCheckCenterMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLRotateMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLCheckRotateMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLShowObjects : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLCheckShowObjects : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLShowWorldMap : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLStopTracking : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLEnableTracking : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLShowAgentProfile : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 
 	class LLEnableProfile : public LLMemberListener<LLNetMap>
 	{
 	public:
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	};
 };
 

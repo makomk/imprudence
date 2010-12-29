@@ -107,7 +107,7 @@ private:
 	{
 	public: PopupMenuHandler(const JCFloaterAreaSearch* instance);
 	
-		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
+		/*virtual*/ bool handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata);
 	
 		const JCFloaterAreaSearch* mInstance;
 	};

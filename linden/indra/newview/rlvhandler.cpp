@@ -30,6 +30,7 @@
 #include "llfloaterworldmap.h"
 #include "llinventoryview.h"
 #include "llstartup.h"
+#include "llviewerfoldertype.h"
 #include "llviewermenu.h"
 #include "llviewermessage.h"
 #include "llviewerobjectlist.h"
@@ -46,8 +47,6 @@
 #if RLV_TARGET < RLV_MAKE_TARGET(1, 23, 0)			// Version: 1.22.11
 	void confirm_replace_attachment_rez(S32 option, void* user_data);
 #endif
-// Only defined in llinventorymodel.cpp
-extern const char* NEW_CATEGORY_NAME;
 
 // ============================================================================
 // Static variable initialization
@@ -805,7 +804,7 @@ void RlvHandler::onAttach(LLViewerJointAttachment* pAttachPt)
 					std::string strFolderName = ".(" + strAttachPt + ")";
 
 					// Rename the item's parent folder if it's called "New Folder", isn't directly under #RLV and contains exactly 1 object
-					if ( (NEW_CATEGORY_NAME == pFolder->getName()) && (pFolder->getParentUUID() != pRlvRoot->getUUID()) &&
+					if ( (LLViewerFolderType::lookupNewCategoryName(LLFolderType::FT_NONE) == pFolder->getName()) && (pFolder->getParentUUID() != pRlvRoot->getUUID()) &&
 						 (1 == rlvGetDirectDescendentsCount(pFolder, LLAssetType::AT_OBJECT)) )
 					{
 						pFolder->rename(strFolderName);
@@ -816,7 +815,7 @@ void RlvHandler::onAttach(LLViewerJointAttachment* pAttachPt)
 					else
 					{
 						// "No modify" item with a non-renameable parent: create a new folder named and move the item into it
-						LLUUID idAttachFolder = gInventory.createNewCategory(pFolder->getUUID(), LLAssetType::AT_NONE, strFolderName);
+						LLUUID idAttachFolder = gInventory.createNewCategory(pFolder->getUUID(), LLFolderType::FT_NONE, strFolderName);
 						move_inventory_item(gAgent.getID(), gAgent.getSessionID(), pItem->getUUID(), idAttachFolder, std::string(), NULL);
 						//gInventory.notifyObservers(); <- done further down in LLVOAvatar::attachObject()
 					}

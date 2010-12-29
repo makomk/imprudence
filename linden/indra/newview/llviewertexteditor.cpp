@@ -51,6 +51,7 @@
 #include "llpreviewlandmark.h"
 #include "llscrollbar.h"
 #include "lltooldraganddrop.h"
+#include "llviewerassettype.h"
 #include "llviewercontrol.h"
 #include "llviewerimagelist.h"
 #include "llviewerwindow.h"
@@ -835,7 +836,7 @@ BOOL LLViewerTextEditor::handleHover(S32 x, S32 y, MASK mask)
 			if( LLToolDragAndDrop::getInstance()->isOverThreshold( screen_x, screen_y ) )
 			{
 				LLToolDragAndDrop::getInstance()->beginDrag(
-					LLAssetType::lookupDragAndDropType( mDragItem->getType() ),
+					LLViewerAssetType::lookupDragAndDropType( mDragItem->getType() ),
 					mDragItem->getUUID(),
 					LLToolDragAndDrop::SOURCE_NOTECARD,
 					getSourceID(), mObjectID);

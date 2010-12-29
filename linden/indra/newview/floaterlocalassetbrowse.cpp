@@ -39,6 +39,7 @@ this feature is still a work in progress.
 /* basic headers */
 #include "llviewerprecompiledheaders.h"
 #include "lluictrlfactory.h"
+#include "lleventtimer.h"
 
 /* own class header && upload floater header */
 #include "floaterlocalassetbrowse.h"

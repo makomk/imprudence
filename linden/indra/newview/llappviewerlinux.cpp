@@ -103,7 +103,7 @@ int main( int argc, char **argv )
 	gOldTerminateHandler = std::set_terminate(exceptionTerminateHandler);
 	// install crash handlers
 	viewer_app_ptr->setErrorHandler(LLAppViewer::handleViewerCrash);
-	viewer_app_ptr->setSyncErrorHandler(LLAppViewer::handleSyncViewerCrash);
+	// viewer_app_ptr->setSyncErrorHandler(LLAppViewer::handleSyncViewerCrash);
 
 	bool ok = viewer_app_ptr->init();
 	if(!ok)

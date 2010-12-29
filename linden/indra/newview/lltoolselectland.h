@@ -35,6 +35,7 @@
 
 #include "lltool.h"
 #include "v3dmath.h"
+#include "llsafehandle.h"
 
 class LLParcelSelection;
 

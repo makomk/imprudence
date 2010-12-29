@@ -172,7 +172,7 @@ void LLFloaterGroupPicker::ok()
 
 //LLEventListener
 //virtual
-bool LLPanelGroups::handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+bool LLPanelGroups::handleEvent(LLPointer<LLOldEvents::LLEvent> event, const LLSD& userdata)
 {
 	if (event->desc() == "new group")
 	{

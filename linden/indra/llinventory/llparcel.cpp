@@ -41,6 +41,7 @@
 #include "llmath.h"
 #include "llsd.h"
 #include "llsdutil.h"
+#include "llsdutil_math.h"
 #include "lltransactiontypes.h"
 #include "lltransactionflags.h"
 #include "llsdutil.h"

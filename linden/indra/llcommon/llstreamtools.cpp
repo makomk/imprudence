@@ -2,31 +2,25 @@
  * @file llstreamtools.cpp
  * @brief some helper functions for parsing legacy simstate and asset files.
  *
- * $LicenseInfo:firstyear=2005&license=viewergpl$
- * 
- * Copyright (c) 2005-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2005&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -45,7 +39,7 @@
 // skips spaces and tabs
 bool skip_whitespace(std::istream& input_stream)
 {
-	char c = input_stream.peek();
+	int c = input_stream.peek();
 	while (('\t' == c || ' ' == c) && input_stream.good())
 	{
 		input_stream.get();
@@ -57,7 +51,7 @@ bool skip_whitespace(std::istream& input_stream)
 // skips whitespace, newlines, and carriage returns
 bool skip_emptyspace(std::istream& input_stream)
 {
-	char c = input_stream.peek();
+	int c = input_stream.peek();
 	while ( input_stream.good()
 			&& ('\t' == c || ' ' == c || '\n' == c || '\r' == c) )
 	{
@@ -72,7 +66,7 @@ bool skip_comments_and_emptyspace(std::istream& input_stream)
 {
 	while (skip_emptyspace(input_stream))
 	{
-		char c = input_stream.peek();
+		int c = input_stream.peek();
 		if ('#' == c )
 		{
 			while ('\n' != c && input_stream.good())
@@ -90,7 +84,7 @@ bool skip_comments_and_emptyspace(std::istream& input_stream)
 
 bool skip_line(std::istream& input_stream)
 {
-	char c;
+	int c;
 	do
 	{
 		c = input_stream.get();
@@ -100,7 +94,7 @@ bool skip_line(std::istream& input_stream)
 
 bool skip_to_next_word(std::istream& input_stream)
 {
-	char c = input_stream.peek();
+	int c = input_stream.peek();
 	while ( input_stream.good()
 			&& (   (c >= 'a' && c <= 'z')
 		   		|| (c >= 'A' && c <= 'Z')
@@ -132,7 +126,7 @@ bool skip_to_end_of_next_keyword(const char* keyword, std::istream& input_stream
 	while (input_stream.good())
 	{
 		skip_emptyspace(input_stream);
-		char c = input_stream.get();
+		int c = input_stream.get();
 		if (keyword[0] != c)
 		{
 			skip_line(input_stream);
@@ -181,7 +175,7 @@ bool skip_to_start_of_next_keyword(const char* keyword, std::istream& input_stre
 	while (input_stream.good())
 	{
 		skip_emptyspace(input_stream);
-		char c = input_stream.get();
+		int c = input_stream.get();
 		if (keyword[0] != c)
 		{
 			skip_line(input_stream);
@@ -229,7 +223,7 @@ bool skip_to_start_of_next_keyword(const char* keyword, std::istream& input_stre
 bool get_word(std::string& output_string, std::istream& input_stream)
 {
 	skip_emptyspace(input_stream);
-	char c = input_stream.peek();
+	int c = input_stream.peek();
 	while ( !isspace(c) 
 			&& '\n' != c 
 			&& '\r' != c 
@@ -246,7 +240,7 @@ bool get_word(std::string& output_string, std::istream& input_stream, int n)
 {
 	skip_emptyspace(input_stream);
 	int char_count = 0;
-	char c = input_stream.peek();
+	int c = input_stream.peek();
 	while (!isspace(c) 
 			&& '\n' != c 
 			&& '\r' != c 
@@ -265,7 +259,7 @@ bool get_word(std::string& output_string, std::istream& input_stream, int n)
 bool get_line(std::string& output_string, std::istream& input_stream)
 {
 	output_string.clear();
-	char c = input_stream.get();
+	int c = input_stream.get();
 	while (input_stream.good())
 	{
 		output_string += c;
@@ -285,7 +279,7 @@ bool get_line(std::string& output_string, std::istream& input_stream, int n)
 {
 	output_string.clear();
 	int char_count = 0;
-	char c = input_stream.get();
+	int c = input_stream.get();
 	while (input_stream.good() && char_count < n)
 	{
 		char_count++;
@@ -436,7 +430,7 @@ void get_keyword_and_value(std::string& keyword,
 	while (line_index < line_size)
 	{
 		c = line[line_index];
-		if (!isspace(c))
+		if (!LLStringOps::isSpace(c))
 		{
 			break;
 		}
@@ -448,7 +442,7 @@ void get_keyword_and_value(std::string& keyword,
 	while (line_index < line_size)
 	{
 		c = line[line_index];
-		if (isspace(c) || '\r' == c || '\n' == c)
+		if (LLStringOps::isSpace(c) || '\r' == c || '\n' == c)
 		{
 			break;
 		}

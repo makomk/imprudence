@@ -2553,13 +2553,16 @@ S32 LLVOAvatar::setTETexture(const U8 te, const LLUUID& uuid)
 
 // setTEImage
 
+static LLFastTimer::DeclareTimer FTM_AVATAR_UPDATE("Update Avatar");
+static LLFastTimer::DeclareTimer FTM_JOINT_UPDATE("Update Joints");
+
 //------------------------------------------------------------------------
 // idleUpdate()
 //------------------------------------------------------------------------
 BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 {
 	LLMemType mt(LLMemType::MTYPE_AVATAR);
-	LLFastTimer t(LLFastTimer::FTM_AVATAR_UPDATE);
+	LLFastTimer t(FTM_AVATAR_UPDATE);
 
 	if (isDead())
 	{
@@ -2578,7 +2581,7 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 	// force asynchronous drawable update
 	if(mDrawable.notNull() && !gNoRender)
 	{
-		LLFastTimer t(LLFastTimer::FTM_JOINT_UPDATE);
+		LLFastTimer t(FTM_JOINT_UPDATE);
 
 		if (mIsSitting && getParent())
 		{
@@ -2751,6 +2754,8 @@ void LLVOAvatar::idleUpdateVoiceVisualizer(bool voice_enabled)
 	}//if ( voiceEnabled )
 }
 
+static LLFastTimer::DeclareTimer FTM_ATTACHMENT_UPDATE("Update Attachments");
+
 void LLVOAvatar::idleUpdateMisc(bool detailed_update)
 {
 	if (LLVOAvatar::sJointDebug)
@@ -2772,7 +2777,7 @@ void LLVOAvatar::idleUpdateMisc(bool detailed_update)
 	// update attachments positions
 	if (detailed_update || !sUseImpostors)
 	{
-		LLFastTimer t(LLFastTimer::FTM_ATTACHMENT_UPDATE);
+		LLFastTimer t(FTM_ATTACHMENT_UPDATE);
 		for (attachment_map_t::iterator iter = mAttachmentPoints.begin();
 			 iter != mAttachmentPoints.end(); )
 		{
@@ -5845,9 +5850,12 @@ void LLVOAvatar::requestStopMotion( LLMotion* motion )
 //-----------------------------------------------------------------------------
 // loadAvatar()
 //-----------------------------------------------------------------------------
+
+// static LLFastTimer::DeclareTimer FTM_LOAD_AVATAR("Load Avatar");
+
 BOOL LLVOAvatar::loadAvatar()
 {
-// 	LLFastTimer t(LLFastTimer::FTM_LOAD_AVATAR);
+// 	LLFastTimer t(FTM_LOAD_AVATAR);
 
 	// avatar_skeleton.xml
 	if( !buildSkeleton(sAvatarSkeletonInfo) )
@@ -6391,9 +6399,10 @@ LLDrawable *LLVOAvatar::createDrawable(LLPipeline *pipeline)
 //-----------------------------------------------------------------------------
 // updateGeometry()
 //-----------------------------------------------------------------------------
+static LLFastTimer::DeclareTimer FTM_UPDATE_AVATAR("Update Avatar");
 BOOL LLVOAvatar::updateGeometry(LLDrawable *drawable)
 {
-	LLFastTimer ftm(LLFastTimer::FTM_UPDATE_AVATAR);
+	LLFastTimer ftm(FTM_UPDATE_AVATAR);
  	if (!(gPipeline.hasRenderType(LLPipeline::RENDER_TYPE_AVATAR)))
 	{
 		return TRUE;
@@ -8913,7 +8922,7 @@ void LLVOAvatar::dumpArchetypeXML( void* )
 {
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
 	LLAPRFile outfile ;
-	outfile.open(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER,"new archetype.xml"), LL_APR_WB, LLAPRFile::global);
+	outfile.open(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER,"new archetype.xml"), LL_APR_WB);
 	apr_file_t* file = outfile.getFileHandle() ;
 	if( !file )
 	{
