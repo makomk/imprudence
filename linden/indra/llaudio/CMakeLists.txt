@@ -2,11 +2,9 @@
 
 project(llaudio)
 
-# Current starting point for CMake. Seems rather arbitrary - MC
 include(00-Common)
-include(LLAudio)
 include(Audio)
-include(OPENAL)
+include(LLAudio)
 include(FMOD)
 include(OPENAL)
 include(LLCommon)
@@ -33,7 +31,6 @@ set(llaudio_SOURCE_FILES
     llaudioengine.cpp
     lllistener.cpp
     llaudiodecodemgr.cpp
-    llvorbisdecode.cpp
     llvorbisencode.cpp
     )
 
@@ -43,7 +40,6 @@ set(llaudio_HEADER_FILES
     llaudioengine.h
     lllistener.h
     llaudiodecodemgr.h
-    llvorbisdecode.h
     llvorbisencode.h
     llwindgen.h
     )
@@ -61,12 +57,11 @@ if (FMOD)
          llstreamingaudio_fmod.h
          )
 
-    if (LINUX)
-      if (${CXX_VERSION} MATCHES "4.[23]")
-        set_source_files_properties(llaudioengine_fmod.cpp
-                                    COMPILE_FLAGS -Wno-error=write-strings)
-      endif (${CXX_VERSION} MATCHES "4.[23]")
-    endif (LINUX)
+    if (LINUX OR DARWIN)
+      set_source_files_properties(llaudioengine_fmod.cpp
+                                  llstreamingaudio_fmod.cpp
+                                  COMPILE_FLAGS -Wno-write-strings)
+    endif (LINUX OR DARWIN)
 endif (FMOD)
 
 if (OPENAL)
@@ -87,7 +82,6 @@ set_source_files_properties(${llaudio_HEADER_FILES}
 list(APPEND llaudio_SOURCE_FILES ${llaudio_HEADER_FILES})
 
 add_library (llaudio ${llaudio_SOURCE_FILES})
-
 target_link_libraries(
     llaudio
     ${VORBISENC_LIBRARIES}

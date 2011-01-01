@@ -3,35 +3,27 @@
  * @brief implementation of LLAudioEngine class abstracting the Open
  * AL audio support
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
-
-#include <time.h>
 
 #include "linden_common.h"
 
@@ -205,12 +197,12 @@ void LLAudioEngine::updateInternetStream()
 }
 
 // virtual
-int LLAudioEngine::isInternetStreamPlaying()
+LLAudioEngine::LLAudioPlayState LLAudioEngine::isInternetStreamPlaying()
 {
 	if (mStreamingAudioImpl)
-		return mStreamingAudioImpl->isPlaying();
+		return (LLAudioEngine::LLAudioPlayState) mStreamingAudioImpl->isPlaying();
 
-	return 0; // Stopped
+	return LLAudioEngine::AUDIO_STOPPED; // Stopped
 }
 
 
@@ -324,10 +316,7 @@ void LLAudioEngine::idle(F32 max_decode_time)
 			else
 			{
 				channelp->setWaiting(false);
-				if (channelp->mCurrentBufferp)
-				{
-					channelp->play();
-				}
+				channelp->play();
 			}
 		}
 	}
@@ -533,7 +522,7 @@ bool LLAudioEngine::updateBufferForData(LLAudioData *adp, const LLUUID &audio_uu
 	{
 		if (adp->hasDecodedData())
 		{
-			return adp->load();
+			adp->load();
 		}
 		else if (adp->hasLocalData())
 		{
@@ -555,12 +544,11 @@ void LLAudioEngine::enableWind(bool enable)
 {
 	if (enable && (!mEnableWind))
 	{
-		initWind();
-		mEnableWind = enable;
+		mEnableWind = initWind();
 	}
 	else if (mEnableWind && (!enable))
 	{
-		mEnableWind = enable;
+		mEnableWind = false;
 		cleanupWind();
 	}
 }
@@ -568,9 +556,6 @@ void LLAudioEngine::enableWind(bool enable)
 
 LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 {
-	static clock_t last_info = 0;
-	static bool spamming = FALSE;
-
 	S32 i;
 	for (i = 0; i < MAX_BUFFERS; i++)
 	{
@@ -602,18 +587,8 @@ LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 
 	if (buffer_id >= 0)
 	{
-		if (clock() - last_info > CLOCKS_PER_SEC)
-		{
-			// Do not spam us with such messages...
-			llinfos << "Taking over unused buffer " << buffer_id << llendl;
-			last_info = clock();
-		}
-		else if (!spamming)
-		{
-			// ... but warn us *once* when the buffer freeing frequency is abnormal.
-			llwarns << "Excessive buffer freeing frequency, info messages throttled." << llendl;
-			spamming = true;
-		}
+		lldebugs << "Taking over unused buffer " << buffer_id << llendl;
+		//llinfos << "Flushing unused buffer!" << llendl;
 		mBuffers[buffer_id]->mAudioDatap->mBufferp = NULL;
 		delete mBuffers[buffer_id];
 		mBuffers[buffer_id] = createBuffer();
@@ -658,7 +633,7 @@ LLAudioChannel * LLAudioEngine::getFreeChannel(const F32 priority)
 	{
 		LLAudioChannel *channelp = mChannels[i];
 		LLAudioSource *sourcep = channelp->getSource();
-		if (sourcep && sourcep->getPriority() < min_priority)
+		if (sourcep->getPriority() < min_priority)
 		{
 			min_channelp = channelp;
 			min_priority = sourcep->getPriority();
@@ -1756,8 +1731,6 @@ LLAudioData::LLAudioData(const LLUUID &uuid) :
 
 bool LLAudioData::load()
 {
-	static clock_t last_info = 0;
-
 	// For now, just assume we're going to use one buffer per audiodata.
 	if (mBufferp)
 	{
@@ -1770,11 +1743,7 @@ bool LLAudioData::load()
 	if (!mBufferp)
 	{
 		// No free buffers, abort.
-		if (clock() - last_info > CLOCKS_PER_SEC)	// Do not spam us with such messages
-		{
-			llinfos << "Not able to allocate a new audio buffer, aborting." << llendl;
-			last_info = clock();
-		}
+		llinfos << "Not able to allocate a new audio buffer, aborting." << llendl;
 		return false;
 	}
 
@@ -1788,9 +1757,6 @@ bool LLAudioData::load()
 		// Hrm.  Right now, let's unset the buffer, since it's empty.
 		gAudiop->cleanupBuffer(mBufferp);
 		mBufferp = NULL;
-
-		// Maybe it was removed by another instance.  Send it to the preload queue.
-		gAudiop->preloadSound(mID);
 
 		return false;
 	}
