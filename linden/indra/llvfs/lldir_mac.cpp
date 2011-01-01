@@ -2,31 +2,25 @@
  * @file lldir_mac.cpp
  * @brief Implementation of directory utilities for Mac OS X
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
- * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2002&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -68,7 +62,8 @@ static void CFStringRefToLLString(CFStringRef stringRef, std::string &llString, 
 {
 	if (stringRef)
 	{
-		long	bufferSize = CFStringGetLength(stringRef) + 1;
+		long stringSize = CFStringGetLength(stringRef) + 1;
+		long bufferSize = CFStringGetMaximumSizeForEncoding(stringSize,kCFStringEncodingUTF8);
 		char* buffer = new char[bufferSize];
 		memset(buffer, 0, bufferSize);
 		if (CFStringGetCString(stringRef, buffer, bufferSize, kCFStringEncodingUTF8))
@@ -142,8 +137,33 @@ LLDir_Mac::LLDir_Mac()
 		CFURLRefToLLString(executableParentURLRef, mExecutableDir, true);
 		
 		// mAppRODataDir
-		CFURLRef	resourcesURLRef = CFBundleCopyResourcesDirectoryURL(mainBundleRef);
+
+		
+		// *NOTE: When running in a dev tree, use the copy of
+		// skins in indra/newview/ rather than in the application bundle.  This
+		// mirrors Windows dev environment behavior and allows direct checkin
+		// of edited skins/xui files. JC
+		
+		// MBW -- This keeps the mac application from finding other things.
+		// If this is really for skins, it should JUST apply to skins.
+
+		CFURLRef resourcesURLRef = CFBundleCopyResourcesDirectoryURL(mainBundleRef);
 		CFURLRefToLLString(resourcesURLRef, mAppRODataDir, true);
+		
+		U32 indra_pos = mExecutableDir.find("/indra");
+		if (indra_pos != std::string::npos)
+		{
+			// ...we're in a dev checkout
+			mSkinBaseDir = mExecutableDir.substr(0, indra_pos)
+				+ "/indra/newview/skins";
+			llinfos << "Running in dev checkout with mSkinBaseDir "
+				<< mSkinBaseDir << llendl;
+		}
+		else
+		{
+			// ...normal installation running
+			mSkinBaseDir = mAppRODataDir + mDirDelimiter + "skins";
+		}
 		
 		// mOSUserDir
 		error = FSFindFolder(kUserDomain, kApplicationSupportFolderType, true, &fileRef);
@@ -205,8 +225,15 @@ LLDir_Mac::~LLDir_Mac()
 // Implementation
 
 
-void LLDir_Mac::initAppDirs(const std::string &app_name)
+void LLDir_Mac::initAppDirs(const std::string &app_name,
+							const std::string& app_read_only_data_dir)
 {
+	// Allow override so test apps can read newview directory
+	if (!app_read_only_data_dir.empty())
+	{
+		mAppRODataDir = app_read_only_data_dir;
+		mSkinBaseDir = mAppRODataDir + mDirDelimiter + "skins";
+	}
 	mCAFile = getExpandedFilename(LL_PATH_APP_SETTINGS, "CA.pem");
 
 	//dumpCurrentDirectories();

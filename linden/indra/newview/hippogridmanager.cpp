@@ -968,3 +968,16 @@ void HippoGridManager::saveFile()
 		llerrs << "Unable to open grid info file: " << fileName << llendl;
 	}
 }
+
+// static
+std::string HippoGridManager::makeUsernameForDir(const std::string &grid, const std::string &first, const std::string &last) {
+	if (!first.empty() && !last.empty()) {
+		std::string username(first + " " + last);
+		if (!grid.empty()) {
+			username += "@" + grid;
+		}
+		return username;
+	} else {
+		return LLStringUtil::null;
+	}
+}

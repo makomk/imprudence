@@ -3146,17 +3146,17 @@ bool LLAppViewer::initCache()
 	gSavedSettings.setU32("VFSSalt", new_salt);
 
 	// Don't remove VFS after viewer crashes.  If user has corrupt data, they can reinstall. JC
-	gVFS = new LLVFS(new_vfs_index_file, new_vfs_data_file, false, vfs_size_u32, false);
-	if( VFSVALID_BAD_CORRUPT == gVFS->getValidState() )
+	gVFS = LLVFS::createLLVFS(new_vfs_index_file, new_vfs_data_file, false, vfs_size_u32, false);
+	if( !gVFS )
 	{
-		// Try again with fresh files 
-		// (The constructor deletes corrupt files when it finds them.)
-		LL_WARNS("AppCache") << "VFS corrupt, deleted.  Making new VFS." << LL_ENDL;
-		delete gVFS;
-		gVFS = new LLVFS(new_vfs_index_file, new_vfs_data_file, false, vfs_size_u32, false);
+		return false;
 	}
 
-	gStaticVFS = new LLVFS(static_vfs_index_file, static_vfs_data_file, true, 0, false);
+	gStaticVFS = LLVFS::createLLVFS(static_vfs_index_file, static_vfs_data_file, true, 0, false);
+
+	if( !gStaticVFS ) {
+		return false;
+	}
 
 	BOOL success = gVFS->isValid() && gStaticVFS->isValid();
 	if( !success )
@@ -3291,7 +3291,7 @@ void LLAppViewer::saveFinalSnapshot()
 		gSavedSettings.setBOOL("ShowParcelOwners", FALSE);
 		idle();
 
-		std::string snap_filename = gDirUtilp->getLindenUserDir(true);
+		std::string snap_filename = gDirUtilp->getLindenUserDir();
 		if (!snap_filename.empty())
 		{
 			snap_filename += gDirUtilp->getDirDelimiter();

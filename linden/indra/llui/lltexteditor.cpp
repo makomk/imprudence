@@ -4209,7 +4209,7 @@ void LLTextEditor::appendColoredText(const std::string &new_text,
 	// If LindenUserDir is empty then we didn't login yet.
 	// In that case we can't instantiate LLTextParser, which
 	// is initialized per user.
-	if (mParseHighlights && !gDirUtilp->getLindenUserDir(true).empty())
+	if (mParseHighlights && !gDirUtilp->getLindenUserDir().empty())
 	{
 		LLTextParser* highlight = LLTextParser::getInstance();
 		highlight->parseFullLineHighlights(new_text, &lcolor);
@@ -4292,7 +4292,7 @@ void LLTextEditor::appendHighlightedText(const std::string &new_text,
 	// If LindenUserDir is empty then we didn't login yet.
 	// In that case we can't instantiate LLTextParser, which
 	// is initialized per user.
-	if (mParseHighlights && !gDirUtilp->getLindenUserDir(true).empty())
+	if (mParseHighlights && !gDirUtilp->getLindenUserDir().empty())
 	{
 		LLTextParser* highlight = LLTextParser::getInstance();
 		

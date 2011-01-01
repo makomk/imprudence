@@ -162,6 +162,8 @@ public:
 	GridIterator beginGrid() { return mGridInfo.begin(); }
 	GridIterator endGrid() { return mGridInfo.end(); }
 
+	static std::string makeUsernameForDir(const std::string &grid, const std::string &first, const std::string &last);
+
 private:
 	std::map<std::string, HippoGridInfo*> mGridInfo;
 	std::string mDefaultGrid;

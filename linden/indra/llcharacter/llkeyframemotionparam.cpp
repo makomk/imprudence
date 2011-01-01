@@ -343,6 +343,11 @@ void LLKeyframeMotionParam::setDefaultKeyframeMotion(char *name)
 //-----------------------------------------------------------------------------
 BOOL LLKeyframeMotionParam::loadMotions()
 {
+#if 1
+	// FIXME - this appears to be effectively dead code that can never
+	// succeed because the files it's looking for just don't exist anymore.
+	return FALSE;
+#else
 	//-------------------------------------------------------------------------
 	// Load named file by concatenating the character prefix with the motion name.
 	// Load data into a buffer to be parsed.
@@ -455,6 +460,7 @@ BOOL LLKeyframeMotionParam::loadMotions()
 
 	delete [] text;
 	return TRUE;
+#endif
 }
 
 // End

@@ -930,7 +930,7 @@ bool idle_startup()
 		gHippoLimits->setLimits();
 		// create necessary directories
 		// *FIX: these mkdir's should error check
-		gDirUtilp->setLindenUserDir(gHippoGridManager->getCurrentGridNick(), firstname, lastname);
+		gDirUtilp->setLindenUserDir(HippoGridManager::makeUsernameForDir(gHippoGridManager->getCurrentGridNick(), firstname, lastname));
 		LLFile::mkdir(gDirUtilp->getLindenUserDir());
 
 		// Set PerAccountSettingsFile to the default value.
@@ -963,11 +963,11 @@ bool idle_startup()
 		
 		if (gSavedSettings.getBOOL("UseLegacyChatLogsFolder"))
 		{
-			gDirUtilp->setPerAccountChatLogsDir(LLStringUtil::null, firstname, lastname);
+			gDirUtilp->setPerAccountChatLogsDir(HippoGridManager::makeUsernameForDir(LLStringUtil::null, firstname, lastname));
 		}
 		else
 		{
-			gDirUtilp->setPerAccountChatLogsDir(gHippoGridManager->getCurrentGridNick(), firstname, lastname);
+			gDirUtilp->setPerAccountChatLogsDir(HippoGridManager::makeUsernameForDir(gHippoGridManager->getCurrentGridNick(), firstname, lastname));
 		}
 
 		LLFile::mkdir(gDirUtilp->getChatLogsDir());
