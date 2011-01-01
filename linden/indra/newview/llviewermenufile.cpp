@@ -458,7 +458,6 @@ class LLFileTakeSnapshotToDisk : public view_listener_t
 		{
 			gViewerWindow->playSnapshotAnimAndSound();
 			
-			LLImageBase::setSizeOverride(TRUE);
 			LLPointer<LLImageFormatted> formatted;
 			switch(LLFloaterSnapshot::ESnapshotFormat(gSavedSettings.getS32("SnapshotFormat")))
 			{
@@ -473,12 +472,11 @@ class LLFileTakeSnapshotToDisk : public view_listener_t
 				break;
 			  default: 
 				llwarns << "Unknown Local Snapshot format" << llendl;
-				LLImageBase::setSizeOverride(FALSE);
 				return true;
 			}
 
+			formatted->enableOverSize();
 			formatted->encode(raw, 0);
-			LLImageBase::setSizeOverride(FALSE);
 			gViewerWindow->saveImageNumbered(formatted);
 		}
 		return true;
@@ -642,7 +640,7 @@ void upload_new_resource(const std::string& src_filename, std::string name,
  			return;
  		}
  	}
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 	else if(exten == "psd")
 	{
 		asset_type = LLAssetType::AT_TEXTURE;

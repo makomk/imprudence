@@ -2,31 +2,25 @@
  * @file llimage.h
  * @brief Object for managing images and their textures.
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2010, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -48,7 +42,7 @@ const S32 MAX_IMAGE_SIZE = (1<<MAX_IMAGE_MIP); // 2048
 const S32 MIN_IMAGE_AREA = MIN_IMAGE_SIZE * MIN_IMAGE_SIZE;
 const S32 MAX_IMAGE_AREA = MAX_IMAGE_SIZE * MAX_IMAGE_SIZE;
 const S32 MAX_IMAGE_COMPONENTS = 8;
-const S32 MAX_IMAGE_DATA_SIZE = MAX_IMAGE_AREA * MAX_IMAGE_COMPONENTS;
+const S32 MAX_IMAGE_DATA_SIZE = MAX_IMAGE_AREA * MAX_IMAGE_COMPONENTS; //2048 * 2048 * 8 = 16 MB
 
 // Note!  These CANNOT be changed without modifying simulator code
 // *TODO: change both to 1024 when SIM texture fetching is deprecated
@@ -73,13 +67,7 @@ typedef enum e_image_codec
 	IMG_CODEC_JPEG = 5,
 	IMG_CODEC_DXT  = 6,
 	IMG_CODEC_PNG  = 7,
-#ifdef LL_DARWIN
-	IMG_CODEC_PSD = 8,
-	IMG_CODEC_TIFF = 9,
-	IMG_CODEC_EOF  = 10
-#else
 	IMG_CODEC_EOF  = 8
-#endif
 } EImageCodec;
 
 //============================================================================
@@ -88,7 +76,7 @@ typedef enum e_image_codec
 class LLImage
 {
 public:
-	static void initClass(const bool& useDSO);
+	static void initClass(bool useKDU);
 	static void cleanupClass();
 
 	static const std::string& getLastError();
@@ -130,10 +118,12 @@ public:
 
 	const U8 *getData() const	;
 	U8 *getData()				;
-	BOOL isBufferInvalid() ;
+	bool isBufferInvalid() ;
 
 	void setSize(S32 width, S32 height, S32 ncomponents);
 	U8* allocateDataSize(S32 width, S32 height, S32 ncomponents, S32 size = -1); // setSize() + allocateData()
+	void enableOverSize() {mAllowOverSize = true ;}
+	void disableOverSize() {mAllowOverSize = false; }
 
 protected:
 	// special accessor to allow direct setting of mData and mDataSize by LLImageFormatted
@@ -146,8 +136,6 @@ public:
 	// <= 0 priority means that there's no need for more data.
 	static F32 calc_download_priority(F32 virtual_size, F32 visible_area, S32 bytes_sent);
 
-	static void setSizeOverride(BOOL enabled) { sSizeOverride = enabled; }
-
 	static EImageCodec getCodecFromExtension(const std::string& exten);
 	
 private:
@@ -159,12 +147,10 @@ private:
 
 	S8 mComponents;
 
-	BOOL mBadBufferAllocation ;
-
+	bool mBadBufferAllocation ;
+	bool mAllowOverSize ;
 public:
-	LLMemType::DeclareMemType &mMemType; // debug
-	
-	static BOOL sSizeOverride;
+	LLMemType::DeclareMemType& mMemType; // debug
 };
 
 // Raw representation of an image (used for textures, and other uncompressed formats

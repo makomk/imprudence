@@ -3,6 +3,7 @@
 project(llimage)
 
 include(00-Common)
+include(LLAddBuildTest)
 include(LLCommon)
 include(LLImage)
 include(LLMath)
@@ -20,6 +21,7 @@ include_directories(
 set(llimage_SOURCE_FILES
     llimagebmp.cpp
     llimage.cpp
+    llimagedimensionsinfo.cpp
     llimagedxt.cpp
     llimagej2c.cpp
     llimagejpeg.cpp
@@ -34,6 +36,7 @@ set(llimage_HEADER_FILES
 
     llimage.h
     llimagebmp.h
+    llimagedimensionsinfo.h
     llimagedxt.h
     llimagej2c.h
     llimagejpeg.h
@@ -50,9 +53,15 @@ set_source_files_properties(${llimage_HEADER_FILES}
 list(APPEND llimage_SOURCE_FILES ${llimage_HEADER_FILES})
 
 add_library (llimage ${llimage_SOURCE_FILES})
-target_link_libraries(
-    llimage
+# Libraries on which this library depends, needed for Linux builds
+# Sort by high-level to low-level
+target_link_libraries(llimage
+    llcommon
+    llimagej2coj        # *HACK: In theory a noop for KDU builds?
     ${JPEG_LIBRARIES}
     ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     )
+
+# Add tests
+#ADD_BUILD_TEST(llimageworker llimage)

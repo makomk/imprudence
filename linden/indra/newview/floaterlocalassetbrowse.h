@@ -115,7 +115,7 @@ class LocalBitmap
 			IMG_EXTEN_TGA,
 			IMG_EXTEN_JPG,
 			IMG_EXTEN_PNG
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 			,IMG_EXTEN_PSD,
 			IMG_EXTEN_TIFF
 #endif

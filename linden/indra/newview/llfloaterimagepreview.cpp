@@ -355,7 +355,7 @@ bool LLFloaterImagePreview::loadImage(const std::string& src_filename)
 	{
 		codec = IMG_CODEC_PNG;
 	}
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 	else if( exten == "psd" )
 	{
 		codec = IMG_CODEC_PSD;
@@ -367,7 +367,7 @@ bool LLFloaterImagePreview::loadImage(const std::string& src_filename)
 #endif
 
 	LLPointer<LLImageRaw> raw_image = new LLImageRaw;
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 	if (! decodeImageQuartz(src_filename, raw_image))
 		return false;
 #else

@@ -120,7 +120,7 @@ LocalBitmap::LocalBitmap(std::string fullpath)
 		else if (temp_exten == "tga") { this->extension = IMG_EXTEN_TGA; }
 		else if (temp_exten == "jpg" || temp_exten == "jpeg") { this->extension = IMG_EXTEN_JPG; }
 		else if (temp_exten == "png") { this->extension = IMG_EXTEN_PNG; }
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 		else if (temp_exten == "psd") { this->extension = IMG_EXTEN_PSD; }
 		else if (temp_exten == "tif" || temp_exten == "tiff") { this->extension = IMG_EXTEN_TIFF; }
 #endif
@@ -235,7 +235,7 @@ void LocalBitmap::updateSelf()
 
 bool LocalBitmap::decodeSelf(LLImageRaw* rawimg)
 {
-#ifdef LL_DARWIN
+#if 0 /*def LL_DARWIN*/
 	if (decodeImageQuartz(filename, rawimg))
 	{
 		rawimg->biasedScaleToPowerOfTwo( LLViewerImage::MAX_IMAGE_SIZE_DEFAULT );

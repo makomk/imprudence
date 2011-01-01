@@ -2,31 +2,25 @@
  * @file llimagej2coj.cpp
  * @brief This is an implementation of JPEG2000 encode/decode using OpenJPEG.
  *
- * $LicenseInfo:firstyear=2006&license=viewergpl$
- * 
- * Copyright (c) 2006-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2006&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -37,7 +31,7 @@
 #include "openjpeg.h"
 
 #include "lltimer.h"
-#include "llmemory.h"
+//#include "llmemory.h"
 
 const char* fallbackEngineInfoLLImageJ2CImpl()
 {
@@ -97,9 +91,9 @@ void info_callback(const char* msg, void*)
 }
 
 
-LLImageJ2COJ::LLImageJ2COJ() : LLImageJ2CImpl()
+LLImageJ2COJ::LLImageJ2COJ()
+	: LLImageJ2CImpl()
 {
-	mRawImagep=NULL;
 }
 
 
@@ -152,13 +146,8 @@ BOOL LLImageJ2COJ::decodeImpl(LLImageJ2C &base, LLImageRaw &raw_image, F32 decod
 	/* open a byte stream */
 	cio = opj_cio_open((opj_common_ptr)dinfo, base.getData(), base.getDataSize());
 
-	/* decode the stream and fill the image structure, also fill in an additional
-	   structure to get the decoding result. This structure is a bit unusual in that
-	   it is not received through opj, but still has some dynamically allocated fields
-	   that need to be cleared up at the end by calling a destroy function. */
-	opj_codestream_info_t cinfo;
-	memset(&cinfo, 0, sizeof(opj_codestream_info_t));
-	image = opj_decode_with_info(dinfo, cio, &cinfo);
+	/* decode the stream and fill the image structure */
+	image = opj_decode(dinfo, cio);
 
 	/* close the byte stream */
 	opj_cio_close(cio);
@@ -172,20 +161,11 @@ BOOL LLImageJ2COJ::decodeImpl(LLImageJ2C &base, LLImageRaw &raw_image, F32 decod
 	// The image decode failed if the return was NULL or the component
 	// count was zero.  The latter is just a sanity check before we
 	// dereference the array.
-	if(!image) 
+	if(!image || !image->numcomps)
 	{
-		LL_DEBUGS("Openjpeg")  << "ERROR -> decodeImpl: failed to decode image - no image" << LL_ENDL;
-		return TRUE; // done
-	}
-
-	S32 img_components = image->numcomps;
-
-	if( !img_components ) // < 1 ||img_components > 4 )
-	{
-		LL_DEBUGS("Openjpeg") << "ERROR -> decodeImpl: failed to decode image wrong number of components: " << img_components << LL_ENDL;
+		LL_DEBUGS("Texture") << "ERROR -> decodeImpl: failed to decode image!" << LL_ENDL;
 		if (image)
 		{
-			opj_destroy_cstr_info(&cinfo);
 			opj_image_destroy(image);
 		}
 
@@ -193,40 +173,22 @@ BOOL LLImageJ2COJ::decodeImpl(LLImageJ2C &base, LLImageRaw &raw_image, F32 decod
 	}
 
 	// sometimes we get bad data out of the cache - check to see if the decode succeeded
-	int decompdifference = 0;
-	if (cinfo.numdecompos) // sanity
+	for (S32 i = 0; i < image->numcomps; i++)
 	{
-		for (int comp = 0; comp < image->numcomps; comp++)
-		{	/* get maximum decomposition level difference, first field is from the COD header and the second
-			   is what is actually met in the codestream, NB: if everything was ok, this calculation will
-			   return what was set in the cp_reduce value! */
-			decompdifference = llmax(decompdifference, cinfo.numdecompos[comp] - image->comps[comp].resno_decoded);
-		}
-		if (decompdifference < 0) // sanity
+		if (image->comps[i].factor != base.getRawDiscardLevel())
 		{
-			decompdifference = 0;
+			// if we didn't get the discard level we're expecting, fail
+			opj_image_destroy(image);
+			base.mDecoding = FALSE;
+			return TRUE;
 		}
 	}
 	
-
-	/* if OpenJPEG failed to decode all requested decomposition levels
-	   the difference will be greater than this level */
-	if (decompdifference > base.getRawDiscardLevel())
+	if(image->numcomps <= first_channel)
 	{
-		llwarns << "not enough data for requested discard level, setting mDecoding to FALSE, difference: " << (decompdifference - base.getRawDiscardLevel()) << llendl;
-		opj_destroy_cstr_info(&cinfo);
-		opj_image_destroy(image);
-		base.mDecoding = FALSE;
-		return TRUE;
-	}
-
-	if(img_components <= first_channel)
-	{
-		// sanity
-		LL_DEBUGS("Openjpeg") << "trying to decode more channels than are present in image: numcomps: " << img_components << " first_channel: " << first_channel << LL_ENDL;
+		llwarns << "trying to decode more channels than are present in image: numcomps: " << image->numcomps << " first_channel: " << first_channel << llendl;
 		if (image)
 		{
-			opj_destroy_cstr_info(&cinfo);
 			opj_image_destroy(image);
 		}
 			
@@ -235,7 +197,7 @@ BOOL LLImageJ2COJ::decodeImpl(LLImageJ2C &base, LLImageRaw &raw_image, F32 decod
 
 	// Copy image data into our raw image format (instead of the separate channel format
 
-
+	S32 img_components = image->numcomps;
 	S32 channels = img_components - first_channel;
 	if( channels > max_channel_count )
 		channels = max_channel_count;
@@ -274,20 +236,15 @@ BOOL LLImageJ2COJ::decodeImpl(LLImageJ2C &base, LLImageRaw &raw_image, F32 decod
 		}
 		else // Some rare OpenJPEG versions have this bug.
 		{
-			llwarns << "ERROR -> decodeImpl: failed to decode image! (NULL comp data - OpenJPEG bug)" << llendl;
-			opj_destroy_cstr_info(&cinfo);
+			LL_DEBUGS("Texture") << "ERROR -> decodeImpl: failed to decode image! (NULL comp data - OpenJPEG bug)" << LL_ENDL;
 			opj_image_destroy(image);
 
 			return TRUE; // done
 		}
 	}
 
-	/* free opj data structures */
-	if (image)
-	{
-		opj_destroy_cstr_info(&cinfo);
-		opj_image_destroy(image);
-	}
+	/* free image data structure */
+	opj_image_destroy(image);
 
 	return TRUE; // done
 }
@@ -413,7 +370,7 @@ BOOL LLImageJ2COJ::encodeImpl(LLImageJ2C &base, const LLImageRaw &raw_image, con
 	if (!bSuccess)
 	{
 		opj_cio_close(cio);
-		llinfos << "Failed to encode image." << llendl;
+		LL_DEBUGS("Texture") << "Failed to encode image." << LL_ENDL;
 		return FALSE;
 	}
 	codestream_length = cio_tell(cio);
