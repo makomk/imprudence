@@ -188,8 +188,8 @@ LLFloaterPay::~LLFloaterPay()
 {
 	std::for_each(mCallbackData.begin(), mCallbackData.end(), DeletePointer());
 
-	// Clean up if we are still waiting for a name.
-	gCacheName->cancelCallback(mTargetUUID,onCacheOwnerName,this);
+	// not needed, since LLFloater is trackable
+	//gCacheName->cancelCallback(mTargetUUID,onCacheOwnerName,this);
 }
 
 // static

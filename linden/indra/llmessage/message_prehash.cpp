@@ -2,31 +2,25 @@
  * @file message_prehash.cpp
  * @brief file of prehashed variables
  *
- * $LicenseInfo:firstyear=2003&license=viewergpl$
- * 
- * Copyright (c) 2003-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2003&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -174,6 +168,7 @@ char* _PREHASH_UpdateInventoryItem = LLMessageStringTable::getInstance()->getStr
 char* _PREHASH_UpdateCreateInventoryItem = LLMessageStringTable::getInstance()->getString("UpdateCreateInventoryItem");
 char* _PREHASH_MoveInventoryItem = LLMessageStringTable::getInstance()->getString("MoveInventoryItem");
 char* _PREHASH_CopyInventoryItem = LLMessageStringTable::getInstance()->getString("CopyInventoryItem");
+char* _PREHASH_LinkInventoryItem = LLMessageStringTable::getInstance()->getString("LinkInventoryItem");
 char* _PREHASH_RemoveInventoryItem = LLMessageStringTable::getInstance()->getString("RemoveInventoryItem");
 char* _PREHASH_CreateInventoryItem = LLMessageStringTable::getInstance()->getString("CreateInventoryItem");
 char* _PREHASH_PathTwistBegin = LLMessageStringTable::getInstance()->getString("PathTwistBegin");
@@ -405,7 +400,7 @@ char* _PREHASH_GlobalX = LLMessageStringTable::getInstance()->getString("GlobalX
 char* _PREHASH_GlobalY = LLMessageStringTable::getInstance()->getString("GlobalY");
 char* _PREHASH_CopyRotates = LLMessageStringTable::getInstance()->getString("CopyRotates");
 char* _PREHASH_KickUserAck = LLMessageStringTable::getInstance()->getString("KickUserAck");
-char* _PREHASH_TopPick = LLMessageStringTable::getInstance()->getString("TopPick");
+char* _PREHASH_TopPick = LLMessageStringTable::getInstance()->getString("TopPick"); 	//legacy var  need to be deleted -angela
 char* _PREHASH_SessionID = LLMessageStringTable::getInstance()->getString("SessionID");
 char* _PREHASH_GlobalZ = LLMessageStringTable::getInstance()->getString("GlobalZ");
 char* _PREHASH_DeclineFriendship = LLMessageStringTable::getInstance()->getString("DeclineFriendship");
@@ -600,7 +595,6 @@ char* _PREHASH_FromAgentId = LLMessageStringTable::getInstance()->getString("Fro
 char* _PREHASH_Type = LLMessageStringTable::getInstance()->getString("Type");
 char* _PREHASH_ChatType = LLMessageStringTable::getInstance()->getString("ChatType");
 char* _PREHASH_ReportData = LLMessageStringTable::getInstance()->getString("ReportData");
-char* _PREHASH_MonoScore = LLMessageStringTable::getInstance()->getString("MonoScore");
 char* _PREHASH_RequestBlock = LLMessageStringTable::getInstance()->getString("RequestBlock");
 char* _PREHASH_GrantData = LLMessageStringTable::getInstance()->getString("GrantData");
 char* _PREHASH_DetachAttachmentIntoInv = LLMessageStringTable::getInstance()->getString("DetachAttachmentIntoInv");
@@ -632,6 +626,8 @@ char* _PREHASH_OfferCallingCard = LLMessageStringTable::getInstance()->getString
 char* _PREHASH_AcceptCallingCard = LLMessageStringTable::getInstance()->getString("AcceptCallingCard");
 char* _PREHASH_DeclineCallingCard = LLMessageStringTable::getInstance()->getString("DeclineCallingCard");
 char* _PREHASH_AgentAccess = LLMessageStringTable::getInstance()->getString("AgentAccess");
+char* _PREHASH_AgentLegacyAccess = LLMessageStringTable::getInstance()->getString("AgentLegacyAccess");
+char* _PREHASH_AgentMaxAccess = LLMessageStringTable::getInstance()->getString("AgentMaxAccess");
 char* _PREHASH_DataHomeLocationReply = LLMessageStringTable::getInstance()->getString("DataHomeLocationReply");
 char* _PREHASH_EventLocationReply = LLMessageStringTable::getInstance()->getString("EventLocationReply");
 char* _PREHASH_TerseDateID = LLMessageStringTable::getInstance()->getString("TerseDateID");
@@ -1145,7 +1141,7 @@ char* _PREHASH_ForceObjectSelect = LLMessageStringTable::getInstance()->getStrin
 char* _PREHASH_Price = LLMessageStringTable::getInstance()->getString("Price");
 char* _PREHASH_SunDirection = LLMessageStringTable::getInstance()->getString("SunDirection");
 char* _PREHASH_FromName = LLMessageStringTable::getInstance()->getString("FromName");
-char* _PREHASH_ChangeInventoryItemFlags = LLMessageStringTable::getInstance()->getString("ChangeInventoryItemFlags");
+char* _PREHASH_ChangeInventoryItemFlags = LLMessageStringTable::getInstance()->getString("ChangLLInventoryItemFlags");
 char* _PREHASH_Force = LLMessageStringTable::getInstance()->getString("Force");
 char* _PREHASH_TransactionBlock = LLMessageStringTable::getInstance()->getString("TransactionBlock");
 char* _PREHASH_PowersMask = LLMessageStringTable::getInstance()->getString("PowersMask");

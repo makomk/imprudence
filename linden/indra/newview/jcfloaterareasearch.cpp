@@ -428,7 +428,7 @@ void JCFloaterAreaSearch::results()
 }
 
 // static
-void JCFloaterAreaSearch::callbackLoadOwnerName(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group, void* data)
+void JCFloaterAreaSearch::callbackLoadOwnerName(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group)
 {
 	results();
 }

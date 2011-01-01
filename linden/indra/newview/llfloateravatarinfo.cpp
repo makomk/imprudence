@@ -244,8 +244,7 @@ void LLFloaterAvatarInfo::showProfileCallback(S32 option, void *userdata)
 void LLFloaterAvatarInfo::callbackLoadAvatarName(const LLUUID& id,
 												 const std::string& first,
 												 const std::string& last,
-												 BOOL is_group,
-												 void* data)
+												 BOOL is_group)
 {
 	LLFloaterAvatarInfo *floater = gAvatarInfoInstances.getIfThere(id);
 

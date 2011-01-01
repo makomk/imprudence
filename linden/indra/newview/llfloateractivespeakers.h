@@ -73,7 +73,7 @@ public:
 	~LLSpeaker() {};
 	void lookupName();
 
-	static void onAvatarNameLookup(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group, void* user_data);
+	void onAvatarNameLookup(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group);
 
 	ESpeakerStatus	mStatus;			// current activity status in speech group
 	F32				mLastSpokeTime;		// timestamp when this speaker last spoke

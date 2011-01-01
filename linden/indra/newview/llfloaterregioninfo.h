@@ -362,8 +362,7 @@ public:
 		const LLUUID& id,
 		const std::string& first,
 		const std::string& last,
-		BOOL is_group,
-		void*);
+		BOOL is_group);
 
 protected:
 	virtual BOOL sendUpdate();

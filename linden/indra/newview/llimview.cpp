@@ -995,7 +995,10 @@ void LLIMMgr::inviteToSession(
 	{
 		if (caller_name.empty())
 		{
-			gCacheName->getName(caller_id, onInviteNameLookup, new LLSD(payload));
+			// FIXME: what happens if name lookup fails?
+			// Do we leak memory?
+			gCacheName->get(caller_id, FALSE, onInviteNameLookup, 
+					new LLSD(payload));
 		}
 		else
 		{

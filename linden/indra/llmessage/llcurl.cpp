@@ -4,31 +4,25 @@
  * @date 2006-10-15
  * @brief Implementation of wrapper around libcurl.
  *
- * $LicenseInfo:firstyear=2006&license=viewergpl$
- * 
- * Copyright (c) 2006-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2006&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -74,7 +68,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-static const S32 EASY_HANDLE_POOL_SIZE		= 5;
+static const U32 EASY_HANDLE_POOL_SIZE		= 5;
 static const S32 MULTI_PERFORM_CALL_REPEAT	= 5;
 static const S32 CURL_REQUEST_TIMEOUT = 30; // seconds
 static const S32 MAX_ACTIVE_REQUEST_COUNT = 100;
@@ -131,12 +125,17 @@ void LLCurl::Responder::errorWithContent(
 // virtual
 void LLCurl::Responder::error(U32 status, const std::string& reason)
 {
-	llinfos << status << ": " << reason << llendl;
+	llinfos << mURL << " [" << status << "]: " << reason << llendl;
 }
 
 // virtual
 void LLCurl::Responder::result(const LLSD& content)
 {
+}
+
+void LLCurl::Responder::setURL(const std::string& url)
+{
+	mURL = url;
 }
 
 // virtual
@@ -148,7 +147,11 @@ void LLCurl::Responder::completedRaw(
 {
 	LLSD content;
 	LLBufferStream istr(channels, buffer.get());
-	LLSDSerialize::fromXML(content, istr);
+	if (!LLSDSerialize::fromXML(content, istr))
+	{
+		llinfos << "Failed to deserialize LLSD. " << mURL << " [" << status << "]: " << reason << llendl;
+	}
+
 	completed(status, reason, content);
 }
 
@@ -355,7 +358,7 @@ U32 LLCurl::Easy::report(CURLcode code)
 		responseCode = 499;
 		responseReason = strerror(code) + " : " + mErrorBuffer;
 	}
-		
+
 	if (mResponder)
 	{	
 		mResponder->completedRaw(responseCode, responseReason, mChannels, mOutput);
@@ -452,6 +455,13 @@ void LLCurl::Easy::prepRequest(const std::string& url,
 	
 	setopt(CURLOPT_HEADERFUNCTION, (void*)&curlHeaderCallback);
 	setopt(CURLOPT_HEADERDATA, (void*)this);
+
+	// Allow up to five redirects
+	if(responder && responder->followRedir())
+	{
+		setopt(CURLOPT_FOLLOWLOCATION, 1);
+		setopt(CURLOPT_MAXREDIRS, MAX_REDIRECTS);
+	}
 
 	setErrorBuffer();
 	setCA();
@@ -886,6 +896,15 @@ void LLCurlEasyRequest::setReadCallback(curl_read_callback callback, void* userd
 	}
 }
 
+void LLCurlEasyRequest::setSSLCtxCallback(curl_ssl_ctx_callback callback, void* userdata)
+{
+	if (mEasy)
+	{
+		mEasy->setopt(CURLOPT_SSL_CTX_FUNCTION, (void*)callback);
+		mEasy->setopt(CURLOPT_SSL_CTX_DATA, userdata);
+	}
+}
+
 void LLCurlEasyRequest::slist_append(const char* str)
 {
 	if (mEasy)
@@ -1036,3 +1055,4 @@ void LLCurl::cleanupClass()
 	curl_global_cleanup();
 }
 
+const unsigned int LLCurl::MAX_REDIRECTS = 5;

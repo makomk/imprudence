@@ -2,31 +2,25 @@
  * @file message.h
  * @brief LLMessageSystem class header file
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -59,12 +53,11 @@
 #include "llhttpclient.h"
 #include "llhttpnode.h"
 #include "llpacketack.h"
+#include "llsingleton.h"
 #include "message_prehash.h"
 #include "llstl.h"
 #include "llmsgvariabletype.h"
-#include "llmsgvariabletype.h"
 #include "llmessagesenderinterface.h"
-#include "llsingleton.h"
 
 #include "llstoredmessage.h"
 
@@ -231,14 +224,11 @@ class LLMessageSystem : public LLMessageSenderInterface
 	typedef std::map<const char *, LLMessageTemplate*> message_template_name_map_t;
 	typedef std::map<U32, LLMessageTemplate*> message_template_number_map_t;
 
-// <edit>
-//private:
-// </edit>
+public: // was private, made public for use of message builder
 	message_template_name_map_t		mMessageTemplates;
 	message_template_number_map_t		mMessageNumbers;
-// <edit>
-//public:
-// </edit>
+
+public:
 	S32					mSystemVersionMajor;
 	S32					mSystemVersionMinor;
 	S32					mSystemVersionPatch;
@@ -513,6 +503,22 @@ private:
 public:
 	// BOOL	decodeData(const U8 *buffer, const LLHost &host);
 
+	/**
+	gets binary data from the current message.
+	
+	@param blockname the name of the block in the message (from the message template)
+
+	@param varname 
+
+	@param datap
+	
+	@param size expected size - set to zero to get any amount of data up to max_size.
+	Make sure max_size is set in that case!
+
+	@param blocknum
+
+	@param max_size the max number of bytes to read
+	*/
 	void	getBinaryDataFast(const char *blockname, const char *varname, void *datap, S32 size, S32 blocknum = 0, S32 max_size = S32_MAX);
 	void	getBinaryData(const char *blockname, const char *varname, void *datap, S32 size, S32 blocknum = 0, S32 max_size = S32_MAX);
 	void	getBOOLFast(	const char *block, const char *var, BOOL &data, S32 blocknum = 0);
@@ -572,10 +578,6 @@ public:
 
 	void	showCircuitInfo();
 	void getCircuitInfo(LLSD& info) const;
-
-	// <edit>
-	LLCircuit* getCircuit();
-	// </edit>
 
 	U32 getOurCircuitCode();
 	
@@ -741,8 +743,6 @@ public:
 	// This will cause all trust queries to return true until the next message
 	// is read: use with caution!
 	void receivedMessageFromTrustedSender();
-
-	LLTemplateMessageBuilder* mTemplateMessageBuilder;
 	
 private:
 
@@ -817,6 +817,9 @@ private:
 	TPACKETID mCurrentRecvPacketID;       // packet ID of current receive packet (for reporting)
 
 	LLMessageBuilder* mMessageBuilder;
+public:	// HACK for llfloatermessagebuilder.cpp, was private
+	LLTemplateMessageBuilder* mTemplateMessageBuilder;
+private:
 	LLSDMessageBuilder* mLLSDMessageBuilder;
 	LLMessageReader* mMessageReader;
 	LLTemplateMessageReader* mTemplateMessageReader;
@@ -830,6 +833,10 @@ private:
 
 	/** Find, create or revive circuit for host as needed */
 	LLCircuitData* findCircuit(const LLHost& host, bool resetPacketId);
+
+public:
+	// HACK for use of llfloatermessagebuilder.cpp
+	LLCircuit* getCircuit() { return &mCircuitInfo; }
 };
 
 

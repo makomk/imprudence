@@ -201,7 +201,7 @@ private:
 };
 
 static void cacheNameUpdateRefreshesBuyLand(const LLUUID&,
-	const std::string&, const std::string&, BOOL, void* data)
+	const std::string&, const std::string&, BOOL)
 {
 	LLFloaterBuyLandUI* ui = LLFloaterBuyLandUI::soleInstance(false);
 	if (ui)

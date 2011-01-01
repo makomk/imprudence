@@ -275,7 +275,7 @@ void init_start_screen(S32 location_id);
 void release_start_screen();
 void apply_udp_blacklist(const std::string& csv);
 
-void callback_cache_name(const LLUUID& id, const std::string& firstname, const std::string& lastname, BOOL is_group, void* data)
+void callback_cache_name(const LLUUID& id, const std::string& firstname, const std::string& lastname, BOOL is_group)
 {
 	LLNameListCtrl::refreshAll(id, firstname, lastname, is_group);
 	LLNameBox::refreshAll(id, firstname, lastname, is_group);
@@ -606,7 +606,8 @@ bool idle_startup()
 				gXferManager->setUseAckThrottling(TRUE);
 				gXferManager->setAckThrottleBPS(xfer_throttle_bps);
 			}
-			gAssetStorage = new LLViewerAssetStorage(msg, gXferManager, gVFS);
+			gAssetStorage = new LLViewerAssetStorage(msg, gXferManager, 
+								 gVFS, gStaticVFS);
 
 
 			F32 dropPercent = gSavedSettings.getF32("PacketDropPercentage");

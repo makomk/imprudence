@@ -133,7 +133,8 @@ void RlvFloaterBehaviour::onClose(bool fQuitting)
 
 	for (std::list<LLUUID>::const_iterator itLookup = m_PendingLookup.begin(); itLookup != m_PendingLookup.end(); ++itLookup)
 	{
-		gCacheName->cancelCallback(*itLookup, onAvatarNameLookup, this);
+		// don't need this anymore, LLFloater is trackable.
+		// gCacheName->cancelCallback(*itLookup, onAvatarNameLookup, this);
 	}
 	m_PendingLookup.clear();
 }

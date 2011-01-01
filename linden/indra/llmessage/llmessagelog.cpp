@@ -1,3 +1,6 @@
+/* This is imported from Hazim Gazov's Yeti, so in theory it should be under
+   the LGPL version 2.1 */
+
 // <edit>
 #include "llmessagelog.h"
 

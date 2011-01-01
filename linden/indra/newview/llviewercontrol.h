@@ -84,7 +84,7 @@ class LLCachedControl
 {
     T mCachedValue;
     LLPointer<LLControlVariable> mControl;
-    boost::signals::connection mConnection;
+    boost::signals2::connection mConnection;
 
 public:
 	LLCachedControl(const std::string& name, 

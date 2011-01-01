@@ -188,7 +188,7 @@ void open_offer(const std::vector<LLUUID>& items, const std::string& from_name);
 bool check_offer_throttle(const std::string& from_name, bool check_only);
 void callbackCacheEstateOwnerName(const LLUUID& id,
 								  const std::string& first, const std::string& last,
-								  BOOL is_group, void*);
+								  BOOL is_group);
 
 //inventory offer throttle globals
 LLFrameTimer gThrottleTimer;
@@ -5322,7 +5322,7 @@ void handle_show_mean_events(void *)
 	LLFloaterBump::show(NULL);
 }
 
-void mean_name_callback(const LLUUID &id, const std::string& first, const std::string& last, BOOL always_false, void* data)
+void mean_name_callback(const LLUUID &id, const std::string& first, const std::string& last, BOOL always_false)
 {
 	if (gNoRender)
 	{
@@ -6401,7 +6401,7 @@ static LLNotificationFunctorRegistration callback_load_url_reg("LoadWebPage", ca
 
 // We've got the name of the person who owns the object hurling the url.
 // Display confirmation dialog.
-void callback_load_url_name(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group, void* data)
+void callback_load_url_name(const LLUUID& id, const std::string& first, const std::string& last, BOOL is_group)
 {
 	std::vector<LLSD>::iterator it;
 	for (it = gLoadUrlList.begin(); it != gLoadUrlList.end(); )
@@ -6572,7 +6572,7 @@ void process_covenant_reply(LLMessageSystem* msg, void**)
 	LLPanelLandCovenant::updateLastModified(last_modified);
 	LLFloaterBuyLand::updateLastModified(last_modified);
 
-	gCacheName->getName(estate_owner_id, callbackCacheEstateOwnerName);
+	gCacheName->get(estate_owner_id, FALSE, callbackCacheEstateOwnerName);
 	
 	// load the actual covenant asset data
 	const BOOL high_priority = TRUE;
@@ -6608,7 +6608,7 @@ void process_covenant_reply(LLMessageSystem* msg, void**)
 
 void callbackCacheEstateOwnerName(const LLUUID& id,
 								  const std::string& first, const std::string& last,
-								  BOOL is_group, void*)
+								  BOOL is_group)
 {
 	std::string name;
 	

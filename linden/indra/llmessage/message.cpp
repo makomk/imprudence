@@ -2,31 +2,25 @@
  * @file message.cpp
  * @brief LLMessageSystem class implementation
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -86,7 +80,11 @@
 #include "v3math.h"
 #include "v4math.h"
 #include "lltransfertargetvfile.h"
+#include "llmemtype.h"
+
+//<edit> (Yeti code)
 #include "llmessagelog.h"
+//</edit>
 
 // Constants
 //const char* MESSAGE_LOG_FILENAME = "message.log";
@@ -253,6 +251,8 @@ LLMessageSystem::LLMessageSystem(const std::string& filename, U32 port,
 {
 	init();
 
+	mSendSize = 0;
+
 	mSystemVersionMajor = version_major;
 	mSystemVersionMinor = version_minor;
 	mSystemVersionPatch = version_patch;
@@ -323,6 +323,8 @@ LLMessageSystem::LLMessageSystem(const std::string& filename, U32 port,
 	mMaxMessageTime   = 1.f;
 
 	mTrueReceiveSize = 0;
+
+	mReceiveTime = 0.f;
 }
 
 
@@ -528,7 +530,7 @@ LLCircuitData* LLMessageSystem::findCircuit(const LLHost& host,
 BOOL LLMessageSystem::checkMessages( S64 frame_count, bool faked_message, U8 fake_buffer[MAX_BUFFER_SIZE], LLHost fake_host, S32 fake_size )
 {
 	// Pump 
-	BOOL valid_packet = FALSE;
+	BOOL	valid_packet = FALSE;
 	mMessageReader = mTemplateMessageReader;
 
 	LLTransferTargetVFile::updateQueue();
@@ -554,21 +556,32 @@ BOOL LLMessageSystem::checkMessages( S64 frame_count, bool faked_message, U8 fak
 		S32 true_rcv_size = 0;
 
 		U8* buffer = mTrueReceiveBuffer;
-		
-		mTrueReceiveSize = mPacketRing.receivePacket(mSocket, (char *)mTrueReceiveBuffer);
+
+		// <edit> (Yeti code)
+		if(!faked_message)
+                {
+			mTrueReceiveSize = mPacketRing.receivePacket(mSocket, (char *)mTrueReceiveBuffer);
+			receive_size = mTrueReceiveSize;
+			mLastSender = mPacketRing.getLastSender();
+			mLastReceivingIF = mPacketRing.getLastReceivingInterface();
+		}
+		else
+		{
+			buffer = fake_buffer; //true my ass.
+			mTrueReceiveSize = fake_size;
+			receive_size = mTrueReceiveSize;
+			mLastSender = fake_host;
+			mLastReceivingIF = mPacketRing.getLastReceivingInterface(); //don't really give two tits about the interface, just leave it
+
+		}
 		// If you want to dump all received packets into SecondLife.log, uncomment this
 		//dumpPacketToLog();
- 		// <edit>
- 		if(mTrueReceiveSize && receive_size > (S32) LL_MINIMUM_VALID_PACKET_SIZE)
- 		{
- 			LLMessageLog::log(mLastSender, LLHost(16777343, mPort), buffer, mTrueReceiveSize);
- 		}
- 		// </edit>
 
-		
-		receive_size = mTrueReceiveSize;
-		mLastSender = mPacketRing.getLastSender();
-		mLastReceivingIF = mPacketRing.getLastReceivingInterface();
+		if(mTrueReceiveSize && receive_size > (S32) LL_MINIMUM_VALID_PACKET_SIZE && !faked_message)
+		{
+			LLMessageLog::log(mLastSender, LLHost(16777343, mPort), buffer, mTrueReceiveSize);
+		}
+		// </edit>
 		
 		if (receive_size < (S32) LL_MINIMUM_VALID_PACKET_SIZE)
 		{
@@ -588,7 +601,9 @@ BOOL LLMessageSystem::checkMessages( S64 frame_count, bool faked_message, U8 fak
 			LLCircuitData* cdp;
 			
 			// note if packet acks are appended.
-			if(buffer[0] & LL_ACK_FLAG)
+			// <edit> (Yeti code)
+			if((buffer[0] & LL_ACK_FLAG) && !faked_message)
+			// </edit>
 			{
 				acks += buffer[--receive_size];
 				true_rcv_size = receive_size;
@@ -620,7 +635,9 @@ BOOL LLMessageSystem::checkMessages( S64 frame_count, bool faked_message, U8 fak
 			// this message came in on if it's valid, and NULL if the
 			// circuit was bogus.
 
-			if(cdp && (acks > 0) && ((S32)(acks * sizeof(TPACKETID)) < (true_rcv_size)))
+			// <edit> (Yeti code)
+			if(cdp && (acks > 0) && ((S32)(acks * sizeof(TPACKETID)) < (true_rcv_size)) && !faked_message)
+			// </edit>
 			{
 				TPACKETID packet_id;
 				U32 mem_id=0;
@@ -802,6 +819,7 @@ S32	LLMessageSystem::getReceiveBytes() const
 
 void LLMessageSystem::processAcks()
 {
+	LLMemType mt_pa(LLMemType::MTYPE_MESSAGE_PROCESS_ACKS);
 	F64 mt_sec = getMessageTimeSeconds();
 	{
 		gTransferManager.updateTransfers();
@@ -1555,12 +1573,6 @@ void LLMessageSystem::dumpCircuitInfo()
 U32 LLMessageSystem::getOurCircuitCode()
 {
 	return mOurCircuitCode;
-}
-
-// <edit>
-LLCircuit* LLMessageSystem::getCircuit()
-{
-	return &mCircuitInfo;
 }
 
 void LLMessageSystem::getCircuitInfo(LLSD& info) const
@@ -2445,7 +2457,7 @@ void dump_prehash_files()
 			" * @file message_prehash.h\n"
 			" * @brief header file of externs of prehashed variables plus defines.\n"
 			" *\n"
-			" * $LicenseInfo:firstyear=2003&license=viewergpl$"
+			" * $LicenseInfo:firstyear=2003&license=viewerlgpl$"
 			" * $/LicenseInfo$"
 			" */\n\n"
 			"#ifndef LL_MESSAGE_PREHASH_H\n#define LL_MESSAGE_PREHASH_H\n\n");
@@ -2476,7 +2488,7 @@ void dump_prehash_files()
 			" * @file message_prehash.cpp\n"
 			" * @brief file of prehashed variables\n"
 			" *\n"
-			" * $LicenseInfo:firstyear=2003&license=viewergpl$"
+			" * $LicenseInfo:firstyear=2003&license=viewerlgpl$"
 			" * $/LicenseInfo$"
 			" */\n\n"
 			"/**\n"
@@ -4034,6 +4046,7 @@ void LLMessageSystem::setTimeDecodesSpamThreshold( F32 seconds )
 // TODO: babbage: move gServicePump in to LLMessageSystem?
 bool LLMessageSystem::checkAllMessages(S64 frame_count, LLPumpIO* http_pump)
 {
+	LLMemType mt_cam(LLMemType::MTYPE_MESSAGE_CHECK_ALL);
 	if(checkMessages(frame_count))
 	{
 		return true;

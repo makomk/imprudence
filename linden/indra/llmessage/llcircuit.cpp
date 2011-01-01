@@ -2,31 +2,25 @@
  * @file llcircuit.cpp
  * @brief Class to track UDP endpoints for the message system.
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
- * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2002&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -77,6 +71,8 @@ LLCircuitData::LLCircuitData(const LLHost &host, TPACKETID in_id,
 	mPacketsOutID(0), 
 	mPacketsInID(in_id),
 	mHighestPacketID(in_id),
+	mTimeoutCallback(NULL),
+	mTimeoutUserData(NULL),
 	mTrusted(FALSE),
 	mbAllowTimeout(TRUE),
 	mbAlive(TRUE),
@@ -102,11 +98,12 @@ LLCircuitData::LLCircuitData(const LLHost &host, TPACKETID in_id,
 	mBytesOutLastPeriod(0),
 	mBytesInThisPeriod(0),
 	mBytesOutThisPeriod(0),
-	mPeakBPSIn(0),
-	mPeakBPSOut(0),
+	mPeakBPSIn(0.f),
+	mPeakBPSOut(0.f),
 	mPeriodTime(0.0),
 	mExistenceTimer(),
 	mCurrentResendCount(0),
+	mLastPacketGap(0),
 	mHeartbeatInterval(circuit_heartbeat_interval), 
 	mHeartbeatTimeout(circuit_timeout)
 {
@@ -120,9 +117,6 @@ LLCircuitData::LLCircuitData(const LLHost &host, TPACKETID in_id,
 	mLastPingReceivedTime = mt_sec;
 	mNextPingSendTime = mLastPingSendTime + 0.95*mHeartbeatInterval + ll_frand(0.1f*mHeartbeatInterval);
 	mPeriodTime = mt_sec;
-
-	mTimeoutCallback = NULL;
-	mTimeoutUserData = NULL;
 
 	mLocalEndPointID.generate();
 }
@@ -646,6 +640,18 @@ BOOL LLCircuit::isCircuitAlive(const LLHost& host) const
 	}
 
 	return FALSE;
+}
+
+// HACK for llfloatermessagebuilder.cpp
+std::vector<LLCircuitData*> LLCircuit::getCircuitDataList()
+{
+	std::vector<LLCircuitData*> vec;
+
+	for(circuit_data_map::iterator iter = mCircuitData.begin(); iter != mCircuitData.end(); ++iter)
+	{
+		vec.push_back(iter->second);
+	}
+	return vec;
 }
 
 void LLCircuitData::setTimeoutCallback(void (*callback_func)(const LLHost &host, void *user_data), void *user_data)
@@ -1230,17 +1236,6 @@ void LLCircuit::getCircuitRange(
 	end = mCircuitData.end();
 	first = mCircuitData.upper_bound(key);
 }
-
-// <edit>
-std::vector<LLCircuitData*> LLCircuit::getCircuitDataList()
-{
-	std::vector<LLCircuitData*> list;
-	circuit_data_map::iterator end = mCircuitData.end();
-	for(circuit_data_map::iterator iter = mCircuitData.begin(); iter != end; ++iter)
-		list.push_back((*iter).second);
-	return list;
-}
-// </edit>
 
 TPACKETID LLCircuitData::nextPacketOutID()
 {
