@@ -336,7 +336,7 @@ public:
 	static void		onChangeSelfInvisible(BOOL newvalue);
 	void			setInvisible(BOOL newvalue);
 	static LLColor4 getDummyColor();
-
+	bool			sendAppearanceMessage(LLMessageSystem *mesgsys, int shield) const;
 
 
 	//--------------------------------------------------------------------

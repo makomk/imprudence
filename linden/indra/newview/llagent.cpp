@@ -7472,7 +7472,7 @@ void LLAgent::sendAgentSetAppearance()
 			if(gSavedSettings.getBOOL("ShowMyClientTagToOthers")) shield = 1;
 			else shield = 2;
 		}
-		mAvatarObject->packTEMessage	( gMessageSystem, shield );
+		mAvatarObject->sendAppearanceMessage( gMessageSystem, shield );
 	}
 	else
 	{
