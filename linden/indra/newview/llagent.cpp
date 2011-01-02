@@ -555,9 +555,9 @@ void LLAgent::resetView(BOOL reset_camera, BOOL change_camera)
 		gMenuHolder->hideMenus();
 	}
 
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 
-	if (change_camera && !(*sFreezeTime))
+	if (change_camera && !sFreezeTime())
 	{
 		changeCameraToDefault();
 		
@@ -581,7 +581,7 @@ void LLAgent::resetView(BOOL reset_camera, BOOL change_camera)
 	}
 
 
-	if (reset_camera && !(*sFreezeTime))
+	if (reset_camera && !sFreezeTime())
 	{
 		if (!gViewerWindow->getLeftMouseDown() && cameraThirdPerson())
 		{
@@ -1996,9 +1996,9 @@ void LLAgent::cameraOrbitIn(const F32 meters)
 		
 		mCameraZoomFraction = (mTargetCameraDistance - meters) / camera_offset_dist;
 
-		static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+		static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 
-		if (!(*sFreezeTime) && mCameraZoomFraction < MIN_ZOOM_FRACTION && meters > 0.f)
+		if (!sFreezeTime() && mCameraZoomFraction < MIN_ZOOM_FRACTION && meters > 0.f)
 		{
 			// No need to animate, camera is already there.
 			changeCameraToMouselook(FALSE);
@@ -2923,8 +2923,8 @@ static const LLFloaterView::skip_list_t& get_skip_list()
 {
 	static LLFloaterView::skip_list_t skip_list;
 	skip_list.insert(LLFloaterMap::getInstance());
-	static BOOL *sShowStatusBarInMouselook = rebind_llcontrol<BOOL>("ShowStatusBarInMouselook", &gSavedSettings, true);
-	if(*sShowStatusBarInMouselook)
+	static LLCachedControl<bool> sShowStatusBarInMouselook(gSavedSettings, "ShowStatusBarInMouselook");
+	if(sShowStatusBarInMouselook())
 	{
 		skip_list.insert(LLFloaterStats::getInstance());
 	}
@@ -6334,9 +6334,9 @@ void LLAgent::setTeleportState(ETeleportState state)
 		mbTeleportKeepsLookAt = false;
 	}
 
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 
-	if (mTeleportState > TELEPORT_NONE && (*sFreezeTime))
+	if (mTeleportState > TELEPORT_NONE && sFreezeTime())
 	{
 		LLFloaterSnapshot::hide(0);
 	}

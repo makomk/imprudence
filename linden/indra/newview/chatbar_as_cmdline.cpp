@@ -267,36 +267,37 @@ std::map<std::string, int> get_gsaved_calls();
 
 bool cmd_line_chat(std::string revised_text, EChatType type)
 {
-	static BOOL *sCmdLineChatbarEnabled = rebind_llcontrol<BOOL>("CmdLineChatbarEnabled", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarPos = rebind_llcontrol<std::string>("CmdLineChatbarPos", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarDrawDistance = rebind_llcontrol<std::string>("CmdLineChatbarDrawDistance", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarTeleportToCam = rebind_llcontrol<std::string>("CmdLineChatbarTeleportToCam", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarAO = rebind_llcontrol<std::string>("CmdLineChatbarAO", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarKeyToName = rebind_llcontrol<std::string>("CmdLineChatbarKeyToName", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarOfferTp = rebind_llcontrol<std::string>("CmdLineChatbarOfferTp", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarGround = rebind_llcontrol<std::string>("CmdLineChatbarGround", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarHeight = rebind_llcontrol<std::string>("CmdLineChatbarHeight", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarTeleportHome = rebind_llcontrol<std::string>("CmdLineChatbarTeleportHome", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarRezPlatform = rebind_llcontrol<std::string>("CmdLineChatbarRezPlatform", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarMapTo = rebind_llcontrol<std::string>("CmdLineChatbarMapTo", &gSavedSettings, true);
-	static BOOL *sCmdLineChatbarMapToKeepPos = rebind_llcontrol<BOOL>("CmdLineChatbarMapToKeepPos", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarCalc = rebind_llcontrol<std::string>("CmdLineChatbarCalc", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarTP2 = rebind_llcontrol<std::string>("CmdLineChatbarTP2", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarClearChat = rebind_llcontrol<std::string>("CmdLineChatbarClearChat", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarMedia = rebind_llcontrol<std::string>("CmdLineChatbarMedia", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarMusic = rebind_llcontrol<std::string>("CmdLineChatbarMusic", &gSavedSettings, true);
-	static std::string *sCmdLineChatbarAutocorrect = rebind_llcontrol<std::string>("CmdLineChatbarAutocorrect", &gSavedSettings, true);
-	//static std::string *sCmdLineChatbarUndeform = rebind_llcontrol<std::string>("CmdLineChatbarUndeform", &gSavedSettings, true);
+	static LLCachedControl<bool> sCmdLineChatbarEnabled(gSavedSettings, "CmdLineChatbarEnabled");
+	static LLCachedControl<std::string> sCmdLineChatbarPos(gSavedSettings, "CmdLineChatbarPos");
+	static LLCachedControl<std::string> sCmdLineChatbarDrawDistance(gSavedSettings, "CmdLineChatbarDrawDistance");
+	static LLCachedControl<std::string> sCmdLineChatbarTeleportToCam(gSavedSettings, "CmdLineChatbarTeleportToCam");
+	static LLCachedControl<std::string> sCmdLineChatbarAO(gSavedSettings, "CmdLineChatbarAO");
+	
+	static LLCachedControl<std::string> sCmdLineChatbarKeyToName(gSavedSettings, "CmdLineChatbarKeyToName");
+	static LLCachedControl<std::string> sCmdLineChatbarOfferTp(gSavedSettings, "CmdLineChatbarOfferTp");
+	static LLCachedControl<std::string> sCmdLineChatbarGround(gSavedSettings, "CmdLineChatbarGround");
+	static LLCachedControl<std::string> sCmdLineChatbarHeight(gSavedSettings, "CmdLineChatbarHeight");
+	static LLCachedControl<std::string> sCmdLineChatbarTeleportHome(gSavedSettings, "CmdLineChatbarTeleportHome");
+	static LLCachedControl<std::string> sCmdLineChatbarRezPlatform(gSavedSettings, "CmdLineChatbarRezPlatform");
+	static LLCachedControl<std::string> sCmdLineChatbarMapTo(gSavedSettings, "CmdLineChatbarMapTo");
+	static LLCachedControl<bool> sCmdLineChatbarMapToKeepPos(gSavedSettings, "CmdLineChatbarMapToKeepPos");
+	static LLCachedControl<std::string> sCmdLineChatbarCalc(gSavedSettings, "CmdLineChatbarCalc");
+	static LLCachedControl<std::string> sCmdLineChatbarTP2(gSavedSettings, "CmdLineChatbarTP2");
+	static LLCachedControl<std::string> sCmdLineChatbarClearChat(gSavedSettings, "CmdLineChatbarClearChat");
+	static LLCachedControl<std::string> sCmdLineChatbarMedia(gSavedSettings, "CmdLineChatbarMedia");
+	static LLCachedControl<std::string> sCmdLineChatbarMusic(gSavedSettings, "CmdLineChatbarMusic");
+	static LLCachedControl<std::string> sCmdLineChatbarAutocorrect(gSavedSettings, "CmdLineChatbarAutocorrect");
+	//static LLCachedControl<std::string> sCmdLineChatbarUndeform(gSavedSettings, "CmdLineChatbarUndeform");
 	//gSavedSettings.getString("CmdLineChatbarUndeform")
 	
-	if(*sCmdLineChatbarEnabled)
+	if(sCmdLineChatbarEnabled())
 	{
 		std::istringstream i(revised_text);
 		std::string command;
 		i >> command;
 		if(command != "")
 		{
-			if(command == *sCmdLineChatbarPos)
+			if(command == sCmdLineChatbarPos())
 			{
 				F32 x,y,z;
 				if (i >> x)
@@ -319,7 +320,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					}
 				}
 			}
-			else if(command == *sCmdLineChatbarDrawDistance)
+			else if(command == sCmdLineChatbarDrawDistance())
 			{
                 int drawDist;
                 if(i >> drawDist)
@@ -332,7 +333,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					return false;
                 }
 			}
-			else if(command == *sCmdLineChatbarTeleportToCam)
+			else if(command == sCmdLineChatbarTeleportToCam())
             {
 				gAgent.teleportViaLocationLookAt(gAgent.getCameraPositionGlobal());
 				return false;
@@ -343,7 +344,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				gAgent.getAvatarObject()->undeform();
 				return false;
             }*/ //what the fuck is this shit, thought it would be something useful like repairing the skeleton but its some shitty playing of inworld anims
-			else if(command == *sCmdLineChatbarMedia)
+			else if(command == sCmdLineChatbarMedia())
 			{
 				std::string url;
 				std::string type;
@@ -361,7 +362,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					}
 				}
 			}
-			else if(command == *sCmdLineChatbarMusic)
+			else if(command == sCmdLineChatbarMusic())
 			{
 				std::string status;
 				if(i >> status)
@@ -374,7 +375,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					return false;
 				}
 			}
-			else if(command == *sCmdLineChatbarAO)
+			else if(command == sCmdLineChatbarAO())
             {
 				std::string status;
                 if(i >> status)
@@ -397,7 +398,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				}
 				return false;
             }
-			else if(command == *sCmdLineChatbarKeyToName)
+			else if(command == sCmdLineChatbarKeyToName())
             {
                 LLUUID targetKey;
                 if(i >> targetKey)
@@ -499,7 +500,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				cmdline_printchat(std::string("Standing up"));
 				return false;
             }
-			else if(command == *sCmdLineChatbarOfferTp)
+			else if(command == sCmdLineChatbarOfferTp())
             {
                 std::string avatarKey;
 //				llinfos << "CMD DEBUG 0 " << command << " " << avatarName << llendl;
@@ -535,7 +536,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
                 }
             }
 			
-			else if(command == *sCmdLineChatbarGround)
+			else if(command == sCmdLineChatbarGround())
 			{
 				LLVector3 agentPos = gAgent.getPositionAgent();
 				U64 agentRegion = gAgent.getRegion()->getHandle();
@@ -544,7 +545,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				pos_global += LLVector3d((F64)targetPos.mV[0],(F64)targetPos.mV[1],(F64)targetPos.mV[2]);
 				gAgent.teleportViaLocation(pos_global);
 				return false;
-			}else if(command == *sCmdLineChatbarHeight)
+			}else if(command == sCmdLineChatbarHeight())
 			{
 				F32 z;
 				if(i >> z)
@@ -557,17 +558,17 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					gAgent.teleportViaLocation(pos_global);
 					return false;
 				}
-			}else if(command == *sCmdLineChatbarTeleportHome)
+			}else if(command == sCmdLineChatbarTeleportHome())
 			{
 				gAgent.teleportHome();
 				return false;
-			}else if(command == *sCmdLineChatbarRezPlatform && gHippoGridManager->getConnectedGrid()->isSecondLife())
+			}else if(command == sCmdLineChatbarRezPlatform() && gHippoGridManager->getConnectedGrid()->isSecondLife())
             {
 				F32 width;
 				if (i >> width) cmdline_rezplat(false, width);
 				else cmdline_rezplat();
 				return false;
-			}else if(command == *sCmdLineChatbarMapTo)
+			}else if(command == sCmdLineChatbarMapTo())
 			{
 				if (revised_text.length() > command.length() + 1) //Typing this command with no argument was causing a crash. -Madgeek
 				{
@@ -578,7 +579,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					std::string region_name = LLWeb::escapeURL(revised_text.substr(command.length()+1));
 					std::string url;
 
-					if(!*sCmdLineChatbarMapToKeepPos)
+					if(!sCmdLineChatbarMapToKeepPos())
 					{
 						agent_x = 128;
 						agent_y = 128;
@@ -589,7 +590,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					LLURLDispatcher::dispatch(url, NULL, true);
 				}
 				return false;
-			}else if(command == *sCmdLineChatbarCalc)//Cryogenic Blitz
+			}else if(command == sCmdLineChatbarCalc())//Cryogenic Blitz
 			{
 				bool success;
 				F32 result = 0.f;
@@ -618,7 +619,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 					cmdline_printchat(out);
 					return false;
 				}
-			}else if(command == *sCmdLineChatbarTP2)
+			}else if(command == sCmdLineChatbarTP2())
 			{
 				if (revised_text.length() > command.length() + 1) //Typing this command with no argument was causing a crash. -Madgeek
 				{
@@ -633,22 +634,22 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				cmdline_printchat("Displaying AutoCorrection Floater.");
 				return false;
 			}
-			else if(command == *sCmdLineChatbarAutocorrect)
+			else if(command == sCmdLineChatbarAutocorrect())
 			{
 				if (revised_text.length() <= command.length() + 1) //KOW: verify that we have params
 				{
 					cmdline_printchat("No parameter specified, correct usage is "+
-						*sCmdLineChatbarAutocorrect+" list Name|wrong word|right word.");
+						sCmdLineChatbarAutocorrect()+" list Name|wrong word|right word.");
 					return false;
 				}
 
-				std::string info = revised_text.substr((*sCmdLineChatbarAutocorrect).length()+1);
+				std::string info = revised_text.substr((sCmdLineChatbarAutocorrect()).length()+1);
 				//addac list name|wrong word|right word
 				int bar = info.find("|");
 				if (bar==std::string::npos)
 				{
 					cmdline_printchat("Wrong usage, correct usage is "+
-				*sCmdLineChatbarAutocorrect+" list name|wrong word|right word.");
+				sCmdLineChatbarAutocorrect()+" list name|wrong word|right word.");
 					return false;
 				}
 				
@@ -660,7 +661,7 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 				if (bar==std::string::npos)
 				{
 					cmdline_printchat("Wrong usage, correct usage is"+
-						*sCmdLineChatbarAutocorrect+" list name|wrong word|right word.");
+						sCmdLineChatbarAutocorrect()+" list name|wrong word|right word.");
 					return false;
 				}
 
@@ -686,9 +687,9 @@ bool cmd_line_chat(std::string revised_text, EChatType type)
 // 				//gAgent.getAvatarObject()->loadAvatar();
 // 				return false;
 // 			}
-			else if(command == *sCmdLineChatbarClearChat)
+			else if(command == sCmdLineChatbarClearChat())
 			{
-				LLFloaterChat* chat = LLFloaterChat::getInstance(LLSD());
+				LLFloaterChat* chat = LLFloaterChat::getInstance();
 				if(chat)
 				{
 					LLViewerTextEditor*	history_editor = chat->getChild<LLViewerTextEditor>("Chat History Editor");
@@ -933,9 +934,9 @@ void cmdline_rezplat(bool use_saved_value, F32 visual_radius) //cmdline_rezplat(
     LLQuaternion rotation;
     rotation.setQuat(90.f * DEG_TO_RAD, LLVector3::y_axis);
 
-	static F32 *sCmdLineChatbarPlatformSize = rebind_llcontrol<F32>("CmdLineChatbarPlatformSize", &gSavedSettings, true);
+	static LLCachedControl<F32> sCmdLineChatbarPlatformSize(gSavedSettings, "CmdLineChatbarPlatformSize");
 
-	if (use_saved_value) visual_radius = *sCmdLineChatbarPlatformSize;
+	if (use_saved_value) visual_radius = sCmdLineChatbarPlatformSize();
 	F32 realsize = visual_radius / 3.0f;
 	if (realsize < 0.01f) realsize = 0.01f;
 	else if (realsize > 10.0f) realsize = 10.0f;

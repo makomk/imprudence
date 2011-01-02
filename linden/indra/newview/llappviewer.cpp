@@ -546,8 +546,6 @@ bool LLAppViewer::sendURLToOtherInstance(const std::string& url)
 LLAppViewer* LLAppViewer::sInstance = NULL;
 
 const std::string LLAppViewer::sGlobalSettingsName = "Global"; 
-const std::string LLAppViewer::sPerAccountSettingsName = "PerAccount"; 
-const std::string LLAppViewer::sCrashSettingsName = "CrashSettings"; 
 
 LLTextureCache* LLAppViewer::sTextureCache = NULL; 
 LLImageDecodeThread* LLAppViewer::sImageDecodeThread = NULL; 
@@ -1702,7 +1700,7 @@ bool LLAppViewer::loadSettingsFromDirectory(const std::string& location_key,
 		llinfos << "Attempting to load settings for the group " << settings_group 
 			    << " - from location " << location_key << llendl;
 
-		if(gSettings.find(settings_group) == gSettings.end())
+		if(!LLControlGroup::getInstance(settings_group))
 		{
 			llwarns << "No matching settings group for name " << settings_group << llendl;
 			continue;
@@ -1716,10 +1714,10 @@ bool LLAppViewer::loadSettingsFromDirectory(const std::string& location_key,
 			std::string custom_name_setting = file.get("NameFromSetting");
 			// *NOTE: Regardless of the group currently being lodaed,
 			// this setting is always read from the Global settings.
-			if(gSettings[sGlobalSettingsName]->controlExists(custom_name_setting))
+			if(LLControlGroup::getInstance(sGlobalSettingsName)->controlExists(custom_name_setting))
 			{
 				std::string file_name = 
-					gSettings[sGlobalSettingsName]->getString(custom_name_setting);
+					LLControlGroup::getInstance(sGlobalSettingsName)->getString(custom_name_setting);
 				full_settings_path = file_name;
 			}
 		}
@@ -1736,7 +1734,7 @@ bool LLAppViewer::loadSettingsFromDirectory(const std::string& location_key,
 			requirement = file.get("Requirement").asInteger();
 		}
 		
-		if(!gSettings[settings_group]->loadFromFile(full_settings_path, set_defaults))
+		if(!LLControlGroup::getInstance(settings_group)->loadFromFile(full_settings_path, set_defaults))
 		{
 			if(requirement == 1)
 			{
@@ -1781,14 +1779,9 @@ bool LLAppViewer::initConfiguration()
 	// init Imprudence version - MC
 	ViewerVersion::initViewerVersion();
 
-	//Set up internal pointers	
-	gSettings[sGlobalSettingsName] = &gSavedSettings;
-	gSettings[sPerAccountSettingsName] = &gSavedPerAccountSettings;
-	gSettings[sCrashSettingsName] = &gCrashSettings;
-
 	//Load settings files list
 	std::string settings_file_list = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "settings_files.xml");
-	LLControlGroup settings_control;
+	LLControlGroup settings_control("SettingsFiles");
 	llinfos << "Loading settings file list" << settings_file_list << llendl;
 	if (0 == settings_control.loadFromFile(settings_file_list))
 	{
@@ -1842,7 +1835,7 @@ bool LLAppViewer::initConfiguration()
 	gSavedSettings.setBOOL("WatchdogEnabled", FALSE);
 #endif
 
-	gCrashSettings.getControl(CRASH_BEHAVIOR_SETTING)->getSignal()->connect(boost::bind(&handleCrashSubmitBehaviorChanged, _1));	
+	gCrashSettings.getControl(CRASH_BEHAVIOR_SETTING)->getSignal()->connect(boost::bind(&handleCrashSubmitBehaviorChanged, _2));	
 
 	// These are warnings that appear on the first experience of that condition.
 	// They are already set in the settings_default.xml file, but still need to be added to LLFirstUse
@@ -1989,7 +1982,7 @@ bool LLAppViewer::initConfiguration()
             {
                 const std::string& name = *itr;
                 const std::string& value = *(++itr);
-                LLControlVariable* c = gSettings[sGlobalSettingsName]->getControl(name);
+                LLControlVariable* c = LLControlGroup::getInstance(sGlobalSettingsName)->getControl(name);
                 if(c)
                 {
                     c->setValue(value, false);
@@ -4208,8 +4201,8 @@ void LLAppViewer::resumeMainloopTimeout(const std::string& state, F32 secs)
 	{
 		if(secs < 0.0f)
 		{
-			static F32 *sMainloopTimeoutDefault = rebind_llcontrol<F32>("MainloopTimeoutDefault", &gSavedSettings, true);
-			secs = *sMainloopTimeoutDefault;
+			LLCachedControl<F32> sMainloopTimeoutDefault(gSavedSettings, "MainloopTimeoutDefault");
+			secs = sMainloopTimeoutDefault();
 		}
 
 		mMainloopTimeout->setTimeout(secs);
@@ -4236,8 +4229,8 @@ void LLAppViewer::pingMainloopTimeout(const std::string& state, F32 secs)
 	{
 		if(secs < 0.0f)
 		{
-			static F32 *sMainloopTimeoutDefault = rebind_llcontrol<F32>("MainloopTimeoutDefault", &gSavedSettings, true);
-			secs = *sMainloopTimeoutDefault;
+			LLCachedControl<F32> sMainloopTimeoutDefault(gSavedSettings, "MainloopTimeoutDefault");
+			secs = sMainloopTimeoutDefault();
 		}
 
 		mMainloopTimeout->setTimeout(secs);

@@ -314,16 +314,16 @@ void LLOverlayBar::refresh()
 		// update "remotes"
 		childSetVisible("media_remote_container", TRUE);
 		childSetVisible("voice_remote_container", LLVoiceClient::voiceEnabled());
-		static BOOL *sEnableWindlightRemote = rebind_llcontrol<BOOL>("EnableWindlightRemote", &gSavedSettings, true);
-		childSetVisible("windlight_remote_container", (*sEnableWindlightRemote));
-		static BOOL *sEnableAORemote = rebind_llcontrol<BOOL>("EnableAORemote", &gSavedSettings, true);
-		childSetVisible("ao_remote_container", (*sEnableAORemote));
+		static LLCachedControl<bool> sEnableWindlightRemote(gSavedSettings, "EnableWindlightRemote");
+		childSetVisible("windlight_remote_container", sEnableWindlightRemote());
+		static LLCachedControl<bool> sEnableAORemote(gSavedSettings, "EnableAORemote");
+		childSetVisible("ao_remote_container", sEnableAORemote());
 		childSetVisible("state_buttons", TRUE);
 	}
 
-	static BOOL *sChatVisible = rebind_llcontrol<BOOL>("ChatVisible", &gSavedSettings, true);
+	static LLCachedControl<bool> sChatVisible(gSavedSettings, "ChatVisible");
 	// always let user toggle into and out of chatbar
-	childSetVisible("chat_bar", *sChatVisible);//gSavedSettings.getBOOL("ChatVisible"));
+	childSetVisible("chat_bar", sChatVisible());//gSavedSettings.getBOOL("ChatVisible"));
 
 
 	if (buttons_changed)

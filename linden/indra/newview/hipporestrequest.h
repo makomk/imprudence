@@ -60,6 +60,7 @@ class HippoRestHandlerRaw : public HippoRestHandler
 };
 
 
+#if 0 // FIXME - broken by LLXmlTree changes
 class HippoRestHandlerXml : public HippoRestHandler
 {
 	public:
@@ -76,6 +77,7 @@ class HippoRestHandlerXml : public HippoRestHandler
 					const LLChannelDescriptors &channels,
 					const boost::shared_ptr<LLBufferArray> &body);
 };
+#endif
 
 
 // ********************************************************************
@@ -89,12 +91,16 @@ class HippoRestRequest
 						HippoRestHandler *handler, float timeout=HIPPO_REST_TIMEOUT);
 		static void put(const std::string &url, const std::string &body,
 						HippoRestHandler *handler, float timeout=HIPPO_REST_TIMEOUT);
+#if 0 // FIXME - broken by LLXmlTree changes
 		static void put(const std::string &url, const LLXmlTree *body,
 						HippoRestHandler *handler, float timeout=HIPPO_REST_TIMEOUT);
+#endif
 		static void post(const std::string &url, const std::string &body,
 						 HippoRestHandler *handler, float timeout=HIPPO_REST_TIMEOUT);
+#if 0 // FIXME - broken by LLXmlTree changes
 		static void post(const std::string &url, const LLXmlTree *body,
 						 HippoRestHandler *handler, float timeout=HIPPO_REST_TIMEOUT);
+#endif
  
 		// synchronous interface
 		static int getBlocking(const std::string &url, std::string *result);

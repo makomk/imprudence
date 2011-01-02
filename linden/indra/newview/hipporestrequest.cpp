@@ -108,6 +108,7 @@ void HippoRestHandlerRaw::handle(int status, const std::string &reason,
 	}
 }
 
+#if 0 // FIXME - broken by LLXmlTree changes
 void HippoRestHandlerXml::handle(int status, const std::string &reason,
 								 const LLChannelDescriptors &channels,
 								 const boost::shared_ptr<LLBufferArray> &body)
@@ -127,7 +128,7 @@ void HippoRestHandlerXml::handle(int status, const std::string &reason,
 		llwarns << "Rest request error " << status << ": " << reason << llendl;
 	}
 }
-
+#endif
 
 // ********************************************************************
 
@@ -164,6 +165,7 @@ class BodyDataRaw : public BodyData
 		std::string mData;
 };
 
+#if 0 // FIXME - broken by LLXmlTree changes
 class BodyDataXml : public BodyData
 {
 	public:
@@ -194,7 +196,7 @@ class BodyDataXml : public BodyData
 	private:
 		const LLXmlTree *mTree;
 };
-
+#endif
 
 // ********************************************************************
 
@@ -219,12 +221,14 @@ void HippoRestRequest::put(const std::string &url, const std::string &body,
 	request(url, LLURLRequest::HTTP_PUT, new BodyDataRaw(body), handler, timeout);
 }
 
+#if 0 // FIXME - broken by LLXmlTree changes
 // static
 void HippoRestRequest::put(const std::string &url, const LLXmlTree *body,
 						   HippoRestHandler *handler, float timeout)
 {
 	request(url, LLURLRequest::HTTP_PUT, new BodyDataXml(body), handler, timeout);
 }
+#endif
 
 // static
 void HippoRestRequest::post(const std::string &url, const std::string &body,
@@ -233,12 +237,14 @@ void HippoRestRequest::post(const std::string &url, const std::string &body,
 	request(url, LLURLRequest::HTTP_POST, new BodyDataRaw(body), handler, timeout);
 }
 
+#if 0 // FIXME - broken by LLXmlTree changes
 // static
 void HippoRestRequest::post(const std::string &url, const LLXmlTree *body,
 							HippoRestHandler *handler, float timeout)
 {
 	request(url, LLURLRequest::HTTP_POST, new BodyDataXml(body), handler, timeout);
 }
+#endif
 
 
 // ********************************************************************

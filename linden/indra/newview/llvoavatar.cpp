@@ -3464,18 +3464,18 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 
 	const F32 time_visible = mTimeVisible.getElapsedTimeF32();
 
-	static F32* sRenderNameShowTime = rebind_llcontrol<F32>("RenderNameShowTime", &gSavedSettings, true);
-	static F32* sRenderNameFadeDuration = rebind_llcontrol<F32>("RenderNameFadeDuration", &gSavedSettings, true);
+	static LLCachedControl<F32> sRenderNameShowTime(gSavedSettings, "RenderNameShowTime");
+	static LLCachedControl<F32> sRenderNameFadeDuration(gSavedSettings, "RenderNameFadeDuration");
 
 
-	const F32 NAME_SHOW_TIME = *sRenderNameShowTime;	// seconds
-	const F32 FADE_DURATION = *sRenderNameFadeDuration; // seconds
+	const F32 NAME_SHOW_TIME = sRenderNameShowTime();	// seconds
+	const F32 FADE_DURATION = sRenderNameFadeDuration(); // seconds
 // [RLVa:KB] - Checked: 2009-07-08 (RLVa-1.0.0e) | Added: RLVa-0.2.0b
 	bool fRlvShowNames = gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES);
 // [/RLVa:KB]
 	BOOL visible_avatar = isVisible() || mNeedsAnimUpdate;
-	static BOOL* sUseChatBubbles = rebind_llcontrol<BOOL>("UseChatBubbles", &gSavedSettings, true);
-	BOOL visible_chat = *sUseChatBubbles && (mChats.size() || mTyping);
+	static LLCachedControl<bool> sUseChatBubbles(gSavedSettings, "UseChatBubbles");
+	BOOL visible_chat = sUseChatBubbles() && (mChats.size() || mTyping);
 	BOOL render_name =	visible_chat ||
 						(visible_avatar &&
 // [RLVa:KB] - Checked: 2009-08-11 (RLVa-1.0.1h) | Added: RLVa-1.0.0h
@@ -3518,8 +3518,6 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 			new_name = TRUE;
 		}
 
-		static LLColor4* sAvatarNameColor = rebind_llcontrol<LLColor4>("AvatarNameColor", &gColors, true);
-
 		std::string client;
 		// First Calculate Alpha
 		// If alpha > 0, create mNameText if necessary, otherwise delete it
@@ -3560,7 +3558,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 					new_name = TRUE;
 				}
 				
-				LLColor4 avatar_name_color = (*sAvatarNameColor);
+				LLColor4 avatar_name_color = gColors.getColor( "AvatarNameColor" );
 				LLColor4 client_color = avatar_name_color;
 
 				if(!mIsSelf) //don't know your own client ?
@@ -3576,13 +3574,13 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 					client_color = LLColor4(0.79f,0.44f,0.88f);
 				}
 
-				static BOOL* sShowClientColor = rebind_llcontrol<BOOL>("ShowClientColor", &gSavedSettings, true);
-				static BOOL* sShowClientNameTag = rebind_llcontrol<BOOL>("ShowClientNameTag", &gSavedSettings, true);
-				if (*sShowClientColor)
+				static LLCachedControl<bool> sShowClientColor(gSavedSettings, "ShowClientColor");
+				static LLCachedControl<bool> sShowClientNameTag(gSavedSettings, "ShowClientNameTag");
+				if (sShowClientColor())
 				{
 					avatar_name_color = client_color;
 				}
-				if (!(*sShowClientNameTag))
+				if (!sShowClientNameTag())
 				{
 					client.clear();
 				}
@@ -3674,8 +3672,8 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 
 				BOOL need_comma = FALSE;
 
-				static BOOL* sShowClientNameTag = rebind_llcontrol<BOOL>("ShowClientNameTag", &gSavedSettings, true);
-				bool show_client = client.length() != 0 && (*sShowClientNameTag);
+				static LLCachedControl<bool> sShowClientNameTag(gSavedSettings, "ShowClientNameTag");
+				bool show_client = client.length() != 0 && sShowClientNameTag();
 				if (is_away || is_muted || is_busy || show_client)
 				{
 					line += " (";
@@ -3744,7 +3742,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				std::deque<LLChat>::iterator chat_iter = mChats.begin();
 				mNameText->clearString();
 
-				LLColor4 new_chat = (*sAvatarNameColor);
+				LLColor4 new_chat = gColors.getColor( "AvatarNameColor" );
 				LLColor4 normal_chat = lerp(new_chat, LLColor4(0.8f, 0.8f, 0.8f, 1.f), 0.7f);
 				LLColor4 old_chat = lerp(normal_chat, LLColor4(0.6f, 0.6f, 0.6f, 1.f), 0.7f);
 				if (mTyping && mChats.size() >= MAX_BUBBLE_CHAT_UTTERANCES)
@@ -3814,8 +3812,8 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 						style |= LLFontGL::BOLD;
 				}
 
-				static BOOL* sSmallAvatarNames = rebind_llcontrol<BOOL>("SmallAvatarNames", &gSavedSettings, true);
-				if (*sSmallAvatarNames)
+				static LLCachedControl<bool> sSmallAvatarNames(gSavedSettings, "SmallAvatarNames");
+				if (sSmallAvatarNames())
 					mNameText->setFont(LLFontGL::getFont(LLFontDescriptor("SansSerif","Medium",style)));
 				else
 					mNameText->setFont(LLFontGL::getFont(LLFontDescriptor("SansSerif","Large",style)));
@@ -7398,8 +7396,8 @@ BOOL LLVOAvatar::updateIsFullyLoaded()
 
 BOOL LLVOAvatar::isFullyLoaded()
 {
-	static BOOL* sRenderUnloadedAvatar = rebind_llcontrol<BOOL>("RenderUnloadedAvatar", &gSavedSettings, true);
-	if (*sRenderUnloadedAvatar)
+	static LLCachedControl<bool> sRenderUnloadedAvatar(gSavedSettings, "RenderUnloadedAvatar");
+	if (sRenderUnloadedAvatar())
 		return TRUE;
 	else
 		return mFullyLoaded;

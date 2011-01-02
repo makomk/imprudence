@@ -103,9 +103,9 @@ void LLDrawPoolTree::render(S32 pass)
 	LLGLEnable test(GL_ALPHA_TEST);
 	LLOverrideFaceColor color(this, 1.f, 1.f, 1.f, 1.f);
 
-	static BOOL* sRenderAnimateTrees = rebind_llcontrol<BOOL>("RenderAnimateTrees", &gSavedSettings, true);
+	LLCachedControl<bool> sRenderAnimateTrees(gSavedSettings, "RenderAnimateTrees");
 	
-	if (*sRenderAnimateTrees)
+	if (sRenderAnimateTrees())
 	{
 		renderTree();
 	}
@@ -201,9 +201,9 @@ void LLDrawPoolTree::renderForSelect()
 	gGL.getTexUnit(0)->setTextureColorBlend(LLTexUnit::TBO_REPLACE, LLTexUnit::TBS_PREV_COLOR);
 	gGL.getTexUnit(0)->setTextureAlphaBlend(LLTexUnit::TBO_MULT, LLTexUnit::TBS_TEX_ALPHA, LLTexUnit::TBS_VERT_ALPHA);
 
-	static BOOL* sRenderAnimateTrees = rebind_llcontrol<BOOL>("RenderAnimateTrees", &gSavedSettings, true);
+	LLCachedControl<bool> sRenderAnimateTrees(gSavedSettings, "RenderAnimateTrees");
 	
-	if (*sRenderAnimateTrees)
+	if (sRenderAnimateTrees())
 	{
 		renderTree(TRUE);
 	}

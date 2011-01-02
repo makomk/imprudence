@@ -227,10 +227,7 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 
 		caution_box->setFontStyle(LLFontGL::BOLD);
 		caution_box->setColor(gColors.getColor("NotifyCautionWarnColor"));
-
-		static LLColor4* sNotifyCautionBoxColor = rebind_llcontrol<LLColor4>("NotifyCautionBoxColor", &gColors, true);
-		
-		caution_box->setBackgroundColor((*sNotifyCautionBoxColor));
+		caution_box->setBackgroundColor(gColors.getColor("NotifyCautionBoxColor"));
 		caution_box->setBorderVisible(FALSE);
 		caution_box->setWrappedText(notification->getMessage());
 		
@@ -488,10 +485,7 @@ void LLNotifyBox::drawBackground() const
 	{
 		gGL.getTexUnit(0)->bind(imagep->getImage());
 		// set proper background color depending on whether notify box is a caution or not
-		static LLColor4* sNotifyCautionBoxColor = rebind_llcontrol<LLColor4>("NotifyCautionBoxColor", &gColors, true);
-		static LLColor4* sNotifyBoxColor = rebind_llcontrol<LLColor4>("NotifyBoxColor", &gColors, true);
-
-		LLColor4 color = mIsCaution? (*sNotifyCautionBoxColor) : (*sNotifyBoxColor);
+		LLColor4 color = mIsCaution? gColors.getColor("NotifyCautionBoxColor") : gColors.getColor("NotifyBoxColor");
 		if(gFocusMgr.childHasKeyboardFocus( this ))
 		{
 			const S32 focus_width = 2;
@@ -506,9 +500,9 @@ void LLNotifyBox::drawBackground() const
 			gl_segmented_rect_2d_tex(0, getRect().getHeight(), getRect().getWidth(), 0, imagep->getTextureWidth(), imagep->getTextureHeight(), 16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);
 
 			if( mIsCaution )
-				color = (*sNotifyCautionBoxColor);
+				color = gColors.getColor("NotifyCautionBoxColor");
 			else
-				color = (*sNotifyBoxColor);
+				color = gColors.getColor("NotifyBoxColor");
 
 			gGL.color4fv(color.mV);
 			gl_segmented_rect_2d_tex(1, getRect().getHeight()-1, getRect().getWidth()-1, 1, imagep->getTextureWidth(), imagep->getTextureHeight(), 16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);

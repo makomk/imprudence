@@ -2,31 +2,25 @@
  * @file llxmlnode.h
  * @brief LLXMLNode definition
  *
- * $LicenseInfo:firstyear=2000&license=viewergpl$
- * 
- * Copyright (c) 2000-2010, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2000&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -34,7 +28,7 @@
 #define LL_LLXMLNODE_H
 
 #ifndef XML_STATIC
-#define XML_STATIC 1
+#define XML_STATIC
 #endif
 #ifdef LL_STANDALONE
 #include <expat.h>
@@ -45,9 +39,10 @@
 
 #include "indra_constants.h"
 #include "llpointer.h"
-#include "llthread.h"
+#include "llthread.h"		// LLThreadSafeRefCount
 #include "llstring.h"
 #include "llstringtable.h"
+#include "llfile.h"
 
 
 class LLVector3;
@@ -141,7 +136,7 @@ public:
 		LLXMLNodePtr& node, 
 		LLXMLNode* defaults_tree);
 	static bool parseBuffer(
-		const char *buffer,
+		U8* buffer,
 		U32 length,
 		LLXMLNodePtr& node, 
 		LLXMLNode* defaults);
@@ -153,9 +148,19 @@ public:
 		LLXMLNodePtr& node,
 		LLXMLNodePtr& update_node);
 	static LLXMLNodePtr replaceNode(LLXMLNodePtr node, LLXMLNodePtr replacement_node);
-	static void writeHeaderToFile(LLFILE *fOut);
-    void writeToFile(LLFILE *fOut, const std::string& indent = std::string());
-    void writeToOstream(std::ostream& output_stream, const std::string& indent = std::string());
+	
+	static bool getLayeredXMLNode(const std::string &xui_filename, LLXMLNodePtr& root,
+								  const std::vector<std::string>& paths);
+	
+	
+	// Write standard XML file header:
+	// <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+	static void writeHeaderToFile(LLFILE *out_file);
+	
+	// Write XML to file with one attribute per line.
+	// XML escapes values as they are written.
+    void writeToFile(LLFILE *out_file, const std::string& indent = std::string(), bool use_type_decorations=true);
+    void writeToOstream(std::ostream& output_stream, const std::string& indent = std::string(), bool use_type_decorations=true);
 
     // Utility
     void findName(const std::string& name, LLXMLNodeList &results);
@@ -207,6 +212,7 @@ public:
     U32 getLength() const { return mLength; }
     U32 getPrecision() const { return mPrecision; }
     const std::string& getValue() const { return mValue; }
+	std::string getSanitizedValue() const;
 	std::string getTextContents() const;
     const LLStringTableEntry* getName() const { return mName; }
 	BOOL hasName(const char* name) const { return mName == gStringTable.checkStringEntry(name); }
@@ -226,6 +232,8 @@ public:
 
 	bool getAttribute(const char* name, LLXMLNodePtr& node, BOOL use_default_if_missing = TRUE);
 	bool getAttribute(const LLStringTableEntry* name, LLXMLNodePtr& node, BOOL use_default_if_missing = TRUE);
+
+	S32 getLineNumber();
 
 	// The following skip over attributes
 	LLXMLNodePtr getFirstChild() const;
@@ -261,6 +269,8 @@ public:
 	void setValue(const std::string& value);
 	void setName(const std::string& name);
 	void setName(LLStringTableEntry* name);
+
+	void setLineNumber(S32 line_number);
 
 	// Escapes " (quot) ' (apos) & (amp) < (lt) > (gt)
 	static std::string escapeXML(const std::string& xml);
@@ -300,6 +310,7 @@ public:
 	U32 mPrecision;				// The number of BITS per array item
 	ValueType mType;			// The value type
 	Encoding mEncoding;			// The value encoding
+	S32 mLineNumber;			// line number in source file, if applicable
 
 	LLXMLNode* mParent;				// The parent node
 	LLXMLChildrenPtr mChildren;		// The child nodes
@@ -312,7 +323,11 @@ public:
 	
 protected:
 	LLStringTableEntry *mName;		// The name of this node
-	std::string mValue;			// The value of this node (use getters/setters only)
+
+	// The value of this node (use getters/setters only)
+	// Values are not XML-escaped in memory
+	// They may contain " (quot) ' (apos) & (amp) < (lt) > (gt)
+	std::string mValue;
 
 	LLXMLNodePtr mDefault;		// Mirror node in the default tree
 

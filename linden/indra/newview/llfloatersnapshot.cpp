@@ -739,9 +739,9 @@ BOOL LLSnapshotLivePreview::onIdle( void* snapshot_preview )
 	LLVector3 new_camera_pos = LLViewerCamera::getInstance()->getOrigin();
 	LLQuaternion new_camera_rot = LLViewerCamera::getInstance()->getQuaternion();
 
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 
-	if ((*sFreezeTime) && 
+	if (sFreezeTime() && 
 		(new_camera_pos != previewp->mCameraPos || dot(new_camera_rot, previewp->mCameraRot) < 0.995f))
 	{
 		previewp->mCameraPos = new_camera_pos;
@@ -2336,10 +2336,10 @@ LLSnapshotFloaterView::~LLSnapshotFloaterView()
 
 BOOL LLSnapshotFloaterView::handleKey(KEY key, MASK mask, BOOL called_from_parent)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 
 	// use default handler when not in freeze-frame mode
-	if(!(*sFreezeTime))
+	if(!sFreezeTime())
 	{
 		return LLFloaterView::handleKey(key, mask, called_from_parent);
 	}
@@ -2359,9 +2359,9 @@ BOOL LLSnapshotFloaterView::handleKey(KEY key, MASK mask, BOOL called_from_paren
 
 BOOL LLSnapshotFloaterView::handleMouseDown(S32 x, S32 y, MASK mask)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 	// use default handler when not in freeze-frame mode
-	if(!(*sFreezeTime))
+	if(!sFreezeTime())
 	{
 		return LLFloaterView::handleMouseDown(x, y, mask);
 	}
@@ -2375,9 +2375,9 @@ BOOL LLSnapshotFloaterView::handleMouseDown(S32 x, S32 y, MASK mask)
 
 BOOL LLSnapshotFloaterView::handleMouseUp(S32 x, S32 y, MASK mask)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 	// use default handler when not in freeze-frame mode
-	if(!(*sFreezeTime))
+	if(!sFreezeTime())
 	{
 		return LLFloaterView::handleMouseUp(x, y, mask);
 	}
@@ -2391,9 +2391,9 @@ BOOL LLSnapshotFloaterView::handleMouseUp(S32 x, S32 y, MASK mask)
 
 BOOL LLSnapshotFloaterView::handleHover(S32 x, S32 y, MASK mask)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
 	// use default handler when not in freeze-frame mode
-	if(!(*sFreezeTime))
+	if(!sFreezeTime())
 	{
 		return LLFloaterView::handleHover(x, y, mask);
 	}	

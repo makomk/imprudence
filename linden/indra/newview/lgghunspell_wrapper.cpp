@@ -469,10 +469,10 @@ static char * languageCodesraw[]={
 //#define LANGUAGE_CODES_RAW_SIZE ((__LINE__ - 1 - LANGUAGE_CODES_RAW_START_LINE) * 2)
 #define LANGUAGE_CODES_RAW_SIZE 368
 
-lggHunSpell_Wrapper::lggHunSpell_Wrapper()
+lggHunSpell_Wrapper::lggHunSpell_Wrapper() 
+  : mSpellCheckHighlight(gSavedSettings, "EmeraldSpellDisplay")
 {
 	//languageCodes(begin(languageCodesraw), end(languageCodesraw));    
-	mSpellCheckHighlight = rebind_llcontrol<BOOL>("EmeraldSpellDisplay", &gSavedSettings, true);
 }
 
 lggHunSpell_Wrapper::~lggHunSpell_Wrapper()

@@ -106,11 +106,11 @@ LLManip::LLManip( const std::string& name, LLToolComposite* composite )
 {
 	initPivot();
 
-	gSavedPerAccountSettings.getControl("BuildPrefs_ActualRoot")->getSignal()->connect(&updateActualRoot);
-	gSavedPerAccountSettings.getControl("BuildPrefs_PivotIsPercent")->getSignal()->connect(&updatePivotIsPercent);
-	gSavedPerAccountSettings.getControl("BuildPrefs_PivotX")->getSignal()->connect(&updatePivotX);
-	gSavedPerAccountSettings.getControl("BuildPrefs_PivotY")->getSignal()->connect(&updatePivotY);
-	gSavedPerAccountSettings.getControl("BuildPrefs_PivotZ")->getSignal()->connect(&updatePivotZ);
+	gSavedPerAccountSettings.getControl("BuildPrefs_ActualRoot")->getSignal()->connect(boost::bind(&updateActualRoot, _2));
+	gSavedPerAccountSettings.getControl("BuildPrefs_PivotIsPercent")->getSignal()->connect(boost::bind(&updatePivotIsPercent, _2));
+	gSavedPerAccountSettings.getControl("BuildPrefs_PivotX")->getSignal()->connect(boost::bind(&updatePivotX, _2));
+	gSavedPerAccountSettings.getControl("BuildPrefs_PivotY")->getSignal()->connect(boost::bind(&updatePivotY, _2));
+	gSavedPerAccountSettings.getControl("BuildPrefs_PivotZ")->getSignal()->connect(boost::bind(&updatePivotZ, _2));
 }
 //static
 void LLManip::initPivot()

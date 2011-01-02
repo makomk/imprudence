@@ -68,8 +68,8 @@ LLPanelAudioVolume::~LLPanelAudioVolume ()
 void LLPanelAudioVolume::draw()
 {
 
-	static BOOL* sMuteAudio = rebind_llcontrol<BOOL>("MuteAudio", &gSavedSettings, true);
-	bool enable = (*sMuteAudio) ? false : true;
+	static LLCachedControl<bool> sMuteAudio(gSavedSettings, "MuteAudio");
+	bool enable = sMuteAudio() ? false : true;
 	childSetEnabled("Music Volume", enable);
 	childSetEnabled("Media Volume", enable);
 	childSetEnabled("Voice Volume", enable);

@@ -2,31 +2,25 @@
  * @file llxmltree.cpp
  * @brief LLXmlTree implementation
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
- * 
- * Copyright (c) 2002-2010, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2002&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -50,7 +44,6 @@ LLStdStringTable LLXmlTree::sAttributeKeys(1024);
 
 LLXmlTree::LLXmlTree()
 	: mRoot( NULL ),
-	  mParser(0),
 	  mNodeNames(512)
 {
 }
@@ -84,39 +77,6 @@ BOOL LLXmlTree::parseFile(const std::string &path, BOOL keep_contents)
 	return success;
 }
 
-bool LLXmlTree::parseBufferStart(bool keep_contents)
-{
-	if (mRoot) delete mRoot;
-	mRoot = NULL;
-
-	if (mParser) delete mParser;
-	mParser = new LLXmlTreeParser(this);
-	mParser->parseBufferStart(keep_contents);
-	return (mParser != 0);
-}
-
-bool LLXmlTree::parseBuffer(const char *buf, int len)
-{
-	bool success = mParser->parseBuffer(buf, len);
-	if (!success) {
-		S32 line_number = mParser->getCurrentLineNumber();
-		const char* error = mParser->getErrorString();
-		llwarns << "LLXmlTree parse failed in line " << line_number << ": " << error << llendl;
-		delete mParser;
-		mParser = 0;
-	}
-	return success;
-}
-
-bool LLXmlTree::parseBufferFinalize()
-{
-	bool success = mParser->parseBufferFinalize(&mRoot);
-	delete mParser;
-	mParser = 0;
-	return success;
-}
-
-
 void LLXmlTree::dump()
 {
 	if( mRoot )
@@ -135,25 +95,6 @@ void LLXmlTree::dumpNode( LLXmlTreeNode* node, const std::string& prefix )
 		dumpNode( child, new_prefix );
 	}
 }
-
-void LLXmlTree::write(std::string &buffer) const
-{
-	if (mRoot) writeNode(mRoot, buffer, "");
-}
-
-void LLXmlTree::writeNode(LLXmlTreeNode *node, std::string &buffer, const std::string &indent) const
-{
-	if (!node->getFirstChild()) {
-		node->writeNoChild(buffer, indent);
-	} else {
-		node->writeStart(buffer, indent);
-		std::string newIndent = indent + "	";
-		for (LLXmlTreeNode *child=node->getFirstChild(); child; child=node->getNextChild())
-			writeNode(child, buffer, newIndent);
-		node->writeEnd(buffer, indent);
-	}
-}
-
 
 //////////////////////////////////////////////////////////////
 // LLXmlTreeNode
@@ -191,43 +132,6 @@ void LLXmlTreeNode::dump( const std::string& prefix )
 	}
 	llcont << llendl;
 } 
-
-void LLXmlTreeNode::writeNoChild(std::string &buffer, const std::string &indent) const
-{
-	if (!mContents.empty()) {
-		writeStart(buffer, indent);
-		writeEnd(buffer, indent);
-	} else {
-		buffer += indent + '<' + mName;
-		writeAttributes(buffer);
-		buffer += "/>\n";
-	}
-}
-
-void LLXmlTreeNode::writeStart(std::string &buffer, const std::string &indent) const
-{
-	buffer += indent + '<' + mName;
-	writeAttributes(buffer);
-	buffer += ">\n";
-}
-
-void LLXmlTreeNode::writeEnd(std::string &buffer, const std::string &indent) const
-{
-	if (!mContents.empty()) {
-		buffer += indent + "  " + mContents + '\n';
-	}
-	buffer += indent + "</" + mName + ">\n";
-}
-
-void LLXmlTreeNode::writeAttributes(std::string &buffer) const
-{
-	attribute_map_t::const_iterator it, end = mAttributes.end();
-	for (it=mAttributes.begin(); it!=end; ++it) {
-		LLStdStringHandle key = it->first;
-		const std::string *value = it->second;
-		buffer += ' ' + *key + "=\"" + *value + '"';
-	}
-}
 
 BOOL LLXmlTreeNode::hasAttribute(const std::string& name)
 {
@@ -600,7 +504,8 @@ LLXmlTreeParser::LLXmlTreeParser(LLXmlTree* tree)
 	: mTree(tree),
 	  mRoot( NULL ),
 	  mCurrent( NULL ),
-	  mDump( FALSE )
+	  mDump( FALSE ),
+	  mKeepContents(FALSE)
 {
 }
 
@@ -617,7 +522,7 @@ BOOL LLXmlTreeParser::parseFile(const std::string &path, LLXmlTreeNode** root, B
 
 	BOOL success = LLXmlParser::parseFile(path);
 
-	if (root) *root = mRoot;
+	*root = mRoot;
 	mRoot = NULL;
 
 	if( success )
@@ -626,31 +531,6 @@ BOOL LLXmlTreeParser::parseFile(const std::string &path, LLXmlTreeNode** root, B
 	}
 	mCurrent = NULL;
 	
-	return success;
-}
-
-void LLXmlTreeParser::parseBufferStart(BOOL keep_contents)
-{
-	llassert(!mRoot);
-	llassert(!mCurrent);
-	mKeepContents = keep_contents;
-}
-
-bool LLXmlTreeParser::parseBuffer(const char *buf, int len)
-{
-	return (LLXmlParser::parse(buf, len, false) != 0);
-}
-
-bool LLXmlTreeParser::parseBufferFinalize(LLXmlTreeNode** root)
-{
-	bool success = (LLXmlParser::parse(0, 0, true) != 0);
-
-	if (root) *root = mRoot;
-	mRoot = NULL;
-
-	llassert(!success || !mCurrent);
-	mCurrent = NULL;
-
 	return success;
 }
 

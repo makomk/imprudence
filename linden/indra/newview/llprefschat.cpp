@@ -115,8 +115,8 @@ void LLPrefsChatImpl::refreshValues()
 	mConsoleOpacity = gSavedSettings.getF32("ConsoleBackgroundOpacity");
 	mTranslateLanguage = gSavedSettings.getString("TranslateLanguage");
 	mTranslateChat = gSavedSettings.getBOOL("TranslateChat");
-	static F32* sChatBubbleOpacity = rebind_llcontrol<F32>("ChatBubbleOpacity", &gSavedSettings, true);
-	mBubbleOpacity = *sChatBubbleOpacity;
+	static LLCachedControl<F32> sChatBubbleOpacity(gSavedSettings, "ChatBubbleOpacity");
+	mBubbleOpacity = sChatBubbleOpacity();
 }
 
 void LLPrefsChatImpl::cancel()

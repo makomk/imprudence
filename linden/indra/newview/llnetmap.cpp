@@ -356,21 +356,11 @@ void LLNetMap::draw()
 		F32 min_pick_dist = mDotRadius * MIN_PICK_SCALE; 
 
 		// Draw avatars
-		static LLColor4* sMapAvatar = rebind_llcontrol<LLColor4>("MapAvatar", &gColors, true);
-		LLColor4 avatar_color = *sMapAvatar;
-
-		static LLColor4* sMapFriend = rebind_llcontrol<LLColor4>("MapFriend", &gColors, true);
-		LLColor4 friend_color = *sMapFriend;
-
-		static LLColor4* sMapMuted = rebind_llcontrol<LLColor4>("MapMuted", &gColors, true);
-		LLColor4 muted_color = *sMapMuted;
-
-		static LLColor4* sMapSelected = rebind_llcontrol<LLColor4>("MapSelected", &gColors, true);
-		LLColor4 selected_color = *sMapSelected;
-
-		static LLColor4* sMapImpDev = rebind_llcontrol<LLColor4>("MapImpDev", &gColors, true);
-		LLColor4 imp_dev_color = *sMapImpDev;
-
+		LLColor4 avatar_color = gColors.getColor( "MapAvatar" );
+		LLColor4 friend_color = gColors.getColor( "MapFriend" );
+		LLColor4 muted_color = gColors.getColor( "MapMuted" );
+		LLColor4 selected_color = gColors.getColor( "MapSelected" );
+		LLColor4 imp_dev_color = gColors.getColor( "MapImpDev" );
 		LLColor4 glyph_color;
 		int selected = -1;
 

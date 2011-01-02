@@ -24,6 +24,8 @@
 #include "hunspell/hunspell.hxx"
 #endif
 
+#include "llcontrol.h"
+
 class lggHunSpell_Wrapper
 {
 
@@ -55,7 +57,7 @@ public:
 	std::string VEC2CSV(std::vector<std::string> vec);
 
 	void setSpellCheckHighlight(BOOL highlight);
-	BOOL getSpellCheckHighlight() { return mSpellCheckHighlight && *mSpellCheckHighlight; }
+	BOOL getSpellCheckHighlight() { return mSpellCheckHighlight(); }
 
 private:
 	void createCustomDic();
@@ -67,7 +69,7 @@ private:
 	std::string currentBaseDic;
 	//std::vector<std::string> languageCodes;
 	//std::vector<std::string> countryCodes;
-	BOOL* mSpellCheckHighlight;
+	LLCachedControl<bool> mSpellCheckHighlight;
 };
 
 extern lggHunSpell_Wrapper* glggHunSpell; // the singleton hunspell wrapper

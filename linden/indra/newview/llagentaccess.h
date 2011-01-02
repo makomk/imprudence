@@ -36,12 +36,12 @@
 #include "stdtypes.h"
 
 // forward declaration so that we don't have to include the whole class
-class LLControlGroupReader;
+class LLControlGroup;
 
 class LLAgentAccess
 {
 public:
-	LLAgentAccess(LLControlGroupReader& savedSettings);
+	LLAgentAccess(LLControlGroup& savedSettings);
 	
 	bool getAdminOverride() const;
 	void setAdminOverride(bool b);
@@ -86,7 +86,7 @@ private:
 	
 	// we want this to be const but the getters for it aren't, so we're 
 	// overriding it for now
-	/* const */ LLControlGroupReader& mSavedSettings;
+	/* const */ LLControlGroup& mSavedSettings;
 };
 
 #endif // LL_LLAGENTACCESS_H

@@ -1151,8 +1151,8 @@ void LLPipeline::resetFrameStats()
 //external functions for asynchronous updating
 void LLPipeline::updateMoveDampedAsync(LLDrawable* drawablep)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
-	if ((*sFreezeTime))
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
+	if (sFreezeTime())
 	{
 		return;
 	}
@@ -1182,8 +1182,8 @@ void LLPipeline::updateMoveDampedAsync(LLDrawable* drawablep)
 
 void LLPipeline::updateMoveNormalAsync(LLDrawable* drawablep)
 {
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
-	if ((*sFreezeTime))
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
+	if (sFreezeTime())
 	{
 		return;
 	}
@@ -1239,8 +1239,8 @@ void LLPipeline::updateMove()
 	LLFastTimer t(FTM_UPDATE_MOVE);
 	LLMemType mt(LLMemType::MTYPE_PIPELINE);
 
-	static BOOL* sFreezeTime = rebind_llcontrol<BOOL>("FreezeTime", &gSavedSettings, true);
-	if ((*sFreezeTime))
+	static LLCachedControl<bool> sFreezeTime(gSavedSettings, "FreezeTime");
+	if (sFreezeTime())
 	{
 		return;
 	}
@@ -2338,10 +2338,10 @@ void LLPipeline::postSort(LLCamera& camera)
 		std::sort(sCull->beginAlphaGroups(), sCull->endAlphaGroups(), LLSpatialGroup::CompareDepthGreater());
 	}
 	
-	static BOOL* sBeaconsEnabled = rebind_llcontrol<BOOL>("BeaconsEnabled", &gSavedSettings, true);
+	static LLCachedControl<bool> sBeaconsEnabled(gSavedSettings, "BeaconsEnabled");
 
 	// only render if the flag is set. The flag is only set if we are in edit mode or the toggle is set in the menus
-	if (*sBeaconsEnabled && !sShadowRender)
+	if (sBeaconsEnabled() && !sShadowRender)
 	{
 		if (sRenderScriptedTouchBeacons)
 		{

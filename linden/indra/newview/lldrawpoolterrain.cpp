@@ -208,10 +208,10 @@ void LLDrawPoolTerrain::render(S32 pass)
 			renderFull4TU();
 		}
 	}
-	static BOOL* sShowParcelOwners = rebind_llcontrol<BOOL>("ShowParcelOwners", &gSavedSettings, true);
+	LLCachedControl<bool> sShowParcelOwners(gSavedSettings, "ShowParcelOwners");
 	
 	// Special-case for land ownership feedback
-	if (*sShowParcelOwners)
+	if (sShowParcelOwners())
 	{
 		if (mVertexShaderLevel > 1)
 		{ //use fullbright shader for highlighting

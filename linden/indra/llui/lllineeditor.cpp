@@ -1943,8 +1943,8 @@ void LLLineEditor::doDelete()
 
 void LLLineEditor::autoCorrectText()
 {
-	static BOOL *doAnything = rebind_llcontrol<BOOL>("EmeraldEnableAutoCorrect", &gSavedSettings, true);
-	if (!mReadOnly && *doAnything && isSpellDirty())
+	static LLCachedControl<bool> doAnything(gSavedSettings, "EmeraldEnableAutoCorrect");
+	if (!mReadOnly && doAnything() && isSpellDirty())
 	{
 		S32 wordStart = 0;
 		S32 wordEnd = mCursorPos-1;

@@ -2899,9 +2899,9 @@ static LLFastTimer::DeclareTimer FTM_FILTER("Filter Inventory");
 void LLFolderView::filter( LLInventoryFilter& filter )
 {
 	LLFastTimer t2(FTM_FILTER);
-	static S32 *sFilterItemsPerFrame = rebind_llcontrol<S32>("FilterItemsPerFrame", &gSavedSettings, true);
+	static LLCachedControl<S32> sFilterItemsPerFrame(gSavedSettings, "FilterItemsPerFrame");
 
-	filter.setFilterCount(llclamp(*sFilterItemsPerFrame, 1, 5000));
+	filter.setFilterCount(llclamp(sFilterItemsPerFrame(), 1, 5000));
 
 	if (getCompletedFilterGeneration() < filter.getCurrentGeneration())
 	{
@@ -3272,10 +3272,10 @@ void LLFolderView::draw()
 		setShowSingleSelection(FALSE);
 	}
 
-	static F32 *sTypeAheadTimeout = rebind_llcontrol<F32>("TypeAheadTimeout", &gSavedSettings, true);
+	static LLCachedControl<F32> sTypeAheadTimeout(gSavedSettings, "TypeAheadTimeout");
 
 
-	if (mSearchTimer.getElapsedTimeF32() > *sTypeAheadTimeout || !mSearchString.size())
+	if (mSearchTimer.getElapsedTimeF32() > sTypeAheadTimeout() || !mSearchString.size())
 	{
 		mSearchString.clear();
 	}
@@ -4005,11 +4005,11 @@ BOOL LLFolderView::handleUnicodeCharHere(llwchar uni_char)
 			LLMenuGL::sMenuContainer->hideMenus();
 		}
 
-		static F32 *sTypeAheadTimeout = rebind_llcontrol<F32>("TypeAheadTimeout", &gSavedSettings, true);
+		static LLCachedControl<F32> sTypeAheadTimeout(gSavedSettings, "TypeAheadTimeout");
 
 
 		//do text search
-		if (mSearchTimer.getElapsedTimeF32() > *sTypeAheadTimeout)
+		if (mSearchTimer.getElapsedTimeF32() > sTypeAheadTimeout())
 		{
 			mSearchString.clear();
 		}
@@ -4355,10 +4355,10 @@ void LLFolderView::doIdle()
 {
 	LLFastTimer t2(FTM_INVENTORY);
 
-	static BOOL* debug_filters = rebind_llcontrol<BOOL>("DebugInventoryFilters", &gSavedSettings, true);
-	if (*debug_filters != getDebugFilters())
+	static LLCachedControl<bool> debug_filters(gSavedSettings, "DebugInventoryFilters");
+	if (debug_filters() != getDebugFilters())
 	{
-		mDebugFilters = *debug_filters;
+		mDebugFilters = debug_filters();
 		arrangeAll();
 	}
 
