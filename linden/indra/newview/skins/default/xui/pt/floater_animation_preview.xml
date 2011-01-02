@@ -161,4 +161,100 @@ A duração máxima de animação permitida é de [MAX_LENGTH] segundos.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		OK
+	</string>
+	<string name="E_ST_EOF">
+		Fim de arquivo prematuro
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Impossível ler definição constraint.
+	</string>
+	<string name="E_ST_NO_FILE">
+		Impossível abrir arquivo BVH.
+	</string>
+	<string name="E_ST_NO_HIER">
+		Invalid HIERARCHY header.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		RAIZ ou JUNTA não encontrados.
+	</string>
+	<string name="E_ST_NO_NAME">
+		Impossível obter nome JOINT.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		Impossível localizar OFFSET.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		Impossível localizar CHANNELS.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Impossível obter ordem de rotação.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Impossível obter eixo de rotação.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		Impossível localizar MOTION.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Impossível determinar número de quadros.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Impossível determinar tempo dos quadros.
+	</string>
+	<string name="E_ST_NO_POS">
+		Impossível definir posicionamento.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Impossível definir valores da rotação.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		Impossível abrir arquivo de tradução.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Impossível ler cabeçalho de tradução.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Impossível ler nomes traduzidos.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Impossível obter valor traduzido a ignorar.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Impossível obter valor traduzido relativo.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Impossível obter valor traduzido.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Impossível ler matriz de tradução.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Impossível obter nome mergechild.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Impossível obter nome mergeparent.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Impossível obter valor prioritário.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Impossível obter valor do loop.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		Impossível obter valor easeIn.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		Impossível obter valor easeOut.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Impossível obter valor de morph da mão.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		Impossível ler nome do emote.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Nome da junta incorreto, use &quot;hip&quot;.
+	</string>
 </floater>

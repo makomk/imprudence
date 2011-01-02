@@ -162,4 +162,100 @@ La duración máxima de una animación es de [MAX_LENGTH] segundos.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		OK
+	</string>
+	<string name="E_ST_EOF">
+		Fin prematuro del archivo.
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		No se puede leer la definición de la restricción.
+	</string>
+	<string name="E_ST_NO_FILE">
+		No se puede abrir el archivo BVH.
+	</string>
+	<string name="E_ST_NO_HIER">
+		&apos;HIERARCHY header&apos; inválido.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		No se pueden encontrar &apos;ROOT&apos; o &apos;JOINT&apos;.
+	</string>
+	<string name="E_ST_NO_NAME">
+		No se puede obtener el nombre &apos;JOINT&apos;.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		No se puede encontrar &apos;OFFSET&apos;.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		No se puede encontrar &apos;CHANNELS&apos;.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		No se puede conseguir el orden de la rotación.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		No se puede encontrar el eje de rotación.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		No se puede encontrar &apos;MOTION&apos;.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		No se puede conseguir el número de frames.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		No se puede conseguir el tiempo del frame.
+	</string>
+	<string name="E_ST_NO_POS">
+		No se pueden conseguir los valores de la posición.
+	</string>
+	<string name="E_ST_NO_ROT">
+		No se pueden conseguir los valores de la rotación.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		No se puede abrir el archivo de traducción.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		No se puede leer el encabezamiento de la traducción.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		No se puede leer la traducción de los nombres.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		No se puede leer la traducción de los valores ignorados.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		No se puede leer el valor relativo de la traducción.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		No se puede leer la traducción del valor &apos;outname&apos;
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		No se puede leer la matriz de traducciones.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		No se puede conseguir el nombre &apos;mergechild&apos;.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		No se puede conseguir el nombre &apos;mergeparent&apos;.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		No se puede obtener el valor prioritario.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		No se puede conseguir el valor del bucle.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		No se pueden conseguir los valores &apos;easeIn&apos;.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		No se pueden conseguir los valores &apos;easeOut&apos;.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		No se puede conseguir el valor de &apos;hand morph&apos;.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		No se puede leer el nombre del gesto.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Nombre incorrecto de &apos;root joint&apos;, usa &quot;hip&quot;.
+	</string>
 </floater>

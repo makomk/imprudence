@@ -169,4 +169,100 @@ Maksymalna długość pliku animacji wynosi [MAX_LENGTH] sekund.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		Ok
+	</string>
+	<string name="E_ST_EOF">
+		Niewłaściwe zakończenie nazwy pliku.
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Brak możliwości wyświetlenia definicji ograniczenia.
+	</string>
+	<string name="E_ST_NO_FILE">
+		Plik BVH nie może zostać otworzony.
+	</string>
+	<string name="E_ST_NO_HIER">
+		Niewłaściwy nagłówek HIERARCHII.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		ROOT oraz JOINT nieodnalezione.
+	</string>
+	<string name="E_ST_NO_NAME">
+		Brak nazwy JOINT.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		OFFSET nieodnalezione.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		CHANNELS nieodnalezione.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Brak otrzymania kolejności obrotu.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Brak osi obrotu.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		MOTION nieodnalezione.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Brak otrzymania liczby klatek obrazu.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Brak otrzymania czasu dla ilości klatek obrazu.
+	</string>
+	<string name="E_ST_NO_POS">
+		Brak otrzymania wartości pozycji.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Nie można odczytać wartości obrotu.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		Nie można otworzyć pliku tłumaczenia.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Nie można przeczytać tłumaczenia nagłówka.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Nie można przetłumaczyć nazw.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Nie można przeczytać tłumaczenia dla wartości ignorowania.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Nie można przeczytać tłumaczenia wartości relatywnej.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Nie można przeczytać nazw wartości tłumaczenia.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Nie można przeczytać tłumaczenia pola.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Brak otrzymania nazwy dla mergechild.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Brak otrzymania nazwy dla mergeparent.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Brak wartości prerogatywy.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Brak otrzymania wartości powtórzeń.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		Brak otrzymawnia wartości easeIn.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		Brak otrzymania wartości dla easeOut.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Brak otrzymania wartości morfizacji.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		Nie można odczytać nazwy emocji.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Nieprawidłowa nazwa, użyj &quot;hip&quot;.
+	</string>
 </floater>

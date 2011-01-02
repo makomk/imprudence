@@ -2,31 +2,25 @@
  * @file llkeyframemotionparam.cpp
  * @brief Implementation of LLKeyframeMotion class.
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -343,17 +337,15 @@ void LLKeyframeMotionParam::setDefaultKeyframeMotion(char *name)
 //-----------------------------------------------------------------------------
 BOOL LLKeyframeMotionParam::loadMotions()
 {
-#if 1
-	// FIXME - this appears to be effectively dead code that can never
-	// succeed because the files it's looking for just don't exist anymore.
-	return FALSE;
-#else
 	//-------------------------------------------------------------------------
 	// Load named file by concatenating the character prefix with the motion name.
 	// Load data into a buffer to be parsed.
 	//-------------------------------------------------------------------------
-	std::string path = gDirUtilp->getExpandedFilename(LL_PATH_MOTIONS,mCharacter->getAnimationPrefix())
-		+ "_" + getName() + ".llp";
+	//std::string path = gDirUtilp->getExpandedFilename(LL_PATH_MOTIONS,mCharacter->getAnimationPrefix())
+	//	+ "_" + getName() + ".llp";
+	//RN: deprecated unused reference to "motion" directory
+	std::string path;
+
 
 	//-------------------------------------------------------------------------
 	// open the file
@@ -369,18 +361,13 @@ BOOL LLKeyframeMotionParam::loadMotions()
 	}
 
 	// allocate a text buffer
-	char *text = new char[ fileSize+1 ];
-	if ( !text )
-	{
-		llinfos << "ERROR: can't allocated keyframe text buffer." << llendl;
-		return FALSE;
-	}
+	std::vector<char> text(fileSize+1);
 
 	//-------------------------------------------------------------------------
 	// load data from file into buffer
 	//-------------------------------------------------------------------------
 	bool error = false;
-	char *p = text;
+	char *p = &text[0];
 	while ( 1 )
 	{
 		if (apr_file_eof(fp) == APR_EOF)
@@ -404,12 +391,11 @@ BOOL LLKeyframeMotionParam::loadMotions()
 	//-------------------------------------------------------------------------
 	// check for error
 	//-------------------------------------------------------------------------
-	llassert( p <= (text+fileSize) );
+	llassert( p <= (&text[0] + fileSize) );
 
 	if ( error )
 	{
 		llinfos << "ERROR: error while reading from " << path << llendl;
-		delete [] text;
 		return FALSE;
 	}
 
@@ -418,7 +404,7 @@ BOOL LLKeyframeMotionParam::loadMotions()
 	//-------------------------------------------------------------------------
 	// parse the text and build keyframe data structures
 	//-------------------------------------------------------------------------
-	p = text;
+	p = &text[0];
 	S32 num;
 	char strA[80]; /* Flawfinder: ignore */
 	char strB[80]; /* Flawfinder: ignore */
@@ -437,7 +423,6 @@ BOOL LLKeyframeMotionParam::loadMotions()
 		if ((num != 3))
 		{
 			llinfos << "WARNING: can't read parametric motion" << llendl;
-			delete [] text;
 			return FALSE;
 		}
 
@@ -458,9 +443,7 @@ BOOL LLKeyframeMotionParam::loadMotions()
 		num = sscanf(p, "%79s %79s %f", strA, strB, &floatA);	/* Flawfinder: ignore */
 	}
 
-	delete [] text;
 	return TRUE;
-#endif
 }
 
 // End

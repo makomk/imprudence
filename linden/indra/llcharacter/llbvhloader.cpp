@@ -2,31 +2,25 @@
  * @file llbvhloader.cpp
  * @brief Translates a BVH files to LindenLabAnimation format.
  *
- * $LicenseInfo:firstyear=2004&license=viewergpl$
- * 
- * Copyright (c) 2004-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2004&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -56,7 +50,7 @@ const F32 ROTATION_MOTION_THRESHOLD = 0.001f;
 
 char gInFile[1024];		/* Flawfinder: ignore */
 char gOutFile[1024];		/* Flawfinder: ignore */
-
+/*
 //------------------------------------------------------------------------
 // Status Codes
 //------------------------------------------------------------------------
@@ -91,6 +85,8 @@ const char *LLBVHLoader::ST_NO_XLT_EASEIN		= "Can't get easeIn values.";
 const char *LLBVHLoader::ST_NO_XLT_EASEOUT	= "Can't get easeOut values.";
 const char *LLBVHLoader::ST_NO_XLT_HAND		= "Can't get hand morph value.";
 const char *LLBVHLoader::ST_NO_XLT_EMOTE		= "Can't read emote name.";
+const char *LLBVHLoader::ST_BAD_ROOT        = "Illegal ROOT joint.";
+*/
 
 //------------------------------------------------------------------------
 // find_next_whitespace()
@@ -124,7 +120,9 @@ LLQuaternion::Order bvhStringToOrder( char *str )
 //-----------------------------------------------------------------------------
 // LLBVHLoader()
 //-----------------------------------------------------------------------------
-LLBVHLoader::LLBVHLoader(const char* buffer)
+
+/*
+ LLBVHLoader::LLBVHLoader(const char* buffer)
 {
 	reset();
 
@@ -144,7 +142,7 @@ LLBVHLoader::LLBVHLoader(const char* buffer)
 		}
 	}
 
-	char error_text[128];		/* Flawfinder: ignore */
+	char error_text[128];		// Flawfinder: ignore 
 	S32 error_line;
 	mStatus = loadBVHFile(buffer, error_text, error_line);
 	if (mStatus != LLBVHLoader::ST_OK)
@@ -158,6 +156,49 @@ LLBVHLoader::LLBVHLoader(const char* buffer)
 
 	mInitialized = TRUE;
 }
+*/
+LLBVHLoader::LLBVHLoader(const char* buffer, ELoadStatus &loadStatus, S32 &errorLine)
+{
+	reset();
+	errorLine = 0;
+	mStatus = loadTranslationTable("anim.ini");
+	loadStatus = mStatus;
+	llinfos<<"Load Status 00 : "<< loadStatus << llendl;
+	if (mStatus == E_ST_NO_XLT_FILE)
+	{
+		//llwarns << "NOTE: No translation table found." << llendl;
+		loadStatus = mStatus;
+		return;
+	}
+	else
+	{
+		if (mStatus != E_ST_OK)
+		{
+			//llwarns << "ERROR: [line: " << getLineNumber() << "] " << mStatus << llendl;
+			errorLine = getLineNumber();
+			loadStatus = mStatus;
+			return;
+		}
+	}
+	
+	char error_text[128];		/* Flawfinder: ignore */
+	S32 error_line;
+	mStatus = loadBVHFile(buffer, error_text, error_line);
+	
+	if (mStatus != E_ST_OK)
+	{
+		//llwarns << "ERROR: [line: " << getLineNumber() << "] " << mStatus << llendl;
+		loadStatus = mStatus;
+		errorLine = getLineNumber();
+		return;
+	}
+	
+	applyTranslations();
+	optimize();
+	
+	mInitialized = TRUE;
+}
+
 
 LLBVHLoader::~LLBVHLoader()
 {
@@ -167,7 +208,7 @@ LLBVHLoader::~LLBVHLoader()
 //------------------------------------------------------------------------
 // LLBVHLoader::loadTranslationTable()
 //------------------------------------------------------------------------
-LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
+ELoadStatus LLBVHLoader::loadTranslationTable(const char *fileName)
 {
 	mLineNumber = 0;
 	mTranslations.clear();
@@ -182,7 +223,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 	infile.open(path, LL_APR_R);
 	apr_file_t *fp = infile.getFileHandle();
 	if (!fp)
-		return ST_NO_XLT_FILE;
+		return E_ST_NO_XLT_FILE;
 
 	llinfos << "NOTE: Loading translation table: " << fileName << llendl;
 
@@ -194,9 +235,9 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 	// load header
 	//--------------------------------------------------------------------
 	if ( ! getLine(fp) )
-		return ST_EOF;
+		return E_ST_EOF;
 	if ( strncmp(mLine, "Translations 1.0", 16) )
-		return ST_NO_XLT_HEADER;
+		return E_ST_NO_XLT_HEADER;
 
 	//--------------------------------------------------------------------
 	// load data one line at a time
@@ -222,7 +263,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char name[128]; /* Flawfinder: ignore */
 			if ( sscanf(mLine, " [%127[^]]", name) != 1 )
-				return ST_NO_XLT_NAME;
+				return E_ST_NO_XLT_NAME;
 
 			if (strcmp(name, "GLOBALS")==0)
 			{
@@ -245,7 +286,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char emote_str[1024];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %1023s", emote_str) != 1 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_EMOTE;
+				return E_ST_NO_XLT_EMOTE;
 
 			mEmoteName.assign( emote_str );
 //			llinfos << "NOTE: Emote: " << mEmoteName.c_str() << llendl;
@@ -260,7 +301,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			S32 priority;
 			if ( sscanf(mLine, " %*s = %d", &priority) != 1 )
-				return ST_NO_XLT_PRIORITY;
+				return E_ST_NO_XLT_PRIORITY;
 
 			mPriority = priority;
 //			llinfos << "NOTE: Priority: " << mPriority << llendl;
@@ -288,7 +329,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 			}
 			else
 			{
-				return ST_NO_XLT_LOOP;
+				return E_ST_NO_XLT_LOOP;
 			}
 
 			mLoopInPoint = loop_in * mDuration;
@@ -305,7 +346,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 			F32 duration;
 			char type[128];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %f %127s", &duration, type) != 2 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_EASEIN;
+				return E_ST_NO_XLT_EASEIN;
 
 			mEaseIn = duration;
 			continue;
@@ -319,7 +360,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 			F32 duration;
 			char type[128];		/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %f %127s", &duration, type) != 2 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_EASEOUT;
+				return E_ST_NO_XLT_EASEOUT;
 
 			mEaseOut = duration;
 			continue;
@@ -332,7 +373,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			S32 handMorph;
 			if (sscanf(mLine, " %*s = %d", &handMorph) != 1)
-				return ST_NO_XLT_HAND;
+				return E_ST_NO_XLT_HAND;
 
 			mHand = handMorph;
 			continue;
@@ -380,7 +421,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 					&constraint.mTargetOffset.mV[VY],
 					&constraint.mTargetOffset.mV[VZ]) != 13)
 				{
-					return ST_NO_CONSTRAINT;
+					return E_ST_NO_CONSTRAINT;
 				}
 			}
 			else
@@ -440,7 +481,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 					&constraint.mTargetOffset.mV[VY],
 					&constraint.mTargetOffset.mV[VZ]) != 13)
 				{
-					return ST_NO_CONSTRAINT;
+					return E_ST_NO_CONSTRAINT;
 				}
 			}
 			else
@@ -463,7 +504,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		// at this point there must be a valid trans pointer
 		//----------------------------------------------------------------
 		if ( ! trans )
-			return ST_NO_XLT_NAME;
+			return E_ST_NO_XLT_NAME;
 
 		//----------------------------------------------------------------
 		// check for ignore flag
@@ -472,7 +513,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char trueFalse[128];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %127s", trueFalse) != 1 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_IGNORE;
+				return E_ST_NO_XLT_IGNORE;
 
 			trans->mIgnore = (LLStringUtil::compareInsensitive(trueFalse, "true")==0);
 			continue;
@@ -497,12 +538,12 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 				}
 				else
 				{
-					return ST_NO_XLT_RELATIVE;
+					return E_ST_NO_XLT_RELATIVE;
 				}
 			}
 			else
 			{
-				return ST_NO_XLT_RELATIVE;
+				return E_ST_NO_XLT_RELATIVE;
 			}
 
 			continue;
@@ -523,12 +564,12 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 				}
 				else
 				{
-					return ST_NO_XLT_RELATIVE;
+					return E_ST_NO_XLT_RELATIVE;
 				}
 			}
 			else
 			{
-				return ST_NO_XLT_RELATIVE;
+				return E_ST_NO_XLT_RELATIVE;
 			}
 
 			continue;
@@ -541,7 +582,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char outName[128];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %127s", outName) != 1 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_OUTNAME;
+				return E_ST_NO_XLT_OUTNAME;
 
 			trans->mOutName = outName;
 			continue;
@@ -557,7 +598,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 					&fm.mMatrix[0][0], &fm.mMatrix[0][1], &fm.mMatrix[0][2],
 					&fm.mMatrix[1][0], &fm.mMatrix[1][1], &fm.mMatrix[1][2],
 					&fm.mMatrix[2][0], &fm.mMatrix[2][1], &fm.mMatrix[2][2]	) != 9 )
-				return ST_NO_XLT_MATRIX;
+				return E_ST_NO_XLT_MATRIX;
 
 			trans->mFrameMatrix = fm;
 			continue;
@@ -573,7 +614,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 					&om.mMatrix[0][0], &om.mMatrix[0][1], &om.mMatrix[0][2],
 					&om.mMatrix[1][0], &om.mMatrix[1][1], &om.mMatrix[1][2],
 					&om.mMatrix[2][0], &om.mMatrix[2][1], &om.mMatrix[2][2]	) != 9 )
-				return ST_NO_XLT_MATRIX;
+				return E_ST_NO_XLT_MATRIX;
 
 			trans->mOffsetMatrix = om;
 			continue;
@@ -586,7 +627,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char mergeParentName[128];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %127s", mergeParentName) != 1 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_MERGEPARENT;
+				return E_ST_NO_XLT_MERGEPARENT;
 
 			trans->mMergeParentName = mergeParentName;
 			continue;
@@ -599,7 +640,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			char mergeChildName[128];	/* Flawfinder: ignore */
 			if ( sscanf(mLine, " %*s = %127s", mergeChildName) != 1 )	/* Flawfinder: ignore */
-				return ST_NO_XLT_MERGECHILD;
+				return E_ST_NO_XLT_MERGECHILD;
 
 			trans->mMergeChildName = mergeChildName;
 			continue;
@@ -612,7 +653,7 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 		{
 			S32 priority;
 			if ( sscanf(mLine, " %*s = %d", &priority) != 1 )
-				return ST_NO_XLT_PRIORITY;
+				return E_ST_NO_XLT_PRIORITY;
 
 			trans->mPriorityModifier = priority;
 			continue;
@@ -621,14 +662,14 @@ LLBVHLoader::Status LLBVHLoader::loadTranslationTable(const char *fileName)
 	}
 
 	infile.close() ;
-	return ST_OK;
+	return E_ST_OK;
 }
 
 
 //------------------------------------------------------------------------
 // LLBVHLoader::loadBVHFile()
 //------------------------------------------------------------------------
-LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_text, S32 &err_line)
+ELoadStatus LLBVHLoader::loadBVHFile(const char *buffer, char* error_text, S32 &err_line)
 {
 	std::string line;
 
@@ -650,14 +691,14 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	// consume  hierarchy
 	//--------------------------------------------------------------------
 	if (iter == tokens.end())
-		return ST_EOF;
+		return E_ST_EOF;
 	line = (*(iter++));
 	err_line++;
 
 	if ( !strstr(line.c_str(), "HIERARCHY") )
 	{
 //		llinfos << line << llendl;
-		return ST_NO_HIER;
+		return E_ST_NO_HIER;
 	}
 
 	//--------------------------------------------------------------------
@@ -669,7 +710,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		// get next line
 		//----------------------------------------------------------------
 		if (iter == tokens.end())
-			return ST_EOF;
+			return E_ST_EOF;
 		line = (*(iter++));
 		err_line++;
 
@@ -719,7 +760,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		else
 		{
 			strncpy(error_text, line.c_str(), 127);	/* Flawfinder: ignore */
-			return ST_NO_JOINT;
+			return E_ST_NO_JOINT;
 		}
 
 		//----------------------------------------------------------------
@@ -729,9 +770,20 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		if ( sscanf(line.c_str(), "%*s %79s", jointName) != 1 )	/* Flawfinder: ignore */
 		{
 			strncpy(error_text, line.c_str(), 127);	/* Flawfinder: ignore */
-			return ST_NO_NAME;
+			return E_ST_NO_NAME;
 		}
 
+		//---------------------------------------------------------------
+		// we require the root joint be "hip" - DEV-26188
+		//---------------------------------------------------------------
+		const char* FORCED_ROOT_NAME = "hip";
+		if ( (mJoints.size() == 0 ) && ( !strstr(jointName, FORCED_ROOT_NAME) ) )
+		{
+			strncpy(error_text, line.c_str(), 127);	/* Flawfinder: ignore */
+			return E_ST_BAD_ROOT;
+		}
+
+		
 		//----------------------------------------------------------------
 		// add a set of keyframes for this joint
 		//----------------------------------------------------------------
@@ -754,7 +806,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		//----------------------------------------------------------------
 		if (iter == tokens.end())
 		{
-			return ST_EOF;
+			return E_ST_EOF;
 		}
 		line = (*(iter++));
 		err_line++;
@@ -765,7 +817,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		if ( !strstr(line.c_str(), "{") )
 		{
 			strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-			return ST_NO_OFFSET;
+			return E_ST_NO_OFFSET;
 		}
 		else
 		{
@@ -777,7 +829,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		//----------------------------------------------------------------
 		if (iter == tokens.end())
 		{
-			return ST_EOF;
+			return E_ST_EOF;
 		}
 		line = (*(iter++));
 		err_line++;
@@ -788,7 +840,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		if ( !strstr(line.c_str(), "OFFSET") )
 		{
 			strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-			return ST_NO_OFFSET;
+			return E_ST_NO_OFFSET;
 		}
 
 		//----------------------------------------------------------------
@@ -796,7 +848,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		//----------------------------------------------------------------
 		if (iter == tokens.end())
 		{
-			return ST_EOF;
+			return E_ST_EOF;
 		}
 		line = (*(iter++));
 		err_line++;
@@ -807,7 +859,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		if ( !strstr(line.c_str(), "CHANNELS") )
 		{
 			strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-			return ST_NO_CHANNELS;
+			return E_ST_NO_CHANNELS;
 		}
 
 		//----------------------------------------------------------------
@@ -820,14 +872,14 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 			if (!p)
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_ROTATION;
+				return E_ST_NO_ROTATION;
 			}
 
 			const char axis = *(p - 1);
 			if ((axis != 'X') && (axis != 'Y') && (axis != 'Z'))
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_AXIS;
+				return E_ST_NO_AXIS;
 			}
 
 			joint->mOrder[i] = axis;
@@ -842,7 +894,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	if ( !strstr(line.c_str(), "MOTION") )
 	{
 		strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-		return ST_NO_MOTION;
+		return E_ST_NO_MOTION;
 	}
 
 	//--------------------------------------------------------------------
@@ -850,7 +902,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	//--------------------------------------------------------------------
 	if (iter == tokens.end())
 	{
-		return ST_EOF;
+		return E_ST_EOF;
 	}
 	line = (*(iter++));
 	err_line++;
@@ -858,13 +910,13 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	if ( !strstr(line.c_str(), "Frames:") )
 	{
 		strncpy(error_text, line.c_str(), 127);	/*Flawfinder: ignore*/
-		return ST_NO_FRAMES;
+		return E_ST_NO_FRAMES;
 	}
 
 	if ( sscanf(line.c_str(), "Frames: %d", &mNumFrames) != 1 )
 	{
 		strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-		return ST_NO_FRAMES;
+		return E_ST_NO_FRAMES;
 	}
 
 	//--------------------------------------------------------------------
@@ -872,7 +924,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	//--------------------------------------------------------------------
 	if (iter == tokens.end())
 	{
-		return ST_EOF;
+		return E_ST_EOF;
 	}
 	line = (*(iter++));
 	err_line++;
@@ -880,13 +932,13 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 	if ( !strstr(line.c_str(), "Frame Time:") )
 	{
 		strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-		return ST_NO_FRAME_TIME;
+		return E_ST_NO_FRAME_TIME;
 	}
 
 	if ( sscanf(line.c_str(), "Frame Time: %f", &mFrameTime) != 1 )
 	{
 		strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-		return ST_NO_FRAME_TIME;
+		return E_ST_NO_FRAME_TIME;
 	}
 
 	mDuration = (F32)mNumFrames * mFrameTime;
@@ -903,7 +955,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		// get next line
 		if (iter == tokens.end())
 		{
-			return ST_EOF;
+			return E_ST_EOF;
 		}
 		line = (*(iter++));
 		err_line++;
@@ -922,7 +974,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 				if ( sscanf(p, "%f %f %f", key.mPos, key.mPos+1, key.mPos+2) != 3 )
 				{
 					strncpy(error_text, line.c_str(), 127);	/*Flawfinder: ignore*/
-					return ST_NO_POS;
+					return E_ST_NO_POS;
 				}
 			}
 
@@ -931,19 +983,19 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 			if (!p) 
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_ROT;
+				return E_ST_NO_ROT;
 			}
 			p = find_next_whitespace(++p);
 			if (!p) 
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_ROT;
+				return E_ST_NO_ROT;
 			}
 			p = find_next_whitespace(++p);
 			if (!p)
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_ROT;
+				return E_ST_NO_ROT;
 			}
 
 			// get 3 rot values for joint
@@ -951,7 +1003,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 			if ( sscanf(p, " %f %f %f", rot, rot+1, rot+2) != 3 )
 			{
 				strncpy(error_text, line.c_str(), 127);		/*Flawfinder: ignore*/
-				return ST_NO_ROT;
+				return E_ST_NO_ROT;
 			}
 
 			p++;
@@ -962,7 +1014,7 @@ LLBVHLoader::Status LLBVHLoader::loadBVHFile(const char *buffer, char* error_tex
 		}
 	}
 
-	return ST_OK;
+	return E_ST_OK;
 }
 
 

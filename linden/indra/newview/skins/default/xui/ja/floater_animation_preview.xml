@@ -172,4 +172,100 @@
 
 [STATUS]
 	</text>
+	<string name="E_ST_OK">
+		Ok
+	</string>
+	<string name="E_ST_EOF">
+		不完全なファイル。
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		制約定義を読みとれません。
+	</string>
+	<string name="E_ST_NO_FILE">
+		BVH ファイルを開けません。
+	</string>
+	<string name="E_ST_NO_HIER">
+		無効な HIERARCHY ヘッダーです。.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		ROOT または JOINT が見つかりません。
+	</string>
+	<string name="E_ST_NO_NAME">
+		JOINT ネームを取得できません。
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		OFFSET が見つかりません。
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		CHANNELS が見つかりません。
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		回転順序を取得できません。
+	</string>
+	<string name="E_ST_NO_AXIS">
+		回転軸を取得できません。
+	</string>
+	<string name="E_ST_NO_MOTION">
+		MOTION が見つかりません。
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		フレーム数を取得できません。
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		フレームタイムを取得できません。
+	</string>
+	<string name="E_ST_NO_POS">
+		ポジション値を取得できません。
+	</string>
+	<string name="E_ST_NO_ROT">
+		回転値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		ファイルを開けません。
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		読みとることができません。
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Mergechild 名を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Mergeparent 名を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		プロパティ値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		ループ値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		easeln 値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		easeOut 値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Hand morph 値を取得できません。
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		エモート名を読みとれません。
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		ルートジョイント名が無効です。「hip」を使用してください。
+	</string>
 </floater>

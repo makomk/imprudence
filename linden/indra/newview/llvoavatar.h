@@ -271,6 +271,7 @@ public:
 	// morph targets and such
 	void processAvatarAppearance( LLMessageSystem* mesgsys );
 	void onFirstTEMessageReceived();
+	bool visualParamWeightsAreDefault();
 	void updateSexDependentLayerSets( BOOL set_by_user );
 	void dirtyMesh(); // Dirty the avatar mesh
 	void hideSkirt();

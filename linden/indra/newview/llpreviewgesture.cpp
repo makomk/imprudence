@@ -4,7 +4,7 @@
  *
  * $LicenseInfo:firstyear=2004&license=viewergpl$
  * 
- * Copyright (c) 2004-2009, Linden Research, Inc.
+ * Copyright (c) 2004-2010, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -70,6 +70,7 @@
 #include "llappviewer.h"			// gVFS
 #include "llanimstatelabels.h"
 #include "llresmgr.h"
+#include "lltrans.h"
 
 
 // *TODO: Translate?
@@ -1084,7 +1085,7 @@ void LLPreviewGesture::loadUIFromGesture(LLMultiGesture* gesture)
 
 		// Create an enabled item with this step
 		LLSD row;
-		row["columns"][0]["value"] = new_step->getLabel();
+		row["columns"][0]["value"] = getLabel(new_step->getLabel());
 		row["columns"][0]["font"] = "SANSSERIF_SMALL";
 		LLScrollListItem* item = mStepList->addElement(row);
 		item->setUserdata(new_step);
@@ -1397,7 +1398,7 @@ void LLPreviewGesture::updateLabel(LLScrollListItem* item)
 
 	LLScrollListCell* cell = item->getColumn(0);
 	LLScrollListText* text_cell = (LLScrollListText*)cell;
-	std::string label = step->getLabel();
+	std::string label = getLabel(step->getLabel());
 	text_cell->setText(label);
 }
 
@@ -1659,7 +1660,7 @@ LLScrollListItem* LLPreviewGesture::addStep( const EStepType step_type )
 
 	// Create an enabled item with this step
 	LLSD row;
-	row["columns"][0]["value"] = step->getLabel();
+	row["columns"][0]["value"] = getLabel(step->getLabel());
 	row["columns"][0]["font"] = "SANSSERIF_SMALL";
 	LLScrollListItem* step_item = mStepList->addElement(row);
 	step_item->setUserdata(step);
@@ -1671,6 +1672,59 @@ LLScrollListItem* LLPreviewGesture::addStep( const EStepType step_type )
 	step_item->setSelected(TRUE);
 
 	return step_item;
+}
+
+// static
+std::string LLPreviewGesture::getLabel(std::vector<std::string> labels)
+{
+	std::vector<std::string> v_labels = labels ;
+	std::string result("");
+	
+	if( v_labels.size() != 2)
+	{
+		return result;
+	}
+
+	// FIXME: we really want to localize these, but I haven't backported 
+	// the required XUI infrastructure to do so correctly yet. Not a
+	// regression, since Viewer 1 never did so anyway.
+	
+	if(v_labels[0]=="Chat")
+	{
+		result= " Chat : "; //LLTrans::getString("Chat");
+	}
+	else if(v_labels[0]=="Sound")	
+	{
+		result=" Sound : "; //LLTrans::getString("Sound");
+	}
+	else if(v_labels[0]=="Wait")
+	{
+		result=" --- Wait : "; //LLTrans::getString("Wait");
+	}
+	else if(v_labels[0]=="AnimFlagStop")
+	{
+		result=" Stop Animation :    "; //LLTrans::getString("AnimFlagStop");
+	}
+	else if(v_labels[0]=="AnimFlagStart")
+	{
+		result=" Start Animation :   " ; //LLTrans::getString("AnimFlagStart");
+	}
+
+	// lets localize action value
+	std::string action = v_labels[1];
+	if ("None" == action)
+	{
+		action = "None"; //LLTrans::getString("GestureActionNone");
+	}
+#if 0 // FIXME - need to localize this!
+	else if ("until animations are done" == action)
+	{
+		action = LLFloaterReg::getInstance("preview_gesture")->getChild<LLCheckBoxCtrl>("wait_anim_check")->getLabel();
+	}
+#endif
+	result.append(action);
+	return result;
+	
 }
 
 // static

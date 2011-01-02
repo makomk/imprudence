@@ -162,4 +162,100 @@ La longueur maximale est de [MAX_LENGTH] secondes.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		Ok
+	</string>
+	<string name="E_ST_EOF">
+		Fichier incomplet.
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Impossible de lire la définition des contraintes.
+	</string>
+	<string name="E_ST_NO_FILE">
+		Impossible d&apos;ouvrir le fichier BVH.
+	</string>
+	<string name="E_ST_NO_HIER">
+		En-tête HIERARCHY non valide.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		Impossible de trouver ROOT ou JOINT.
+	</string>
+	<string name="E_ST_NO_NAME">
+		Impossible de trouver le nom JOINT.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		Impossible de trouver OFFSET.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		Impossible de trouver les CHANNELS.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Impossible d&apos;obtenir l&apos;ordre de rotation.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Impossible d&apos;obtenir l&apos;axe de rotation.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		Impossible de trouver MOTION.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Impossible d&apos;obtenir le nombre de cadres.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Impossible d&apos;obtenir le temps du cadre.
+	</string>
+	<string name="E_ST_NO_POS">
+		Impossible de trouver les valeurs de la position.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Impossible de trouver les valeurs de rotation.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		Impossible d&apos;ouvrir le fichier de traduction.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Impossible de lire l&apos;en-tête de traduction.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Impossible de lire la traduction.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Impossible de lire la traduction.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Impossible de lire la valeur de traduction relative.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Impossible de lire la traduction.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Impossible de lire la matrice de traduction.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Impossible de trouver le nom mergechild.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Impossible de trouver le nom mergeparent.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Impossible de définir la valeur de la priorité.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Impossible de définir la valeur de la boucle
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		Impossible de trouver les valeurs easeIn.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		Impossible de trouver les valeurs easeOut.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Impossible d&apos;obtenir la valeur hand morph.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		Impossible de lire le nom emote.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Nom de racine incorrect.
+	</string>
 </floater>

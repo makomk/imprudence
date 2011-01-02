@@ -75,3 +75,14 @@ set_source_files_properties(${llcharacter_HEADER_FILES}
 list(APPEND llcharacter_SOURCE_FILES ${llcharacter_HEADER_FILES})
 
 add_library (llcharacter ${llcharacter_SOURCE_FILES})
+
+
+if(LL_TESTS)
+  # Add tests
+  include(LLAddBuildTest)
+  # UNIT TESTS
+  SET(llcharacter_TEST_SOURCE_FILES
+      lljoint.cpp
+      )
+  LL_ADD_PROJECT_UNIT_TESTS(llcharacter "${llcharacter_TEST_SOURCE_FILES}")
+endif(LL_TESTS)

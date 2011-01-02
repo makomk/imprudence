@@ -4,7 +4,7 @@
  *
  * $LicenseInfo:firstyear=2004&license=viewergpl$
  * 
- * Copyright (c) 2004-2009, Linden Research, Inc.
+ * Copyright (c) 2004-2010, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -85,6 +85,43 @@ const F32 MAX_CAMERA_ZOOM = 10.f;
 
 const F32 BASE_ANIM_TIME_OFFSET = 5.f;
 
+std::string STATUS[] =
+{
+	"E_ST_OK",
+	"E_ST_EOF",
+	"E_ST_NO_CONSTRAINT",
+	"E_ST_NO_FILE",
+	"E_ST_NO_HIER",
+	"E_ST_NO_JOINT",
+	"E_ST_NO_NAME",
+	"E_ST_NO_OFFSET",
+	"E_ST_NO_CHANNELS",
+	"E_ST_NO_ROTATION",
+	"E_ST_NO_AXIS",
+	"E_ST_NO_MOTION",
+	"E_ST_NO_FRAMES",
+	"E_ST_NO_FRAME_TIME",
+	"E_ST_NO_POS",
+	"E_ST_NO_ROT",
+	"E_ST_NO_XLT_FILE",
+	"E_ST_NO_XLT_HEADER",
+	"E_ST_NO_XLT_NAME",
+	"E_ST_NO_XLT_IGNORE",
+	"E_ST_NO_XLT_RELATIVE",
+	"E_ST_NO_XLT_OUTNAME",
+	"E_ST_NO_XLT_MATRIX",
+	"E_ST_NO_XLT_MERGECHILD",
+	"E_ST_NO_XLT_MERGEPARENT",
+	"E_ST_NO_XLT_PRIORITY",
+	"E_ST_NO_XLT_LOOP",
+	"E_ST_NO_XLT_EASEIN",
+	"E_ST_NO_XLT_EASEOUT",
+	"E_ST_NO_XLT_HAND",
+	"E_ST_NO_XLT_EMOTE",
+"E_ST_BAD_ROOT"
+};
+
+
 //-----------------------------------------------------------------------------
 // LLFloaterAnimPreview()
 //-----------------------------------------------------------------------------
@@ -157,6 +194,7 @@ BOOL LLFloaterAnimPreview::postBuild()
 	LLRect r;
 	LLKeyframeMotion* motionp = NULL;
 	LLBVHLoader* loaderp = NULL;
+	ELoadStatus load_status; S32 error_line;
 
 	if (!LLFloaterNameDesc::postBuild())
 	{
@@ -270,7 +308,8 @@ BOOL LLFloaterAnimPreview::postBuild()
 			{
 				file_buffer[file_size] = '\0';
 				llinfos << "Loading BVH file " << mFilename << llendl;
-				loaderp = new LLBVHLoader(file_buffer);
+				loaderp = new LLBVHLoader(file_buffer, load_status, 
+							  error_line);
 			}
 
 			infile.close() ;
@@ -376,7 +415,7 @@ BOOL LLFloaterAnimPreview::postBuild()
 			else
 			{
 				LLUIString out_str = getString("failed_file_read");
-				out_str.setArg("[STATUS]", loaderp->getStatus()); // *TODO:Translate
+				out_str.setArg("[STATUS]", getString(STATUS[loaderp->getStatus()]));
 				childSetValue("bad_animation_text", out_str.getString());
 			}
 		}

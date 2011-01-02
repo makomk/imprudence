@@ -2,31 +2,25 @@
  * @file llhandmotion.cpp
  * @brief Implementation of LLHandMotion class.
  *
- * $LicenseInfo:firstyear=2001&license=viewergpl$
- * 
- * Copyright (c) 2001-2009, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2001&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlifegrid.net/programs/open_source/licensing/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlifegrid.net/programs/open_source/licensing/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
  */
 
@@ -113,9 +107,9 @@ BOOL LLHandMotion::onActivate()
 		// Note: 0 is the default
 		for (S32 i = 1; i < LLHandMotion::NUM_HAND_POSES; i++)
 		{
-			mCharacter->setVisualParamWeight(getHandPoseName((eHandPose)i).c_str(), 0.f);
+			mCharacter->setVisualParamWeight(gHandPoseNames[i], 0.f);
 		}
-		mCharacter->setVisualParamWeight(getHandPoseName(mCurrentPose).c_str(), 1.f);
+		mCharacter->setVisualParamWeight(gHandPoseNames[mCurrentPose], 1.f);
 		mCharacter->updateVisualParams();
 	}
 	return TRUE;
@@ -138,7 +132,7 @@ BOOL LLHandMotion::onUpdate(F32 time, U8* joint_mask)
 	{
 		if (mNewPose != HAND_POSE_RELAXED && mNewPose != mCurrentPose)
 		{
-			mCharacter->setVisualParamWeight(getHandPoseName(mNewPose).c_str(), 0.f);
+			mCharacter->setVisualParamWeight(gHandPoseNames[mNewPose], 0.f);
 		}
 		mNewPose = HAND_POSE_RELAXED;
 	}
@@ -147,7 +141,7 @@ BOOL LLHandMotion::onUpdate(F32 time, U8* joint_mask)
 		// this is a new morph we didn't know about before
 		if (*requestedHandPose != mNewPose && mNewPose != mCurrentPose && mNewPose != HAND_POSE_SPREAD)
 		{
-			mCharacter->setVisualParamWeight(getHandPoseName(mNewPose).c_str(), 0.f);
+			mCharacter->setVisualParamWeight(gHandPoseNames[mNewPose], 0.f);
 		}
 		mNewPose = *requestedHandPose;
 	}
@@ -166,18 +160,18 @@ BOOL LLHandMotion::onUpdate(F32 time, U8* joint_mask)
 
 		if (mNewPose != HAND_POSE_SPREAD)
 		{
-			incomingWeight = mCharacter->getVisualParamWeight(getHandPoseName(mNewPose).c_str());
+			incomingWeight = mCharacter->getVisualParamWeight(gHandPoseNames[mNewPose]);
 			incomingWeight += (timeDelta / HAND_MORPH_BLEND_TIME);
 			incomingWeight = llclamp(incomingWeight, 0.f, 1.f);
-			mCharacter->setVisualParamWeight(getHandPoseName(mNewPose).c_str(), incomingWeight);
+			mCharacter->setVisualParamWeight(gHandPoseNames[mNewPose], incomingWeight);
 		}
 
 		if (mCurrentPose != HAND_POSE_SPREAD)
 		{
-			outgoingWeight = mCharacter->getVisualParamWeight(getHandPoseName(mCurrentPose).c_str());
+			outgoingWeight = mCharacter->getVisualParamWeight(gHandPoseNames[mCurrentPose]);
 			outgoingWeight -= (timeDelta / HAND_MORPH_BLEND_TIME);
 			outgoingWeight = llclamp(outgoingWeight, 0.f, 1.f);
-			mCharacter->setVisualParamWeight(getHandPoseName(mCurrentPose).c_str(), outgoingWeight);
+			mCharacter->setVisualParamWeight(gHandPoseNames[mCurrentPose], outgoingWeight);
 		}
 
 		mCharacter->updateVisualParams();
@@ -199,8 +193,6 @@ void LLHandMotion::onDeactivate()
 {
 }
 
-//Zwag: Changed the defaults here so things look right. Otherwise the hand ends up
-// in a pose that nobody is used to when something messes up.
 //-----------------------------------------------------------------------------
 // LLHandMotion::getHandPoseName()
 //-----------------------------------------------------------------------------
@@ -210,8 +202,7 @@ std::string LLHandMotion::getHandPoseName(eHandPose pose)
 	{
 		return std::string(gHandPoseNames[pose]);
 	}
-	LL_WARNS("Bounds") << "Was passed an invalid hand pose: " << (S32)pose << LL_ENDL;
-	return std::string("Hands_Relaxed");
+	return LLStringUtil::null;
 }
 
 LLHandMotion::eHandPose LLHandMotion::getHandPose(std::string posename)
@@ -223,7 +214,7 @@ LLHandMotion::eHandPose LLHandMotion::getHandPose(std::string posename)
 			return (eHandPose)pose;
 		}
 	}
-	return (eHandPose)1;
+	return (eHandPose)0;
 }
 
 // End

@@ -161,4 +161,100 @@ La lunghezza massima è [MAX_LENGTH] secondi.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		Ok
+	</string>
+	<string name="E_ST_EOF">
+		Fine prematura del file.
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Impossibile leggere la definizione del vincolo.
+	</string>
+	<string name="E_ST_NO_FILE">
+		Impossibile aprire il file BVH.
+	</string>
+	<string name="E_ST_NO_HIER">
+		Intestazione HIERARCHY non valida.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		Impossibile trovare la ROOT o JOINT.
+	</string>
+	<string name="E_ST_NO_NAME">
+		Impossibile trovare il nome JOINT.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		Impossibile trovare OFFSET.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		Impossibile trovare CHANNELS.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Impossibile ottenere un ordine di rotazione.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Rotazione dell&apos;asse non disponibile.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		Impossibile trovare MOTION.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Impossibile ottenere il numero dei frame.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Impossibile ottenere il tempo del frame.
+	</string>
+	<string name="E_ST_NO_POS">
+		Impossibile ottenere i valori della posizione.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Impossibile ottenere i valori di rotazione.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		Impossibile aprire il file di traduzione.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Impossibile leggere l&apos;intestazione della traduzione.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Impossibile leggere i nomi della traduzione.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Impossibile leggere la traduzione, ignora il valore.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Impossibile leggere la traduzione del valore relativo.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Valore non trovato.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Impossibile leggere la matrice di traduzione.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Impossibile trovare il nome mergechild.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Impossibile ottenere il nome mergeparent.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Impossibile ottenere il valore di priorità.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Impossibile ottenere il valore di ripetizione.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		Impossibile ottenere i valori easeIn.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		Cannot get ease Out values.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Impossibile ottenere il valore morph della mano.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		Impossibile leggere il nome emote.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Nome non corretto del root joint, usa &quot;hip&quot;.
+	</string>
 </floater>

@@ -168,4 +168,100 @@ Maksimal animations længde er [MAX_LENGTH] sekunder.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		OK
+	</string>
+	<string name="E_ST_EOF">
+		Fil afsluttet for tidligt.
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Kan ikke læse &quot;constraint definition&quot;.
+	</string>
+	<string name="E_ST_NO_FILE">
+		Kan ikke åbne BVH fil.
+	</string>
+	<string name="E_ST_NO_HIER">
+		Ugyldig header i HIERARCHY.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		Kan ikke finde &quot;ROOT&quot; eller &quot;JOINT&quot;.
+	</string>
+	<string name="E_ST_NO_NAME">
+		Kan ikke finde JOINT navn.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		Kan ikke finde OFFSET.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		Kan ikke finde CHANNELS.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Kan ikke læse &quot;rotation order&quot;.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Kan ikke finde rotationsakser.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		Kan ikke finde MOTION.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Kan ikke læse antal &quot;frames&quot;.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Kan ikke læse &quot;frame time&quot;.
+	</string>
+	<string name="E_ST_NO_POS">
+		Kan ikke læse positionsværdier.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Kan ikke læse rotationsværdier.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		kan ikke åbne &quot;translation file&quot;.
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Kan ikke læse &quot;translation header.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Kan ikke aflæse &quot;translation&quot; navne.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Kan ikke læse &quot;translation ignore&quot; værdi.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Kan ikke læse &quot;translation relative&quot; værdi.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Kan ikke læse &quot;translation outname&quot; værdi.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Kan ikke læse &quot;translation matrix&quot;.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Kan ikke læse &quot;mergechild&quot; navn.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Kan ikke læse &quot;mergeparent&quot; navn.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Kan ikke finde prioritetsværdi.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Kan ikke læse &quot;loop&quot; værdi.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		kan ikke læse &quot;easeIn&quot; værdier.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		Kan ikke læse &quot;easeOut&quot; værdier.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Kan ikke læse &quot;hand morph&quot; værdi.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		kan ikke læse &quot;emote&quot; navn.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Incorrect root joint name, use &quot;hip&quot;.
+	</string>
 </floater>

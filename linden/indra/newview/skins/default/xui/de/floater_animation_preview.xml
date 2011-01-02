@@ -162,4 +162,100 @@ Maximal erlaubt sind [MAX_LENGTH] Sekunden.
 
 [STATUS]
 	</string>
+	<string name="E_ST_OK">
+		OK
+	</string>
+	<string name="E_ST_EOF">
+		Unvollständige Datei
+	</string>
+	<string name="E_ST_NO_CONSTRAINT">
+		Constraint-Definition kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_NO_FILE">
+		BVH-Datei kann nicht geöffnet werden
+	</string>
+	<string name="E_ST_NO_HIER">
+		Ungültiger HIERARCHY-Titel.
+	</string>
+	<string name="E_ST_NO_JOINT">
+		ROOT oder JOINT nicht gefunden.
+	</string>
+	<string name="E_ST_NO_NAME">
+		JOINT-Name nicht erfasst.
+	</string>
+	<string name="E_ST_NO_OFFSET">
+		VERSATZ nicht gefunden.
+	</string>
+	<string name="E_ST_NO_CHANNELS">
+		CHANNELS nicht gefunden.
+	</string>
+	<string name="E_ST_NO_ROTATION">
+		Kann Rotations-Reihenfolge nicht erfassen.
+	</string>
+	<string name="E_ST_NO_AXIS">
+		Kann Rotations-Achse nicht erfassen.
+	</string>
+	<string name="E_ST_NO_MOTION">
+		MOTION nicht gefunden.
+	</string>
+	<string name="E_ST_NO_FRAMES">
+		Anzahl der Bilder kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_FRAME_TIME">
+		Bildzeit kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_POS">
+		Positions-Werte können nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_ROT">
+		Kann Rotations-Werte nicht erfassen.
+	</string>
+	<string name="E_ST_NO_XLT_FILE">
+		Datei kann nicht geöffnet werden
+	</string>
+	<string name="E_ST_NO_XLT_HEADER">
+		Übersetzungstitel kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_NO_XLT_NAME">
+		Übersetzungsnamen können nicht geladen werden.
+	</string>
+	<string name="E_ST_NO_XLT_IGNORE">
+		Ignorier-Wert kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_NO_XLT_RELATIVE">
+		Übersetzungs-Wert kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_NO_XLT_OUTNAME">
+		Outname-Wert kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_NO_XLT_MATRIX">
+		Übersetzungsmatrix kann nicht geladen werden.
+	</string>
+	<string name="E_ST_NO_XLT_MERGECHILD">
+		Mergechild-Name nicht erfasst.
+	</string>
+	<string name="E_ST_NO_XLT_MERGEPARENT">
+		Mergeparent-Name nicht erfasst.
+	</string>
+	<string name="E_ST_NO_XLT_PRIORITY">
+		Prioritätswert kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_XLT_LOOP">
+		Loop-Wert kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_XLT_EASEIN">
+		Easeln-Wert kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_XLT_EASEOUT">
+		easeOut-Wert kann nicht erfasst werden.
+	</string>
+	<string name="E_ST_NO_XLT_HAND">
+		Hand-Morph-Wert nicht erfasst.
+	</string>
+	<string name="E_ST_NO_XLT_EMOTE">
+		Emote-Name kann nicht gelesen werden.
+	</string>
+	<string name="E_ST_BAD_ROOT">
+		Falscher Root-Joint-Name, &quot;hip&quot; verwenden.
+	</string>
 </floater>
