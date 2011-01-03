@@ -3,33 +3,26 @@
  * @brief LLPluginProcessParent handles the parent side of the external-process plugin API.
  *
  * @cond
- * $LicenseInfo:firstyear=2008&license=viewergpl$
- * 
- * Copyright (c) 2008-2010, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2008&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlife.com/developers/opensource/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlife.com/developers/opensource/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
- * 
  * @endcond
  */
 
@@ -108,7 +101,6 @@ LLPluginProcessParent::LLPluginProcessParent(LLPluginProcessParentOwner *owner):
 	
 	// Don't start the timer here -- start it when we actually launch the plugin process.
 	mHeartbeat.stop();
-
 	
 	// Don't add to the global list until fully constructed.
 	{
@@ -406,17 +398,6 @@ void LLPluginProcessParent::idle(void)
 						mDebugger.addArgument("do script \"continue\" in win");
 						mDebugger.addArgument("-e");
 						mDebugger.addArgument("end tell");
-						mDebugger.launch();
-
-						#elif LL_LINUX
-
-						std::stringstream cmd;
-
-						mDebugger.setExecutable("/usr/bin/gnome-terminal");
-						mDebugger.addArgument("--geometry=165x24-0+0");
-						mDebugger.addArgument("-e");
-						cmd << "/usr/bin/gdb -n /proc/" << mProcess.getProcessID() << "/exe " << mProcess.getProcessID();
-						mDebugger.addArgument(cmd.str());
 						mDebugger.launch();
 
 						#endif
@@ -1084,7 +1065,7 @@ std::string LLPluginProcessParent::getPluginVersion(void)
 
 void LLPluginProcessParent::setState(EState state)
 {
-	LL_DEBUGS("Plugin") << "setting state to " << stateToString(state) << LL_ENDL;
+	LL_DEBUGS("Plugin") << "setting state to " << state << LL_ENDL;
 	mState = state; 
 };
 
@@ -1118,53 +1099,3 @@ bool LLPluginProcessParent::pluginLockedUp()
 	return (mHeartbeat.getStarted() && mHeartbeat.hasExpired());
 }
 
-std::string LLPluginProcessParent::stateToString(EState state)
-{
-	std::string eng = "unknown plugin state";
-	switch (state)
-	{
-	case STATE_UNINITIALIZED:
-		eng = "STATE_UNINITIALIZED";
-		break;
-	case STATE_INITIALIZED: 
-		eng = "STATE_INITIALIZED - init() has been called";
-		break;
-	case STATE_LISTENING:
-		eng = "STATE_LISTENING - listening for incoming connection";
-		break;
-	case STATE_LAUNCHED:
-		eng = "STATE_LAUNCHED - process has been launched";
-		break;
-	case STATE_CONNECTED:
-		eng = "STATE_CONNECTED - process has connected";
-		break;
-	case STATE_HELLO:
-		eng = "STATE_HELLO - first message from the plugin process has been received";
-		break;
-	case STATE_LOADING:
-		eng = "STATE_LOADING - process has been asked to load the plugin";
-		break;
-	case STATE_RUNNING:
-		eng = "STATE_RUNNING - plugin running";
-		break;
-	case STATE_LAUNCH_FAILURE:
-		eng = "STATE_LAUNCH_FAILURE - failure before plugin loaded";
-		break;
-	case STATE_ERROR:
-		eng = "STATE_ERROR - generic bailout state";
-		break;
-	case STATE_CLEANUP:
-		eng = "STATE_CLEANUP - clean everything up";
-		break;
-	case STATE_EXITING:
-		eng = "STATE_EXITING - tried to kill process, waiting for it to exit";
-		break;
-	case STATE_DONE:
-		eng = "STATE_DONE - plugin done";
-		break;
-	default:
-		break;
-	}
-	
-	return llformat("(%d) ", (S32)state) + eng;
-}

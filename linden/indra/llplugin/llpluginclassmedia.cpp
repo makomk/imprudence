@@ -3,33 +3,26 @@
  * @brief LLPluginClassMedia handles a plugin which knows about the "media" message class.
  *
  * @cond
- * $LicenseInfo:firstyear=2008&license=viewergpl$
- * 
- * Copyright (c) 2008-2010, Linden Research, Inc.
- * 
+ * $LicenseInfo:firstyear=2008&license=viewerlgpl$
  * Second Life Viewer Source Code
- * The source code in this file ("Source Code") is provided by Linden Lab
- * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Linden Lab.  Terms of
- * the GPL can be found in doc/GPL-license.txt in this distribution, or
- * online at http://secondlife.com/developers/opensource/gplv2
+ * Copyright (C) 2010, Linden Research, Inc.
  * 
- * There are special exceptions to the terms and conditions of the GPL as
- * it is applied to this Source Code. View the full text of the exception
- * in the file doc/FLOSS-exception.txt in this software distribution, or
- * online at
- * http://secondlife.com/developers/opensource/flossexception
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation;
+ * version 2.1 of the License only.
  * 
- * By copying, modifying or distributing this software, you acknowledge
- * that you have read and understood your obligations described above,
- * and agree to abide by those obligations.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  * 
- * ALL LINDEN LAB SOURCE CODE IS PROVIDED "AS IS." LINDEN LAB MAKES NO
- * WARRANTIES, EXPRESS, IMPLIED OR OTHERWISE, REGARDING ITS ACCURACY,
- * COMPLETENESS OR PERFORMANCE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ * Linden Research, Inc., 945 Battery Street, San Francisco, CA  94111  USA
  * $/LicenseInfo$
- * 
  * @endcond
  */
 
@@ -150,6 +143,7 @@ void LLPluginClassMedia::reset()
 	mProgressPercent = 0;	
 	mClickURL.clear();
 	mClickTarget.clear();
+	mClickTargetType = TARGET_NONE;
 	
 	// media_time class
 	mCurrentTime = 0.0f;
@@ -721,6 +715,26 @@ void LLPluginClassMedia::setJavascriptEnabled(const bool enabled)
 	sendMessage(message);
 }
 
+LLPluginClassMedia::ETargetType getTargetTypeFromLLQtWebkit(int target_type)
+{
+	// convert a LinkTargetType value from llqtwebkit to an ETargetType
+	// so that we don't expose the llqtwebkit header in viewer code
+	switch (target_type)
+	{
+	case LLQtWebKit::LTT_TARGET_NONE:
+		return LLPluginClassMedia::TARGET_NONE;
+
+	case LLQtWebKit::LTT_TARGET_BLANK:
+		return LLPluginClassMedia::TARGET_BLANK;
+
+	case LLQtWebKit::LTT_TARGET_EXTERNAL:
+		return LLPluginClassMedia::TARGET_EXTERNAL;
+
+	default:
+		return LLPluginClassMedia::TARGET_OTHER;
+	}
+}
+
 /* virtual */ 
 void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 {
@@ -973,12 +987,15 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		{
 			mClickURL = message.getValue("uri");
 			mClickTarget = message.getValue("target");
+			U32 target_type = message.getValueU32("target_type");
+			mClickTargetType = ::getTargetTypeFromLLQtWebkit(target_type);
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_CLICK_LINK_HREF);
 		}
 		else if(message_name == "click_nofollow")
 		{
 			mClickURL = message.getValue("uri");
 			mClickTarget.clear();
+			mClickTargetType = TARGET_NONE;
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_CLICK_LINK_NOFOLLOW);
 		}
 		else if(message_name == "cookie_set")

@@ -79,4 +79,4 @@ if (DARWIN)
   )
 endif (DARWIN)
 
-#ll_deploy_sharedlibs_command(SLPlugin)
+#ll_deploy_sharedlibs_command(SLPlugin) # breaks build process
