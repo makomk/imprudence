@@ -4341,18 +4341,9 @@ void LLAppViewer::handleLoginComplete()
 
 // [RLVa:KB] - Alternate: Snowglobe-1.2.4 | Checked: 2009-08-05 (RLVa-1.0.1e) | Modified: RLVa-1.0.1e
 	// NOTE: this function isn't called in Imprudence so any changes need to go in idle_startup() instead
-	gRlvHandler.initLookupTables();
-
 	if (rlv_handler_t::isEnabled())
 	{
-		RlvCurrentlyWorn::fetchWorn();
-		rlv_handler_t::fetchSharedInventory();
-
-		#ifdef RLV_EXTENSION_STARTLOCATION
-			RlvSettings::updateLoginLastLocation();
-		#endif // RLV_EXTENSION_STARTLOCATION
-
-		gRlvHandler.processRetainedCommands();
+		gRlvHandler.onLoginComplete();
 	}
 // [/RLVa:KB]
 }

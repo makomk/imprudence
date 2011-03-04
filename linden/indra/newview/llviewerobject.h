@@ -236,7 +236,7 @@ public:
 	BOOL isProbablyModifiable() const;
 	*/
 
-	virtual void setParent(LLViewerObject* parent);
+	virtual BOOL setParent(LLViewerObject* parent);
 	virtual void addChild(LLViewerObject *childp);
 	virtual void removeChild(LLViewerObject *childp);
 	const_child_list_t& getChildren() const { 	return mChildList; }
@@ -312,6 +312,7 @@ public:
 	/*virtual*/ S32     setTEGlow(const U8 te, const F32 glow);
 	/*virtual*/	BOOL	setMaterial(const U8 material);
 	virtual		void	setTEImage(const U8 te, LLViewerImage *imagep); // Not derived from LLPrimitive
+	void                changeTEImage(S32 index, LLViewerImage* new_image)  ;
 	LLViewerImage		*getTEImage(const U8 te) const;
 	
 	void fitFaceTexture(const U8 face);
@@ -321,7 +322,10 @@ public:
 
 	void sendShapeUpdate();
 
-	U8 getState()							{ return mState; }
+//	U8 getState()							{ return mState; }
+// [RLVa:KB] - Checked: 2010-09-26 (RLVa-1.3.0a) | Added: RLVa-1.3.0a
+	U8 getState() const						{ return mState; }
+// [/RLVa:KB]
 
 	F32 getAppAngle() const					{ return mAppAngle; }
 	F32 getPixelArea() const				{ return mPixelArea; }
@@ -659,6 +663,13 @@ protected:
 
 private:	
 	static S32 sNumObjects;
+
+public:
+	const LLUUID &getAttachmentItemID() const { return mAttachmentItemID; }
+	void setAttachmentItemID(const LLUUID &id) { mAttachmentItemID = id; }
+	const LLUUID &extractAttachmentItemID(); // find&set the inventory item ID of the attached object
+private:
+	LLUUID mAttachmentItemID; // ItemID when item is in user inventory.
 };
 
 ///////////////////
