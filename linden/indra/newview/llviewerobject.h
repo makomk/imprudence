@@ -671,6 +671,7 @@ public:
 private:
 	LLUUID mAttachmentItemID; // ItemID when item is in user inventory.
 };
+typedef std::vector<LLViewerObject*> llvo_vec_t;
 
 ///////////////////
 //
