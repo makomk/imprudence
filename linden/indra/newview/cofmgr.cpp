@@ -20,6 +20,7 @@
 #include "llcommonutils.h"
 #include "llerror.h"
 #include "llvoavatar.h"
+#include "rlvviewer2.h"
 
 // ============================================================================
 // Inventory helper classes
@@ -33,11 +34,17 @@ public:
 
 	/*virtual*/ void done()
 	{
+		// We shouldn't be messing with inventory items during LLInventoryModel::notifyObservers()
+		doOnIdleOneTime(boost::bind(&LLCOFLinkTargetFetcher::doneIdle, this));
+		gInventory.removeObserver(this);
+	}
+
+	void doneIdle()
+	{
 		LLCOFMgr::instance().setLinkAttachments(true);
 		LLCOFMgr::instance().updateAttachments();
 		LLCOFMgr::instance().synchWearables();
 
-		gInventory.removeObserver(this);
 		delete this;
 	}
 };
@@ -50,11 +57,11 @@ public:
 
 	/*virtual*/ void done()
 	{
-		// Now that we have the COF contents we need to fetch the link targets as well
+		LLInventoryFetchObserver::item_ref_t idItems; 
+
+		// Add the link targets for COF
 		LLInventoryModel::cat_array_t folders; LLInventoryModel::item_array_t items;
 		gInventory.collectDescendents(LLCOFMgr::getCOF(), folders, items, LLInventoryModel::EXCLUDE_TRASH);
-
-		LLInventoryFetchObserver::item_ref_t idItems; 
 		for (S32 idxItem = 0; idxItem < items.count(); idxItem++)
 		{
 			const LLViewerInventoryItem* pItem = items.get(idxItem);
@@ -63,15 +70,41 @@ public:
 			idItems.push_back(pItem->getLinkedUUID());
 		}
 
-		if (!idItems.empty())
+		// Add all currently worn wearables
+		for (S32 idxType = 0; idxType < WT_COUNT; idxType++)
 		{
-			LLCOFLinkTargetFetcher* pFetcher = new LLCOFLinkTargetFetcher();
-			pFetcher->fetchItems(idItems);
-			if (pFetcher->isEverythingComplete())
-				pFetcher->done();
-			else
-				gInventory.addObserver(pFetcher);
+			const LLUUID& idItem = gAgent.getWearableItem((EWearableType)idxType);
+			if (idItem.isNull())
+				continue;
+			idItems.push_back(idItem);
 		}
+
+		// Add all currently worn attachments
+		const LLVOAvatar* pAvatar = gAgent.getAvatarObject();
+		if (pAvatar)
+		{
+			for (LLVOAvatar::attachment_map_t::const_iterator itAttachPt = pAvatar->mAttachmentPoints.begin(); 
+				 itAttachPt != pAvatar->mAttachmentPoints.end(); ++itAttachPt)
+			{
+				const LLViewerJointAttachment* pAttachPt = itAttachPt->second;
+				for (LLViewerJointAttachment::attachedobjs_vec_t::const_iterator itAttachment = pAttachPt->mAttachedObjects.begin();
+					 itAttachment != pAttachPt->mAttachedObjects.end(); ++itAttachment)
+				{
+					const LLUUID& idItem = (*itAttachment)->getAttachmentItemID();
+					if (idItem.isNull())
+						continue;
+					idItems.push_back(idItem);
+				}
+			}
+		}
+
+		// Fetch it all
+		LLCOFLinkTargetFetcher* pFetcher = new LLCOFLinkTargetFetcher();
+		pFetcher->fetchItems(idItems);
+		if (pFetcher->isEverythingComplete())
+			pFetcher->done();
+		else
+			gInventory.addObserver(pFetcher);
 
 		gInventory.removeObserver(this);
 		delete this;
