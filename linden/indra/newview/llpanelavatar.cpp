@@ -500,7 +500,8 @@ void LLPanelAvatarWeb::onVisibilityChange(BOOL new_visibility)
 	else
 		new_priority = LLPluginClassMedia::PRIORITY_HIDDEN;
 
-	mWebBrowser->getMediaPlugin()->setPriority(new_priority);
+	if(mWebBrowser->getMediaPlugin() != NULL)
+		mWebBrowser->getMediaPlugin()->setPriority(new_priority);
 }
 
 void LLPanelAvatarWeb::enableControls(BOOL self)
