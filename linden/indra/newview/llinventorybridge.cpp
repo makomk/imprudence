@@ -3973,7 +3973,14 @@ void LLObjectBridge::openItem()
 	}
 	else
 	{
-		performAction(NULL, NULL, "attach");
+		if(gSavedSettings.getBOOL("PhoenixDoubleClickAddInventoryObjects"))
+		{
+			performAction(NULL, &gInventory, "wear_add");
+		}
+		else
+		{
+			performAction(NULL, &gInventory, "attach");
+		}
 	}
 }
 
