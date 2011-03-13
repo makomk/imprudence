@@ -77,6 +77,7 @@ protected:
 protected:
 	LLCOFMgr() : m_fLinkAttachments(false) {}
 private:
+	friend class LLCOFFetcher;
 	friend class LLCOFLinkTargetFetcher;
 	friend class LLDeferredAddLinkTargetFetcher;
 	friend class LLLinkAttachmentCallback;
