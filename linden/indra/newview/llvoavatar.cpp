@@ -6758,6 +6758,41 @@ LLViewerJointAttachment* LLVOAvatar::getTargetAttachmentPoint(const LLViewerObje
 //-----------------------------------------------------------------------------
 BOOL LLVOAvatar::attachObject(LLViewerObject *viewer_object)
 {
+	// Force-detach attachments using secondary attachment points
+	if ( (isSelf()) && (viewer_object) &&
+		 (ATTACHMENT_ID_FROM_STATE(viewer_object->getState()) > 38) && (ATTACHMENT_ID_FROM_STATE(viewer_object->getState()) <= 70) )
+	{
+		static const std::string cstrAlert("PhoenixUsingDeprecatedAttachPoint");
+
+		// Don't show the notification if it's already visible
+		bool fShowAlert = true; 
+		LLNotificationChannelPtr activeNotifications = LLNotifications::instance().getChannel("AlertModal");
+		for (LLNotificationChannel::Iterator itNotif = activeNotifications->begin(); itNotif != activeNotifications->end(); itNotif++)
+			if ((*itNotif)->getName() == cstrAlert)
+				fShowAlert = false;
+		if (fShowAlert)
+			LLNotifications::instance().add(cstrAlert);
+
+		// Force-detach it on the server side
+		gMessageSystem->newMessage("ObjectDetach");
+		gMessageSystem->nextBlockFast(_PREHASH_AgentData);
+		gMessageSystem->addUUIDFast(_PREHASH_AgentID, gAgent.getID() );
+		gMessageSystem->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
+		gMessageSystem->nextBlockFast(_PREHASH_ObjectData);
+		gMessageSystem->addU32Fast(_PREHASH_ObjectLocalID, viewer_object->getLocalID());
+		gMessageSystem->sendReliable(gAgent.getRegionHost());
+
+		// Make sure it doesn't stay stuck in COF since we'll never see it detach
+		const LLUUID& idItem = viewer_object->getAttachmentItemID();
+		if (idItem.notNull())
+			LLCOFMgr::instance().removeAttachment(idItem);
+
+		// Kill it locally
+		gObjectList.killObject(viewer_object);
+
+		return FALSE;
+	}
+
 	LLViewerJointAttachment* attachment = getTargetAttachmentPoint(viewer_object);
 
 	if (!attachment || !attachment->addObject(viewer_object))
