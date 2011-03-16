@@ -67,7 +67,7 @@ std::set<std::string> LLViewerParcelMedia::sDeniedMedia;
 
 // Local functions
 bool callback_play_media(const LLSD& notification, const LLSD& response, LLParcel* parcel);
-void callback_media_alert(const LLSD& notification, const LLSD& response, LLParcel* parcel, U32 type, std::string domain);
+void callback_media_alert(const LLSD& notification, const LLSD& response, LLParcel* parcel, U32 type, std::string domain, std::string media_url);
 
 // static
 void LLViewerParcelMedia::initClass()
@@ -649,7 +649,7 @@ bool LLViewerParcelMedia::allowedMedia(std::string media_url)
 {
 	LLStringUtil::trim(media_url);
 	std::string domain = extractDomain(media_url);
-	if (sAllowedMedia.count(domain))
+	if (sAllowedMedia.count(media_url))
 	{
 		return true;
 	}
@@ -697,7 +697,7 @@ void LLViewerParcelMedia::filterMedia(LLParcel* parcel, U32 type)
 
 	domain = extractDomain(media_url);
 
-	if (sMediaQueries.count(domain) > 0)
+	if (sMediaQueries.count(media_url) > 0)
 	{
 		sIsUserAction = false;
 		return;
@@ -719,7 +719,7 @@ void LLViewerParcelMedia::filterMedia(LLParcel* parcel, U32 type)
 	{
 		media_action = "ignore";
 	}
-	else if (sAllowedMedia.count(domain))
+	else if (sAllowedMedia.count(media_url))
 	{
 		media_action = "allow";
 	}
@@ -768,9 +768,9 @@ void LLViewerParcelMedia::filterMedia(LLParcel* parcel, U32 type)
 	}
 	else
 	{
-		sMediaQueries.insert(domain);
+		sMediaQueries.insert(media_url);
 		LLSD args;
-		args["DOMAIN"] = domain;
+		args["DOMAIN"] = media_url;
 		args["WARNING"] = "";
 		if (type == 0)
 		{
@@ -780,11 +780,11 @@ void LLViewerParcelMedia::filterMedia(LLParcel* parcel, U32 type)
 		{
 			args["TYPE"] = "an audio";
 		}
-		LLNotifications::instance().add("MediaAlert", args, LLSD(), boost::bind(callback_media_alert, _1, _2, parcel, type, domain));
+		LLNotifications::instance().add("MediaAlert", args, LLSD(), boost::bind(callback_media_alert, _1, _2, parcel, type, domain, media_url));
 	}
 }
 
-void callback_media_alert(const LLSD &notification, const LLSD &response, LLParcel* parcel, U32 type, std::string domain)
+void callback_media_alert(const LLSD &notification, const LLSD &response, LLParcel* parcel, U32 type, std::string domain, std::string media_url)
 {
 	S32 option = LLNotification::getSelectedOption(notification, response);
 
@@ -793,7 +793,7 @@ void callback_media_alert(const LLSD &notification, const LLSD &response, LLParc
 
 	if (option == 0 || option == 3) // Allow or Whitelist
 	{
-		LLViewerParcelMedia::sAllowedMedia.insert(domain);
+		LLViewerParcelMedia::sAllowedMedia.insert(media_url);
 		if (option == 3) // Whitelist
 		{
 			LLSD newmedia;
@@ -836,7 +836,7 @@ void callback_media_alert(const LLSD &notification, const LLSD &response, LLParc
 		}
 	}
 
-	LLViewerParcelMedia::sMediaQueries.erase(domain);
+	LLViewerParcelMedia::sMediaQueries.erase(media_url);
 	SLFloaterMediaFilter::setDirty();
 }
 
