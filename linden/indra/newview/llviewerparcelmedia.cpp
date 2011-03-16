@@ -771,14 +771,7 @@ void LLViewerParcelMedia::filterMedia(LLParcel* parcel, U32 type)
 		sMediaQueries.insert(domain);
 		LLSD args;
 		args["DOMAIN"] = domain;
-		if (media_url.find('?') != std::string::npos)
-		{
-			args["WARNING"] = " (WARNING: this URL also contains parameter(s) that could potentially be used to correlate your avatar name with your IP)";
-		}
-		else
-		{
-			args["WARNING"] = "";
-		}
+		args["WARNING"] = "";
 		if (type == 0)
 		{
 			args["TYPE"] = "a media";
