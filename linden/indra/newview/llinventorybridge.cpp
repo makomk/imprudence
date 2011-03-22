@@ -39,6 +39,7 @@
 
 #include "message.h"
 
+#include "cofmgr.h"
 #include "llagent.h"
 #include "llcallingcard.h"
 #include "llcheckboxctrl.h"		// for radio buttons
@@ -2212,6 +2213,7 @@ void LLFolderBridge::pasteLinkFromClipboard()
 					item->getLinkedUUID(),
 					parent_id,
 					item->getName(),
+					item->getDescription(),
 					LLAssetType::AT_LINK,
 					LLPointer<LLInventoryCallback>(NULL));
 			}
@@ -2236,7 +2238,7 @@ void LLFolderBridge::folderOptionsMenu()
 
 	const LLInventoryCategory* category = model->getCategory(mUUID);
 	bool is_default_folder = category &&
-		(LLAssetType::AT_NONE != category->getPreferredType());
+		(LLAssetType::AT_NONE != category->getPreferredType()) && (LLAssetType::AT_OUTFIT != category->getPreferredType());
 	
 	// calling card related functionality for folders.
 
@@ -2686,8 +2688,16 @@ BOOL LLFolderBridge::dragItemIntoFolder(LLInventoryItem* inv_item,
 		}
 
 		LLUUID trash_id = model->findCategoryUUIDForType(LLAssetType::AT_TRASH);
+		const LLUUID &current_outfit_id = model->findCategoryUUIDForType(LLAssetType::AT_CURRENT_OUTFIT, false);
 		BOOL move_is_into_trash = (mUUID == trash_id) || model->isObjectDescendentOf(mUUID, trash_id);
-		if(is_movable && move_is_into_trash)
+		BOOL move_is_into_current_outfit = (mUUID == current_outfit_id);
+		BOOL move_is_outof_current_outfit = model->isObjectDescendentOf(inv_item->getUUID(), current_outfit_id);
+
+		if (is_movable && move_is_outof_current_outfit)
+		{
+			is_movable = FALSE;	// Don't allow dragging links out of COF
+		}
+		else if(is_movable && move_is_into_trash)
 		{
 			if (inv_item->getIsLinkType())
 			{
@@ -2732,12 +2742,34 @@ BOOL LLFolderBridge::dragItemIntoFolder(LLInventoryItem* inv_item,
 				}
 			}
 
-			// restamp if the move is into the trash.
-			LLInvFVBridge::changeItemParent(
-				model,
-				(LLViewerInventoryItem*)inv_item,
-				mUUID,
-				move_is_into_trash);
+			if (move_is_into_current_outfit)
+			{
+				switch (inv_item->getType())
+				{
+					case LLAssetType::AT_BODYPART:
+					case LLAssetType::AT_CLOTHING:
+						wear_inventory_item_on_avatar(inv_item);
+						break;
+					case LLAssetType::AT_OBJECT:
+						rez_attachment((LLViewerInventoryItem*)inv_item, NULL, false);
+						break;
+					/*
+					case LLAssetType::AT_GESTURE:
+						break;
+					*/
+					default:
+						break;
+				}
+			}
+			else
+			{
+				// restamp if the move is into the trash.
+				LLInvFVBridge::changeItemParent(
+					model,
+					(LLViewerInventoryItem*)inv_item,
+					mUUID,
+					move_is_into_trash);
+			}
 		}
 	}
 	else if(LLToolDragAndDrop::SOURCE_WORLD == source)
@@ -4910,7 +4942,7 @@ void remove_inventory_category_from_avatar_step2( BOOL proceed, void* userdata)
 			{
 //				if( gAgent.isWearingItem (item_array.get(i)->getUUID()) )
 // [RLVa:KB] - Checked: 2009-07-07 (RLVa-1.1.3b) | Modified: RLVa-0.2.2a
-				LLWearable* pWearable = gAgent.getWearableFromWearableItem(item_array.get(i)->getUUID());
+				LLWearable* pWearable = gAgent.getWearableFromWearableItem(item_array.get(i)->getLinkedUUID());
 				if ( (pWearable) && ( (!rlv_handler_t::isEnabled()) || (gRlvWearableLocks.canRemove(pWearable->getType())) ) )
 // [/RLVa:KB]
 				{
@@ -4941,9 +4973,9 @@ void remove_inventory_category_from_avatar_step2( BOOL proceed, void* userdata)
 		{
 			for(i = 0; i  < gest_count; ++i)
 			{
-				if ( gGestureManager.isGestureActive( gest_item_array.get(i)->getUUID()) )
+				if ( gGestureManager.isGestureActive( gest_item_array.get(i)->getLinkedUUID()) )
 				{
-					gGestureManager.deactivateGesture( gest_item_array.get(i)->getUUID() );
+					gGestureManager.deactivateGesture( gest_item_array.get(i)->getLinkedUUID() );
 					gInventory.updateItem( gest_item_array.get(i) );
 					gInventory.notifyObservers();
 				}

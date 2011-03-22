@@ -73,6 +73,7 @@ set(viewer_SOURCE_FILES
 	lggdicdownload.cpp
 	aoremotectrl.cpp
 	chatbar_as_cmdline.cpp
+    cofmgr.cpp
     emeraldboobutils.cpp
     floaterao.cpp
     floaterbusy.cpp
@@ -533,6 +534,7 @@ set(viewer_HEADER_FILES
     ViewerInstall.cmake
     aoremotectrl.h
 	chatbar_as_cmdline.h
+    cofmgr.h
     emeraldboobutils.h
     floaterao.h
     floaterbusy.h
