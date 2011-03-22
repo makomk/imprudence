@@ -42,6 +42,7 @@
 #include "noise.h"
 #include "llsdserialize.h"
 
+#include "cofmgr.h"
 #include "llagent.h" //  Get state values from here
 #include "llviewercontrol.h"
 #include "lldrawpoolavatar.h"
@@ -720,10 +721,6 @@ F32 LLVOAvatar::sUnbakedUpdateTime = 0.f;
 F32 LLVOAvatar::sGreyTime = 0.f;
 F32 LLVOAvatar::sGreyUpdateTime = 0.f;
 
-// Globals
-LLFrameTimer gAttachmentsTimer;
-bool gAttachmentsListDirty = true;
-
 //-----------------------------------------------------------------------------
 // Helper functions
 //-----------------------------------------------------------------------------
@@ -836,7 +833,6 @@ LLVOAvatar::LLVOAvatar(const LLUUID& id,
 	{
 		mIsSelf = TRUE;
 		gAgent.setAvatarObject(this);
-		gAttachmentsTimer.reset();
 		LL_DEBUGS("VOAvatar") << "Marking avatar as self " << id << LL_ENDL;
 	}
 	else
@@ -2704,10 +2700,12 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 
 	// attach objects that were waiting for a drawable
 	lazyAttach();
+/*
 	if (mIsSelf)
 	{
 		checkAttachments();
 	}
+*/
 
 	// animate the character
 	// store off last frame's root position to be consistent with camera position
@@ -2742,134 +2740,6 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 	idleUpdateRenderCost();
 	idleUpdateTractorBeam();
 	return TRUE;
-}
-
-// Check attachments
-void LLVOAvatar::checkAttachments()
-{
-	const F32 LAZY_ATTACH_DELAY = 15.0f;
-	static bool first_run = true;
-
-	if (!mIsSelf)
-	{
-		return;
-	}
-
-	if (mPendingAttachment.size() == 0)
-	{
-		if (first_run)
-		{
-			if (gAttachmentsTimer.getElapsedTimeF32() > LAZY_ATTACH_DELAY)
-			{
-				first_run = false;
-				LLVOAvatar* avatarp = gAgent.getAvatarObject();
-				if (!avatarp) return;
-				std::set<LLUUID> worn;
-				for (LLVOAvatar::attachment_map_t::iterator iter = avatarp->mAttachmentPoints.begin(); 
-					 iter != avatarp->mAttachmentPoints.end(); )
-				{
-					LLVOAvatar::attachment_map_t::iterator curiter = iter++;
-					LLViewerJointAttachment* attachment = curiter->second;
-					for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();
-						 attachment_iter != attachment->mAttachedObjects.end();
-						 ++attachment_iter)
-					{
-						LLViewerObject *attached_object = (*attachment_iter);
-						if (attached_object)
-						{
-							worn.insert(attached_object->getAttachmentItemID());
-						}
-					}
-				}
-				std::string filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, "attachments.xml");
-				//llinfos << "Reading the saved worn attachments list from: " << filename << llendl;
-				LLSD list;
-				llifstream llsd_xml;
-				llsd_xml.open(filename.c_str(), std::ios::in | std::ios::binary);
-				if (llsd_xml.is_open())
-				{
-					LLSDSerialize::fromXML(list, llsd_xml);
-					for (LLSD::map_iterator iter = list.beginMap(); iter != list.endMap(); iter++)
-					{
-						LLSD array = iter->second;
-						if (array.isArray())
-						{
-							for (int i = 0; i < array.size(); i++)
-							{
-								LLSD map = array[i];
-								if (map.has("inv_item_id"))
-								{
-									LLUUID item_id = map.get("inv_item_id");
-									if (worn.find(item_id) == worn.end())
-									{
-										LLViewerInventoryItem* item = gInventory.getItem(item_id);
-										if (item)
-										{
-											rez_attachment(item, NULL, false);
-										}
-										else
-										{
-											llwarns << item_id.asString() << " not found in inventory, could not reattach." << llendl;
-										}
-									}
-								}
-								else
-								{
-									llwarns << "Malformed attachments list file (no \"inv_item_id\" key). Aborting." << llendl;
-									llsd_xml.close();
-									return;
-								}
-							}
-						}
-						else
-						{
-							llwarns << "Malformed attachments list file (not an array). Aborting." << llendl;
-							llsd_xml.close();
-							return;
-						}
-					}
-					llsd_xml.close();
-				}
-			}
-		}
-		else if (gAttachmentsListDirty)
-		{
-			gAttachmentsListDirty = false;
-			LLSD list;
-			LLSD array = list.emptyArray();
-			LLVOAvatar* avatarp = gAgent.getAvatarObject();
-			if (!avatarp) return;
-			for (LLVOAvatar::attachment_map_t::iterator iter = avatarp->mAttachmentPoints.begin(); 
-				 iter != avatarp->mAttachmentPoints.end(); )
-			{
-				LLVOAvatar::attachment_map_t::iterator curiter = iter++;
-				LLViewerJointAttachment* attachment = curiter->second;
-				for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();
-					 attachment_iter != attachment->mAttachedObjects.end();
-					 ++attachment_iter)
-				{
-					LLViewerObject *attached_object = (*attachment_iter);
-					if (attached_object)
-					{
-						LLSD entry = list.emptyMap();
-						entry.insert("inv_item_id", attached_object->getAttachmentItemID());
-						array.append(entry);
-					}
-				}
-			}
-			list.insert("attachments", array);
-			std::string filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, "attachments.xml");
-			llofstream list_file(filename);
-			LLSDSerialize::toPrettyXML(list, list_file);
-			list_file.close();
-			//llinfos << "Worn attachments list saved to: " << filename << llendl;
-		}
-	}
-	else
-	{
-		gAttachmentsListDirty = true;
-		gAttachmentsTimer.reset();
-	}
 }
 
 // static
@@ -6907,22 +6777,12 @@ void LLVOAvatar::addChild(LLViewerObject *childp)
 	{
 		mPendingAttachment.push_back(childp);
 	}
-	if (mIsSelf)
-	{
-		gAttachmentsListDirty = true;
-		gAttachmentsTimer.reset();
-	}
 }
 
 void LLVOAvatar::removeChild(LLViewerObject *childp)
 {
 	LLViewerObject::removeChild(childp);
 	detachObject(childp);
-	if (mIsSelf)
-	{
-		gAttachmentsListDirty = true;
-		gAttachmentsTimer.reset();
-	}
 }
 
 //LLViewerJointAttachment* LLVOAvatar::getTargetAttachmentPoint(LLViewerObject* viewer_object)
@@ -6988,6 +6848,12 @@ BOOL LLVOAvatar::attachObject(LLViewerObject *viewer_object)
 		// Then make sure the inventory is in sync with the avatar.
 		gInventory.addChangedMask(LLInventoryObserver::LABEL, viewer_object->getAttachmentItemID());
 		gInventory.notifyObservers();
+
+		// Should just be the last object added
+		if (attachment->isObjectAttached(viewer_object))
+		{
+			LLCOFMgr::instance().addAttachment(viewer_object->getAttachmentItemID());
+		}
 	}
 
 	return TRUE;
@@ -7026,11 +6892,6 @@ void LLVOAvatar::lazyAttach()
 		if (mPendingAttachment[i]->mDrawable)
 		{
 			attachObject(mPendingAttachment[i]);
-			if (mIsSelf)
-			{
-				gAttachmentsListDirty = true;
-				gAttachmentsTimer.reset();
-			}
 		}
 		else
 		{
@@ -7039,12 +6900,6 @@ void LLVOAvatar::lazyAttach()
 	}
 
 	mPendingAttachment = still_pending;
-
-	if (mIsSelf && still_pending.size() > 0)
-	{
-		gAttachmentsListDirty = true;
-		gAttachmentsTimer.reset();
-	}
 }
 
 void LLVOAvatar::resetHUDAttachments()
@@ -7132,11 +6987,16 @@ BOOL LLVOAvatar::detachObject(LLViewerObject *viewer_object)
 				// Then make sure the inventory is in sync with the avatar.
 				gInventory.addChangedMask(LLInventoryObserver::LABEL, item_id);
 				gInventory.notifyObservers();
+
+				// Update COF contents (unless the avatar is being destroyed)
+				if ( (getRegion()) && (!isDead()) )
+				{
+					LLCOFMgr::instance().removeAttachment(item_id);
+				}
 			}
 			return TRUE;
 		}
 	}
-
 
 	return FALSE;
 }
@@ -7821,7 +7681,8 @@ BOOL LLVOAvatar::isFullyLoaded()
 	{
 		return FALSE;
 	}
-	else if (*sRenderUnloadedAvatar)
+	// Changes to LLAppearanceMgr::updateAppearanceFromCOF() expect this function to actually return mFullyLoaded for gAgentAvatarp
+	else if (*sRenderUnloadedAvatar && !mIsSelf)
 	{
 		 return TRUE;
 	}
