@@ -100,6 +100,7 @@ set(viewer_SOURCE_FILES
     llappviewer.cpp
     llassetuploadresponders.cpp
     llassetuploadqueue.cpp
+    llattachmentsmgr.cpp
     llaudiosourcevo.cpp
     llbbox.cpp
     llbox.cpp
@@ -495,9 +496,11 @@ set(viewer_SOURCE_FILES
     rlvhandler.cpp
     rlvhelper.cpp
     rlvcommon.cpp
-    rlvmultistringsearch.cpp
+    rlvlocks.cpp
+    rlvinventory.cpp
     rlvextensions.cpp
     rlvfloaterbehaviour.cpp
+    rlvviewer2.cpp
     slfloatermediafilter.cpp
     viewertime.cpp
     viewerversion.cpp
@@ -561,7 +564,8 @@ set(viewer_HEADER_FILES
     llappviewer.h
     llassetuploadresponders.h
     llassetuploadqueue.h
-    llaudiosourcevo.h
+    llassetuploadqueue.h
+    llattachmentsmgr.h
     llbbox.h
     llbox.h
     llcallbacklist.h
@@ -965,8 +969,10 @@ set(viewer_HEADER_FILES
     rlvhandler.h
     rlvhelper.h
     rlvcommon.h
-    rlvmultistringsearch.h
+    rlvlocks.h
+    rlvinventory.h
     rlvextensions.h
+    rlvviewer2.h
     rlvfloaterbehaviour.h
     slfloatermediafilter.h
     VertexCache.h
