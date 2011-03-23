@@ -418,7 +418,7 @@ void LLViewerInventoryCategory::updateParentOnServer(BOOL restamp) const
 void LLViewerInventoryCategory::updateServer(BOOL is_new) const
 {
 	// communicate that change with the server.
-	if(LLAssetType::AT_NONE != mPreferredType)
+	if ( (LLAssetType::AT_NONE != mPreferredType) && (LLAssetType::AT_OUTFIT != mPreferredType) )
 	{
 		LLNotifications::instance().add("CannotModifyProtectedCategories");
 		return;
@@ -442,7 +442,7 @@ void LLViewerInventoryCategory::removeFromServer( void )
 	llinfos << "Removing inventory category " << mUUID << " from server."
 			<< llendl;
 	// communicate that change with the server.
-	if(LLAssetType::AT_NONE != mPreferredType)
+	if ( (LLAssetType::AT_NONE != mPreferredType) && (LLAssetType::AT_OUTFIT != mPreferredType) )
 	{
 		LLNotifications::instance().add("CannotRemoveProtectedCategories");
 		return;
