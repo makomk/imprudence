@@ -2273,6 +2273,8 @@ void LLFolderBridge::folderOptionsMenu()
 		if (!is_default_folder)
 		{
 			mItems.push_back(std::string("Add To Outfit"));
+			if(!LLAttachmentsMgr::instance().canMultiAttach())
+				disabled_items.push_back(std::string("Add To Outfit"));
 			mItems.push_back(std::string("Wear Items"));
 			mItems.push_back(std::string("Replace Outfit"));
 		}
@@ -4136,7 +4138,7 @@ void LLObjectBridge::buildContextMenu(LLMenuGL& menu, U32 flags)
 			{
 				items.push_back(std::string("Object Wear"));
 				items.push_back(std::string("Object Add"));
-				if (!avatarp->canAttachMoreObjects())
+				if ((!LLAttachmentsMgr::instance().canMultiAttach()) || (!avatarp->canAttachMoreObjects()))
 				{
 					disabled_items.push_back(std::string("Object Add"));
 				}

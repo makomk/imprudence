@@ -27,6 +27,7 @@
 #include "llviewerprecompiledheaders.h"
 #include "llattachmentsmgr.h"
 
+#include "hippogridmanager.h"
 #include "llagent.h"
 #include "llinventorymodel.h"
 #include "lltooldraganddrop.h" // pack_permissions_slam
@@ -45,13 +46,24 @@ LLAttachmentsMgr::~LLAttachmentsMgr()
 {
 }
 
+bool LLAttachmentsMgr::canMultiAttach()
+{
+	return !gHippoGridManager->getConnectedGrid()->isOpenSimulator();
+}
+
 void LLAttachmentsMgr::addAttachment(const LLUUID& item_id,
 									 const U8 attachment_pt,
 //									 const BOOL add)
 // [RLVa:KB] - Checked: 2010-09-13 (RLVa-1.2.1c) | Added: RLVa-1.2.1c
-									 const BOOL add, const BOOL fRlvForce /*=FALSE*/)
+									 BOOL add, const BOOL fRlvForce /*=FALSE*/)
 // [/RLVa:KB]
 {
+	if(add && !canMultiAttach())
+	{
+		llwarns << "Attempting to add-attach when multi-attach unavailable!" << llendl;
+		add = false;
+	}
+
 	AttachmentsInfo attachment;
 	attachment.mItemID = item_id;
 	attachment.mAttachmentPt = attachment_pt;

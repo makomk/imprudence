@@ -52,6 +52,7 @@ public:
 	LLAttachmentsMgr();
 	virtual ~LLAttachmentsMgr();
 
+	bool canMultiAttach();
 	void addAttachment(const LLUUID& item_id,
 					   const U8 attachment_pt,
 //					   const BOOL add);
