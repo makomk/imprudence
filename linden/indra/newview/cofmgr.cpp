@@ -16,6 +16,7 @@
 
 #include "llviewerprecompiledheaders.h"
 #include "cofmgr.h"
+#include "hippogridmanager.h"
 #include "llagent.h"
 #include "llcommonutils.h"
 #include "llerror.h"
@@ -179,6 +180,11 @@ public:
 // Helper functions
 //
 
+bool LLCOFMgr::isCOFEnabled() const
+{
+	return !gHippoGridManager->getConnectedGrid()->isOpenSimulator();
+}
+
 void LLCOFMgr::checkCOF()
 {
 	const LLUUID idCOF = getCOF();
@@ -238,7 +244,7 @@ void LLCOFMgr::getDescendentsOfAssetType(const LLUUID& idCat, LLInventoryModel::
 void LLCOFMgr::addCOFItemLink(const LLUUID& idItem, LLPointer<LLInventoryCallback> cb)
 {
 	const LLViewerInventoryItem *pItem = gInventory.getItem(idItem);
-	if (!pItem)
+	if ((!isCOFEnabled()) || !pItem)
 	{
 		LLDeferredAddLinkTargetFetcher* pFetcher = new LLDeferredAddLinkTargetFetcher(idItem, cb);
 		pFetcher->startFetch();
@@ -250,7 +256,7 @@ void LLCOFMgr::addCOFItemLink(const LLUUID& idItem, LLPointer<LLInventoryCallbac
 
 void LLCOFMgr::addCOFItemLink(const LLInventoryItem* pItem, LLPointer<LLInventoryCallback> cb)
 {
-	if ( (!pItem) || (isLinkInCOF(pItem->getLinkedUUID())) )
+	if ( (!isCOFEnabled()) || (!pItem) || (isLinkInCOF(pItem->getLinkedUUID())) )
 	{
 		return;
 	}
@@ -271,6 +277,9 @@ bool LLCOFMgr::isLinkInCOF(const LLUUID& idItem)
 
 void LLCOFMgr::removeCOFItemLinks(const LLUUID& idItem)
 {
+	if(!isCOFEnabled())
+		return;
+
 	gInventory.addChangedMask(LLInventoryObserver::LABEL, idItem);
 
 	LLInventoryModel::cat_array_t folders; LLInventoryModel::item_array_t items;
@@ -290,7 +299,7 @@ void LLCOFMgr::removeCOFItemLinks(const LLUUID& idItem)
 
 void LLCOFMgr::addAttachment(const LLUUID& idItem)
 {
-	if ( (isLinkInCOF(idItem)) || (std::find(m_PendingAttachLinks.begin(), m_PendingAttachLinks.end(), idItem) != m_PendingAttachLinks.end()) )
+	if ( (!isCOFEnabled()) || (isLinkInCOF(idItem)) || (std::find(m_PendingAttachLinks.begin(), m_PendingAttachLinks.end(), idItem) != m_PendingAttachLinks.end()) )
 	{
 		return;
 	}
@@ -307,6 +316,9 @@ void LLCOFMgr::addAttachment(const LLUUID& idItem)
 
 void LLCOFMgr::removeAttachment(const LLUUID& idItem)
 {
+	if(!isCOFEnabled())
+		return;
+
 	gInventory.addChangedMask(LLInventoryObserver::LABEL, idItem);
 
 	// Remove the attachment from the pending list
@@ -314,7 +326,7 @@ void LLCOFMgr::removeAttachment(const LLUUID& idItem)
 	if (itPending != m_PendingAttachLinks.end())
 		m_PendingAttachLinks.erase(itPending);
 	
-	if (m_fLinkAttachments)
+	if (isCOFEnabled() && m_fLinkAttachments)
 	{
 	   removeCOFItemLinks(idItem);
 	}
@@ -324,7 +336,7 @@ void LLCOFMgr::setLinkAttachments(bool fEnable)
 {
 	m_fLinkAttachments = fEnable;
 
-	if (m_fLinkAttachments)
+	if (isCOFEnabled() && m_fLinkAttachments)
 		linkPendingAttachments();
 }
 
@@ -360,7 +372,7 @@ void LLCOFMgr::onLinkAttachmentComplete(const LLUUID& idItem)
 void LLCOFMgr::updateAttachments()
 {
 	/*const*/ LLVOAvatar* pAvatar = gAgent.getAvatarObject();
-	if (!pAvatar)
+	if ((!isCOFEnabled()) || (!pAvatar))
 		return;
 
 	const LLUUID idCOF = getCOF();
@@ -397,7 +409,7 @@ void LLCOFMgr::updateAttachments()
 
 void LLCOFMgr::addWearable(const LLUUID& idItem)
 {
-	if ( (isLinkInCOF(idItem)) || (std::find(m_PendingWearableLinks.begin(), m_PendingWearableLinks.end(), idItem) != m_PendingWearableLinks.end()) )
+	if ( !isCOFEnabled() || (isLinkInCOF(idItem)) || (std::find(m_PendingWearableLinks.begin(), m_PendingWearableLinks.end(), idItem) != m_PendingWearableLinks.end()) )
 	{
 		return;
 	}
@@ -411,6 +423,9 @@ void LLCOFMgr::addWearable(const LLUUID& idItem)
 
 void LLCOFMgr::removeWearable(const LLUUID& idItem)
 {
+	if(!isCOFEnabled())
+		return;
+
 	gInventory.addChangedMask(LLInventoryObserver::LABEL, idItem);
 
 	// Remove the attachment from the pending list
@@ -438,6 +453,9 @@ void LLCOFMgr::onLinkWearableComplete(const LLUUID& idItem)
 void LLCOFMgr::synchWearables()
 {
 	const LLUUID idCOF = getCOF();
+
+	if(!isCOFEnabled())
+		return;
 
 	// Grab all wearable links currently in COF
 	LLInventoryModel::item_array_t items;
@@ -482,6 +500,9 @@ void LLCOFMgr::synchWearables()
 
 void LLCOFMgr::addBOFLink(const LLUUID &idFolder, LLPointer<LLInventoryCallback> cb)
 {
+	if(!isCOFEnabled())
+		return;
+
 	purgeBOFLink();
 
 	const LLViewerInventoryCategory* pFolder = gInventory.getCategory(idFolder);
@@ -491,6 +512,9 @@ void LLCOFMgr::addBOFLink(const LLUUID &idFolder, LLPointer<LLInventoryCallback>
 
 void LLCOFMgr::purgeBOFLink()
 {
+	if(!isCOFEnabled())
+		return;
+
 	LLInventoryModel::cat_array_t* pFolders; LLInventoryModel::item_array_t* pItems;
 	gInventory.getDirectDescendentsOf(getCOF(), pFolders, pItems);
 	for (S32 idxItem = 0, cntItem = pItems->count(); idxItem < cntItem; idxItem++)
