@@ -26,6 +26,7 @@ class LLCOFMgr : public LLSingleton<LLCOFMgr>
 	 * Helper functions
 	 */
 public:
+	bool                isCOFEnabled() const;
 	void                checkCOF();
 	void                fetchCOF();
 	static const LLUUID getCOF() { return gInventory.findCategoryUUIDForType(LLAssetType::AT_CURRENT_OUTFIT); }
