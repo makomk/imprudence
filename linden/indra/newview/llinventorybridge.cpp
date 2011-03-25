@@ -2712,6 +2712,10 @@ BOOL LLFolderBridge::dragItemIntoFolder(LLInventoryItem* inv_item,
 		{
 			is_movable = FALSE;	// Don't allow dragging links out of COF
 		}
+		else if(is_movable && move_is_into_current_outfit && !LLAttachmentsMgr::instance().canMultiAttach())
+		{
+			is_movable = FALSE;	// Don't allow dragging items onto it if we don't have multi-attach.
+		}
 		else if(is_movable && move_is_into_trash)
 		{
 			if (inv_item->getIsLinkType())
