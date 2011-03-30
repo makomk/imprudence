@@ -27,6 +27,7 @@
 #include "llviewerprecompiledheaders.h"
 #include "llattachmentsmgr.h"
 
+#include "cofmgr.h"
 #include "hippogridmanager.h"
 #include "llagent.h"
 #include "llinventorymodel.h"
@@ -48,7 +49,7 @@ LLAttachmentsMgr::~LLAttachmentsMgr()
 
 bool LLAttachmentsMgr::canMultiAttach()
 {
-	return !gHippoGridManager->getConnectedGrid()->isOpenSimulator();
+	return LLCOFMgr::instance().isCOFEnabled();
 }
 
 void LLAttachmentsMgr::addAttachment(const LLUUID& item_id,
