@@ -20,6 +20,7 @@
 #include "llagent.h"
 #include "llcommonutils.h"
 #include "llerror.h"
+#include "llviewercontrol.h"
 #include "llvoavatar.h"
 #include "rlvviewer2.h"
 
@@ -182,7 +183,7 @@ public:
 
 bool LLCOFMgr::isCOFEnabled() const
 {
-	return !gHippoGridManager->getConnectedGrid()->isOpenSimulator();
+	return !gHippoGridManager->getConnectedGrid()->isOpenSimulator() || gSavedSettings.getBOOL("OpenSimEnableMultiAttach");
 }
 
 void LLCOFMgr::checkCOF()
