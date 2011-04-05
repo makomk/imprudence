@@ -365,6 +365,7 @@ void LLPreferenceCore::setPersonalInfo(const std::string& visibility, bool im_vi
 void LLPreferenceCore::updateIsLoggedIn(bool enable)
 {
 	mPrefsIM->preparePerAccountPrefs(enable);
+	mAudioPanel->updateIsLoggedIn(enable);
 }
 
 void LLPreferenceCore::refreshEnabledGraphics()
@@ -453,6 +454,25 @@ void LLFloaterPreference::show(void*)
 	}
 
 	LLPanelLogin::setAlwaysRefresh(true);
+}
+
+
+// static
+void LLFloaterPreference::onClickResetPrefs(void* user_data)
+{
+	LLFloaterPreference* self = (LLFloaterPreference*)user_data;
+	LLNotifications::instance().add("ConfirmResetAllPreferences", LLSD(), LLSD(), boost::bind(callbackReset, _1, _2, self));
+}
+
+// static
+bool LLFloaterPreference::callbackReset(const LLSD& notification, const LLSD& response, LLFloaterPreference *self)
+{
+	S32 option = LLNotification::getSelectedOption(notification, response);
+	if ( option == 0 )
+	{
+		gSavedSettings.setBOOL("ResetAllPreferences", TRUE);
+	}
+	return false;
 }
 
 
