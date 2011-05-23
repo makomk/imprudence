@@ -1,17 +1,17 @@
-/**
+/** 
  *
  * Copyright (c) 2009-2010, Kitty Barnett
- *
- * The source code in this file is provided to you under the terms of the
+ * 
+ * The source code in this file is provided to you under the terms of the 
  * GNU General Public License, version 2.0, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. Terms of the GPL can be found in doc/GPL-license.txt
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+ * PARTICULAR PURPOSE. Terms of the GPL can be found in doc/GPL-license.txt 
  * in this distribution, or online at http://www.gnu.org/licenses/gpl-2.0.txt
- *
+ * 
  * By copying, modifying or distributing this software, you acknowledge that
- * you have read and understood your obligations described above, and agree to
+ * you have read and understood your obligations described above, and agree to 
  * abide by those obligations.
- *
+ * 
  */
 
 #include "llviewerprecompiledheaders.h"
@@ -54,19 +54,19 @@ RlvExtGetSet::RlvExtGetSet()
 }
 
 // Checked: 2009-05-17 (RLVa-0.2.0a)
-bool RlvExtGetSet::onForceCommand(const LLUUID& idObj, const RlvCommand& rlvCmd, ERlvCmdRet& cmdRet)
+bool RlvExtGetSet::onForceCommand(const RlvCommand& rlvCmd, ERlvCmdRet& cmdRet)
 {
-	return processCommand(idObj, rlvCmd, cmdRet);
+	return processCommand(rlvCmd, cmdRet);
 }
 
 // Checked: 2009-05-17 (RLVa-0.2.0a)
-bool RlvExtGetSet::onReplyCommand(const LLUUID& idObj, const RlvCommand& rlvCmd, ERlvCmdRet& cmdRet)
+bool RlvExtGetSet::onReplyCommand(const RlvCommand& rlvCmd, ERlvCmdRet& cmdRet)
 {
-	return processCommand(idObj, rlvCmd, cmdRet);
+	return processCommand(rlvCmd, cmdRet);
 }
 
 // Checked: 2009-12-23 (RLVa-1.1.0k) | Modified: RLVa-1.1.0k
-bool RlvExtGetSet::processCommand(const LLUUID& idObj, const RlvCommand& rlvCmd, ERlvCmdRet& eRet)
+bool RlvExtGetSet::processCommand(const RlvCommand& rlvCmd, ERlvCmdRet& eRet)
 {
 	std::string strBehaviour = rlvCmd.getBehaviour(), strGetSet, strSetting;
 	int idxSetting = strBehaviour.find('_');
@@ -82,14 +82,16 @@ bool RlvExtGetSet::processCommand(const LLUUID& idObj, const RlvCommand& rlvCmd,
 		{
 			if ( ("get" == strGetSet) && (RLV_TYPE_REPLY == rlvCmd.getParamType()) )
 			{
-				rlvSendChatReply(rlvCmd.getParam(), onGetDebug(strSetting));
+				RlvUtil::sendChatReply(rlvCmd.getParam(), onGetDebug(strSetting));
 				eRet = RLV_RET_SUCCESS;
 				return true;
 			}
 			else if ( ("set" == strGetSet) && (RLV_TYPE_FORCE == rlvCmd.getParamType()) )
 			{
-				if (!gRlvHandler.hasBehaviourExcept(RLV_BHVR_SETDEBUG, idObj))
+				if (!gRlvHandler.hasBehaviourExcept(RLV_BHVR_SETDEBUG, rlvCmd.getObjectID()))
 					eRet = onSetDebug(strSetting, rlvCmd.getOption());
+				else
+					eRet = RLV_RET_FAILED_LOCK;
 				return true;
 			}
 		}
@@ -97,14 +99,16 @@ bool RlvExtGetSet::processCommand(const LLUUID& idObj, const RlvCommand& rlvCmd,
 		{
 			if ( ("get" == strGetSet) && (RLV_TYPE_REPLY == rlvCmd.getParamType()) )
 			{
-				rlvSendChatReply(rlvCmd.getParam(), onGetEnv(strSetting));
+				RlvUtil::sendChatReply(rlvCmd.getParam(), onGetEnv(strSetting));
 				eRet = RLV_RET_SUCCESS;
 				return true;
 			}
 			else if ( ("set" == strGetSet) && (RLV_TYPE_FORCE == rlvCmd.getParamType()) )
 			{
-				if (!gRlvHandler.hasBehaviourExcept(RLV_BHVR_SETENV, idObj))
+				if (!gRlvHandler.hasBehaviourExcept(RLV_BHVR_SETENV, rlvCmd.getObjectID()))
 					eRet = onSetEnv(strSetting, rlvCmd.getOption());
+				else
+					eRet = RLV_RET_FAILED_LOCK;
 				return true;
 			}
 		}
@@ -127,7 +131,9 @@ bool RlvExtGetSet::processCommand(const LLUUID& idObj, const RlvCommand& rlvCmd,
 			eRet = RLV_RET_SUCCESS;
 		}
 		else
+		{
 			eRet = RLV_RET_FAILED_OPTION;
+		}
 		return true;
 	}
 	return false;
