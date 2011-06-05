@@ -3027,7 +3027,7 @@ BOOL enable_buy(void*)
         obj = node->getObject();
         if(!obj) return FALSE;
 
-		if(node->mSaleInfo.isForSale() && node->mPermissions->getMaskOwner() & PERM_TRANSFER &&
+	if(node->mSaleInfo.isForSale() && (node->mPermissions->getMaskOwner() & PERM_TRANSFER || node->mSaleInfo.getSaleType() == LLSaleInfo::FS_CONTENTS) &&
 			(node->mPermissions->getMaskOwner() & PERM_COPY || node->mSaleInfo.getSaleType() != LLSaleInfo::FS_COPY))
 		{
 			if(obj->permAnyOwner()) return TRUE;
