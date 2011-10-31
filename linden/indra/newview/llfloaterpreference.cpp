@@ -60,7 +60,6 @@
 #include "llpanellogin.h"
 #include "llpanelLCD.h"
 #include "llpanelmsgs.h"
-#include "llpanelweb.h"
 #include "llpanelskins.h"
 #include "llprefsadvanced.h"
 #include "llprefschat.h"
@@ -151,10 +150,6 @@ LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container, LLButton * def
 	mTabContainer->addTabPanel(mNetworkPanel, mNetworkPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
 	mNetworkPanel->setDefaultBtn(default_btn);
 
-	mWebPanel = new LLPanelWeb();
-	mTabContainer->addTabPanel(mWebPanel, mWebPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
-	mWebPanel->setDefaultBtn(default_btn);
-
 	mDisplayPanel = new LLPanelDisplay();
 	mTabContainer->addTabPanel(mDisplayPanel, mDisplayPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
 	mDisplayPanel->setDefaultBtn(default_btn);
@@ -166,10 +161,6 @@ LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container, LLButton * def
 	mPrefsChat = new LLPrefsChat();
 	mTabContainer->addTabPanel(mPrefsChat->getPanel(), mPrefsChat->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
 	mPrefsChat->getPanel()->setDefaultBtn(default_btn);
-
-	mPrefsColors = new LLPrefsColors();
-	mTabContainer->addTabPanel(mPrefsColors, mPrefsColors->getLabel(), FALSE, onTabChanged, mTabContainer);
-	mPrefsColors->setDefaultBtn(default_btn);
 
 	mPrefsIM = new LLPrefsIM();
 	mTabContainer->addTabPanel(mPrefsIM->getPanel(), mPrefsIM->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
@@ -197,6 +188,10 @@ LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container, LLButton * def
 	mMsgPanel = new LLPanelMsgs();
 	mTabContainer->addTabPanel(mMsgPanel, mMsgPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
 	mMsgPanel->setDefaultBtn(default_btn);
+
+	mPrefsColors = new LLPrefsColors();
+	mTabContainer->addTabPanel(mPrefsColors, mPrefsColors->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mPrefsColors->setDefaultBtn(default_btn);
 	
 	mSkinsPanel = new LLPanelSkins();
 	mTabContainer->addTabPanel(mSkinsPanel, mSkinsPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
@@ -259,11 +254,6 @@ LLPreferenceCore::~LLPreferenceCore()
 		delete mMsgPanel;
 		mMsgPanel = NULL;
 	}
-	if (mWebPanel)
-	{
-		delete mWebPanel;
-		mWebPanel = NULL;
-	}
 	if (mSkinsPanel)
 	{
 		delete mSkinsPanel;
@@ -306,7 +296,6 @@ void LLPreferenceCore::apply()
 	// hardware menu apply
 	LLFloaterHardwareSettings::instance()->apply();
 
-	mWebPanel->apply();
 #if LL_LCD_COMPILE
 	// only add this option if we actually have a logitech keyboard / speaker set
 	if (gLcdScreen->Enabled())
@@ -314,7 +303,24 @@ void LLPreferenceCore::apply()
 		mLCDPanel->apply();
 	}
 #endif
-//	mWebPanel->apply();
+
+	// Sims always wants us to send IMViaEMail and DirectoryVisible in the same msg or we crash, they're evil like that
+	// We only know both these values after mPrefsChat and mPrefsIM have been applied -- MC
+	if (mPrefsChat->getUpdateUserInfo() || mPrefsIM->getUpdateUserInfo())
+	{
+		bool new_im_via_email = mPrefsChat->getIMViaEmail();
+		std::string directory_visibility = mPrefsIM->getDirectoryVis();
+
+		LLMessageSystem* msg = gMessageSystem;
+		msg->newMessageFast(_PREHASH_UpdateUserInfo);
+		msg->nextBlockFast(_PREHASH_AgentData);
+		msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
+		msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
+		msg->nextBlockFast(_PREHASH_UserData);
+		msg->addBOOLFast(_PREHASH_IMViaEMail, new_im_via_email);	 	 
+		msg->addString("DirectoryVisibility", directory_visibility);
+		gAgent.sendReliableMessage();
+	}
 }
 
 
@@ -337,7 +343,6 @@ void LLPreferenceCore::cancel()
 	// cancel hardware menu
 	LLFloaterHardwareSettings::instance()->cancel();
 
-	mWebPanel->cancel();
 #if LL_LCD_COMPILE
 	// only add this option if we actually have a logitech keyboard / speaker set
 	if (gLcdScreen->Enabled())
@@ -345,7 +350,6 @@ void LLPreferenceCore::cancel()
 		mLCDPanel->cancel();
 	}
 #endif
-//	mWebPanel->cancel();
 }
 
 // static
@@ -359,7 +363,8 @@ void LLPreferenceCore::onTabChanged(void* user_data, bool from_click)
 
 void LLPreferenceCore::setPersonalInfo(const std::string& visibility, bool im_via_email, const std::string& email)
 {
-	mPrefsIM->setPersonalInfo(visibility, im_via_email, email);
+	mPrefsIM->setPersonalInfo(visibility);
+	mPrefsChat->setPersonalInfo(im_via_email, email);
 }
 
 void LLPreferenceCore::updateIsLoggedIn(bool enable)
@@ -482,34 +487,37 @@ bool LLFloaterPreference::callbackReset(const LLSD& notification, const LLSD& re
 void LLFloaterPreference::onBtnOK( void* userdata )
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
-	// commit any outstanding text entry
-	if (fp->hasFocus())
+	if (fp)
 	{
-		LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
-		if (cur_focus->acceptsTextInput())
+		// commit any outstanding text entry
+		if (fp->hasFocus())
 		{
-			cur_focus->onCommit();
+			LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
+			if (cur_focus->acceptsTextInput())
+			{
+				cur_focus->onCommit();
+			}
 		}
-	}
 
-	if (fp->canClose())
-	{
-		fp->apply();
-		fp->close(false);
+		if (fp->canClose())
+		{
+			fp->apply();
+			fp->close(false);
 
-		gSavedSettings.saveToFile( gSavedSettings.getString("ClientSettingsFile"), TRUE );
-		
-		std::string crash_settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_USER_SETTINGS, CRASH_SETTINGS_FILE);
-		// save all settings, even if equals defaults
-		gCrashSettings.saveToFile(crash_settings_filename, FALSE);
-	}
-	else
-	{
-		// Show beep, pop up dialog, etc.
-		llinfos << "Can't close preferences!" << llendl;
-	}
+			gSavedSettings.saveToFile( gSavedSettings.getString("ClientSettingsFile"), TRUE );
+			
+			std::string crash_settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_USER_SETTINGS, CRASH_SETTINGS_FILE);
+			// save all settings, even if equals defaults
+			gCrashSettings.saveToFile(crash_settings_filename, FALSE);
+		}
+		else
+		{
+			// Show beep, pop up dialog, etc.
+			llinfos << "Can't close preferences!" << llendl;
+		}
 
-	LLPanelLogin::refreshLocation( false );
+		LLPanelLogin::refreshLocation( false );
+	}
 }
 
 
@@ -517,17 +525,20 @@ void LLFloaterPreference::onBtnOK( void* userdata )
 void LLFloaterPreference::onBtnApply( void* userdata )
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
-	if (fp->hasFocus())
+	if (fp)
 	{
-		LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
-		if (cur_focus->acceptsTextInput())
+		if (fp->hasFocus())
 		{
-			cur_focus->onCommit();
+			LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
+			if (cur_focus->acceptsTextInput())
+			{
+				cur_focus->onCommit();
+			}
 		}
-	}
-	fp->apply();
+		fp->apply();
 
-	LLPanelLogin::refreshLocation( false );
+		LLPanelLogin::refreshLocation( false );
+	}
 }
 
 
@@ -543,15 +554,18 @@ void LLFloaterPreference::onClose(bool app_quitting)
 void LLFloaterPreference::onBtnCancel( void* userdata )
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
-	if (fp->hasFocus())
+	if (fp)
 	{
-		LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
-		if (cur_focus->acceptsTextInput())
+		if (fp->hasFocus())
 		{
-			cur_focus->onCommit();
+			LLUICtrl* cur_focus = dynamic_cast<LLUICtrl*>(gFocusMgr.getKeyboardFocus());
+			if (cur_focus->acceptsTextInput())
+			{
+				cur_focus->onCommit();
+			}
 		}
+		fp->close(); // side effect will also cancel any unsaved changes.
 	}
-	fp->close(); // side effect will also cancel any unsaved changes.
 }
 
 

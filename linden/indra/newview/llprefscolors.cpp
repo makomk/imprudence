@@ -80,6 +80,8 @@ BOOL LLPrefsColors::postBuild()
 	childSetCommitCallback("HighlightOwnNameInChat", onCommitCheckSelfName, this);
 	childSetCommitCallback("HighlightFriendsChat", onCommitCheckFriends, this);
 
+	getChild<LLColorSwatchCtrl>("effect_color_swatch")->set(gSavedSettings.getColor4("EffectColor"));
+
 	return TRUE;
 }
 
@@ -96,6 +98,7 @@ void LLPrefsColors::refreshColors()
 	mHTMLLinkColor = gSavedSettings.getColor4("HTMLLinkColor");
 	mFriendsChatColor = gSavedSettings.getColor4("FriendsChatColor");
 	mOwnNameChatColor = gSavedSettings.getColor4("OwnNameChatColor");
+	mEffectColor = gSavedSettings.getColor4("EffectColor");
 }
 
 // static
@@ -113,9 +116,6 @@ void LLPrefsColors::updateSelfCheck()
 	childSetEnabled("nick01", highlight_names_enabled);
 	childSetEnabled("nick02", highlight_names_enabled);
 	childSetEnabled("nick03", highlight_names_enabled);
-	childSetEnabled("nick01_text", highlight_names_enabled);
-	childSetEnabled("nick02_text", highlight_names_enabled);
-	childSetEnabled("nick03_text", highlight_names_enabled);
 }
 
 // static
@@ -143,6 +143,7 @@ void LLPrefsColors::cancel()
 	gSavedSettings.setColor4("HTMLLinkColor", mHTMLLinkColor);
 	gSavedSettings.setColor4("FriendsChatColor", mFriendsChatColor);
 	gSavedSettings.setColor4("OwnNameChatColor", mOwnNameChatColor);
+	gSavedSettings.setColor4("EffectColor", mEffectColor);
 }
 
 void LLPrefsColors::apply()
@@ -176,6 +177,8 @@ void LLPrefsColors::apply()
 	std::string nick03 = childGetValue("nick03");
 	boost::trim(nick03);
 	gSavedSettings.setString("HighlightNickname03", nick03);
+
+	gSavedSettings.setColor4("EffectColor", childGetValue("effect_color_swatch"));
 
 	refreshColors(); // member values become the official values and cancel becomes a no-op.
 }

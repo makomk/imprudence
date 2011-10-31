@@ -44,8 +44,12 @@ public:
 
 	void apply();
 	void cancel();
+	void setPersonalInfo(bool im_via_email, const std::string& email);
 
 	LLPanel* getPanel();
+
+	bool getUpdateUserInfo();
+	bool getIMViaEmail();
 
 protected:
 	LLPrefsChatImpl& impl;

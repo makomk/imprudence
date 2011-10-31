@@ -59,7 +59,7 @@
 #include "llglheaders.h"
 #include "llviewerwindow.h"
 #include "llwindow.h"
-#include "viewerversion.h"
+#include "viewerinfo.h"
 
 // [RLVa:KB]
 #include "rlvhandler.h"
@@ -120,11 +120,7 @@ LLFloaterAbout::LLFloaterAbout()
 	viewer_link_style->setColor(gSavedSettings.getColor4("HTMLLinkColor"));
 
 	// Version string
-	std::string version = llformat(
-	  "%s %d.%d.%d %s (%s %s)\n",
-	  ViewerVersion::getImpViewerName().c_str(),
-	  ViewerVersion::getImpMajorVersion(), ViewerVersion::getImpMinorVersion(), ViewerVersion::getImpPatchVersion(), ViewerVersion::getImpTestVersion().c_str(),
-	  __DATE__, __TIME__);
+	std::string version = llformat("%s (%s %s)\n", ViewerInfo::prettyInfo().c_str(), __DATE__, __TIME__);
 
 	support_widget->appendColoredText(version, FALSE, FALSE, gColors.getColor("TextFgReadOnlyColor"));
 	support_widget->appendStyledText(LLTrans::getString("ReleaseNotes"), false, false, viewer_link_style);
@@ -194,7 +190,14 @@ LLFloaterAbout::LLFloaterAbout()
 	support.append("CPU: ");
 	support.append( gSysCPU.getCPUString() );
 	support.append("\n");
-
+	
+	support.append("SSE Support:");
+	if(gSysCPU.hasSSE())
+		support.append(" SSE2\n");
+	else if(gSysCPU.hasSSE())
+		support.append(" SSE\n");
+	else
+		support.append(" None\n");
 	U32 memory = gSysMemory.getPhysicalMemoryKB() / 1024;
 	// Moved hack adjustment to Windows memory size into llsys.cpp
 
@@ -229,9 +232,19 @@ LLFloaterAbout::LLFloaterAbout()
 
 	support.append("OpenGL Version: ");
 	support.append( (const char*) glGetString(GL_VERSION) );
-	support.append("\n");
+	support.append("\n\n");
 
-	support.append("\n");
+	support.append("Viewer SSE Version: ");
+#if _M_IX86_FP > 0 //Windows
+	support.append(llformat("SSE%i\n", _M_IX86_FP ));
+#elif defined(__SSE2__) //GCC
+	support.append("SSE2\n");	
+#elif defined(__SSE__) //GCC
+	support.append("SSE\n");
+#else
+	support.append("None\n");
+#endif
+
 
 	support.append("libcurl Version: ");
 	support.append( LLCurl::getVersionString() );
@@ -318,13 +331,13 @@ void LLFloaterAbout::onClickCopy(void* user_data)
 static std::string get_viewer_release_notes_url()
 {
 	std::ostringstream version;
-	version << ViewerVersion::getImpMajorVersion() << "."
-	        << ViewerVersion::getImpMinorVersion() << "."
-	        << ViewerVersion::getImpPatchVersion();
+	version << ViewerInfo::versionMajor() << "."
+	        << ViewerInfo::versionMinor() << "."
+	        << ViewerInfo::versionPatch();
 
 	// Append the test version if it's not empty
-	if( !(ViewerVersion::getImpTestVersion().empty()) )
-		version << "-" << ViewerVersion::getImpTestVersion();
+	if( !(ViewerInfo::versionExtra().empty()) )
+		version << "-" << ViewerInfo::versionExtra();
 
 	std::ostringstream url;
 	url << RELEASE_NOTES_BASE_URL << version.str();

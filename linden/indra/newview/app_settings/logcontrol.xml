@@ -53,8 +53,8 @@
 							<!--<string>AudioEngine</string>-->
 							<!--<string>BodyPhysics</string>-->
               <!--<string>InitInfo</string>-->
+              <string>Inventory</string>
               <!--<string>isOwnedSelf</string>-->
-              <!--<string>Inventory</string>-->
 							<!--<string>HUDEffect</string>-->
               <!--<string>MarkerFile</string>-->
 							<!--<string>Media</string>-->
@@ -87,15 +87,16 @@
 							<!--<string>VOAvatar</string>-->
 							<!--<string>View</string>-->
 							<!--<string>ViewerImages</string>-->
+              <!--<string>Volume</string>-->
               <!--<string>TextureCache</string>-->
               <!--<string>Throttle</string>-->
 							<!--<string>Voice</string>-->
-							<!--<string>"VoiceCaps"</string>-->
+							<!--<string>VoiceCaps</string>-->
 							<!--<string>VoiceSession</string>-->
 							<!--<string>VoiceDaemon</string>-->
 							<!--<string>VoiceDevice</string>-->
 							<!--<string>VivoxProtocolParser</string>-->
-
+							<!--<string>VivoxProtocolParserTag</string>-->
 							<!--<string>Wearable</string>-->
               <!--<string>WindLight</string>-->
 

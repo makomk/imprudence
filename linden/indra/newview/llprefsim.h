@@ -45,10 +45,13 @@ public:
 
 	void apply();
 	void cancel();
-	void setPersonalInfo(const std::string& visibility, bool im_via_email, const std::string& email);
+	void setPersonalInfo(const std::string& visibility);
 	void preparePerAccountPrefs(bool enable);
 
 	LLPanel* getPanel();
+
+	bool getUpdateUserInfo();
+	std::string getDirectoryVis();
 
 protected:
 	LLPrefsIMImpl& impl;

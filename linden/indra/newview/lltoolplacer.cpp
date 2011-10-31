@@ -69,6 +69,8 @@
 #include "llviewerparcelmgr.h" // RezWithLandGroup
 #include "roles_constants.h" // Ele: Land Group Override
 
+#include "hippolimits.h"
+
 // [RLVa:KB]
 #include "rlvhandler.h"
 // [/RLVa:KB]
@@ -86,7 +88,7 @@ LLToolPlacer::LLToolPlacer()
 BOOL LLToolPlacer::raycastForNewObjPos( S32 x, S32 y, LLViewerObject** hit_obj, S32* hit_face, 
 							 BOOL* b_hit_land, LLVector3* ray_start_region, LLVector3* ray_end_region, LLViewerRegion** region )
 {
-	F32 max_dist_from_camera = gSavedSettings.getF32( "MaxSelectDistance" ) - 1.f;
+	F32 max_dist_from_camera = gHippoLimits->getMaxSelectDistance() - 1.f;
 
 	// Viewer-side pick to find the right sim to create the object on.  
 	// First find the surface the object will be created on.

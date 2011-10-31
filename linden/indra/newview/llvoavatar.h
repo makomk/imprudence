@@ -232,6 +232,7 @@ public:
 
 	BOOL			isVisible();
 	BOOL			isSelf() const { return mIsSelf; }
+	bool			isBuilt() const { return mIsBuilt; }
 	BOOL			isCulled() const { return mCulled; }
 
 public:

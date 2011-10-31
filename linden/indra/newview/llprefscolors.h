@@ -62,6 +62,7 @@ private:
 	LLColor4 mHTMLLinkColor;
 	LLColor4 mFriendsChatColor;
 	LLColor4 mOwnNameChatColor;
+	LLColor4 mEffectColor;
 };
 
 #endif //LLPREFSCOLORS_H
