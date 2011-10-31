@@ -40,6 +40,7 @@
 #include "llcombobox.h"
 #include "lliconctrl.h"
 #include "llframetimer.h"
+#include "lltimer.h"
 
 
 class LLMessageSystem;
@@ -53,7 +54,7 @@ class LLMenuBarGL;
 class LLKeywordToken;
 
 // Inner, implementation class.  LLPreviewScript and LLLiveLSLEditor each own one of these.
-class LLScriptEdCore : public LLPanel
+class LLScriptEdCore : public LLPanel, public LLEventTimer
 {
 	friend class LLPreviewScript;
 	friend class LLPreviewLSL;
@@ -96,6 +97,8 @@ public:
 	static void		onBtnInsertFunction(LLUICtrl*, void*);
 	static void		doSave( void* userdata, BOOL close_after_save );
 	static void		onBtnSave(void*);
+	static void		onSetExternalEditor(void* data);
+	static void		onBtnXEd(void*);
 	static void		onBtnUndoChanges(void*);
 	static void		onBtnSaveToDisc(void*);
 	static void		onBtnLoadFromDisc(void*);
@@ -117,12 +120,20 @@ public:
 	static BOOL		enablePasteMenu(void* userdata);
 	static BOOL		enableSelectAllMenu(void* userdata);
 	static BOOL		enableDeselectMenu(void* userdata);
+	static BOOL		enableExternalEditor(void* userdata);
 
 	static BOOL		hasChanged(void* userdata);
 
 	void selectFirstError();
+	
+	void autoSave();
+	//dim external ed
+	void xedUpdateScript();
+	void xedLaunch();
 
 	virtual BOOL handleKeyHere(KEY key, MASK mask);
+	
+	virtual BOOL tick();
 	
 	void enableSave(BOOL b) {mEnableSave = b;}
 
@@ -137,8 +148,10 @@ protected:
 
 private:
 	std::string		mSampleText;
+	std::string		mAutosaveFilename;
+	std::string     mXfname;
+	llstat			mXstbuf;
 	std::string		mHelpURL;
-	std::string		mScriptTitle;
 	LLTextEditor*	mEditor;
 	void			(*mLoadCallback)(void* userdata);
 	void			(*mSaveCallback)(void* userdata, BOOL close_after_save);
@@ -146,8 +159,7 @@ private:
 	void*			mUserdata;
 	LLComboBox		*mFunctions;
 	BOOL			mForceClose;
-	//LLPanel*		mGuiPanel;
-	LLPanel*		mCodePanel;
+	//LLPanel*		mCodePanel;
 	LLScrollListCtrl* mErrorList;
 	LLDynamicArray<LLEntryAndEdCore*> mBridges;
 	LLHandle<LLFloater>	mLiveHelpHandle;
@@ -155,6 +167,7 @@ private:
 	LLFrameTimer	mLiveHelpTimer;
 	S32				mLiveHelpHistorySize;
 	BOOL			mEnableSave;
+	BOOL			mEnableXEd;
 	BOOL			mHasScriptData;
 };
 
@@ -165,9 +178,10 @@ class LLPreviewLSL : public LLPreview
 public:
 	LLPreviewLSL(const std::string& name, const LLRect& rect, const std::string& title,
 				 const LLUUID& item_uuid );
+	~LLPreviewLSL();
+
 	virtual void callbackLSLCompileSucceeded();
 	virtual void callbackLSLCompileFailed(const LLSD& compile_errors);
-
 	/*virtual*/ void open();		/*Flawfinder: ignore*/
 
 protected:
