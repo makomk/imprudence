@@ -112,7 +112,12 @@ LLWLParamManager::LLWLParamManager() :
 
 	// sky dome
 	mDomeOffset(0.96f),
-	mDomeRadius(15000.f)
+	mDomeRadius(15000.f),
+
+	// initialize a couple of variables
+	sNeedsMix(false),
+	sMixSet(NULL)
+
 {
 }
 
